@@ -1,0 +1,250 @@
+Initialized native services in: /Users/chamikalakshan/.gradle/native
+Initialized jansi services in: /Users/chamikalakshan/.gradle/native
+The client will now receive all logging from the daemon (pid: 76824). The daemon log file: /Users/chamikalakshan/.gradle/daemon/9.2.1/daemon-76824.out.log
+Starting 4th build in daemon [uptime: 6 mins 39.961 secs, performance: 98%, GC rate: 0.00/s, heap usage: 2% of 2 GiB]
+Using 8 worker leases.
+Operational build model parameters: {requiresToolingModels=false, parallelProjectExecution=false, configureOnDemand=false, configurationCache=false, configurationCacheParallelStore=false, configurationCacheParallelLoad=true, isolatedProjects=false, parallelProjectConfiguration=false, intermediateModelCache=false, parallelToolingApiActions=false, invalidateCoupledProjects=false, modelAsProjectDependency=false, resilientModelBuilding=false}
+Now considering [/Users/chamikalakshan/AndroidStudioProjects/Spendly] as hierarchies to watch
+Watching the file system is configured to be enabled if available
+File system watching is active
+Starting Build
+Resolved plugin [id: 'org.gradle.toolchains.foojay-resolver-convention', version: '1.0.0']
+Settings evaluated using settings file '/Users/chamikalakshan/AndroidStudioProjects/Spendly/settings.gradle.kts'.
+Projects loaded. Root project using build file '/Users/chamikalakshan/AndroidStudioProjects/Spendly/build.gradle.kts'.
+Included projects: [root project 'Spendly', project ':app']
+
+> Configure project :
+Evaluating root project 'Spendly' using build file '/Users/chamikalakshan/AndroidStudioProjects/Spendly/build.gradle.kts'.
+Resolved plugin [id: 'com.android.application', version: '8.7.3', apply: false]
+Resolved plugin [id: 'com.android.library', version: '8.7.3', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.android', version: '2.1.0', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.compose', version: '2.1.0', apply: false]
+Resolved plugin [id: 'com.google.dagger.hilt.android', version: '2.54', apply: false]
+Resolved plugin [id: 'com.google.gms.google-services', version: '4.4.4', apply: false]
+Resolved plugin [id: 'com.google.devtools.ksp', version: '2.1.0-1.0.29', apply: false]
+
+> Configure project :app
+Evaluating project ':app' using build file '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/build.gradle.kts'.
+Resolved plugin [id: 'com.android.application', version: '8.7.3']
+Resolved plugin [id: 'org.jetbrains.kotlin.android', version: '2.1.0']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.compose', version: '2.1.0']
+Resolved plugin [id: 'com.google.dagger.hilt.android', version: '2.54']
+Resolved plugin [id: 'com.google.gms.google-services', version: '4.4.4']
+Resolved plugin [id: 'com.google.devtools.ksp', version: '2.1.0-1.0.29']
+Using default execution profile
+Using Kotlin Gradle Plugin gradle85 variant
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+All projects evaluated.
+Task path ':app:kspDebugKotlin' matched project ':app'
+Task name matched 'kspDebugKotlin'
+Selected primary task 'kspDebugKotlin' from project :app
+Tasks to be executed: [task ':app:checkKotlinGradlePluginConfigurationErrors', task ':app:preBuild', task ':app:preDebugBuild', task ':app:checkDebugAarMetadata', task ':app:generateDebugResValues', task ':app:processDebugGoogleServices', task ':app:mapDebugSourceSetPaths', task ':app:generateDebugResources', task ':app:mergeDebugResources', task ':app:packageDebugResources', task ':app:parseDebugLocalResources', task ':app:createDebugCompatibleScreenManifests', task ':app:extractDeepLinksDebug', task ':app:processDebugMainManifest', task ':app:processDebugManifest', task ':app:processDebugManifestForPackage', task ':app:processDebugResources', task ':app:kspDebugKotlin']
+Tasks that were excluded: []
+Resolve mutations for :app:checkKotlinGradlePluginConfigurationErrors (Thread[#394,Execution worker,5,main]) started.
+:app:checkKotlinGradlePluginConfigurationErrors (Thread[#394,Execution worker,5,main]) started.
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+Skipping task ':app:checkKotlinGradlePluginConfigurationErrors' as task onlyIf 'errorDiagnostics are present' is false.
+Resolve mutations for :app:preBuild (Thread[#393,included builds,5,main]) started.
+:app:preBuild (Thread[#393,included builds,5,main]) started.
+
+> Task :app:preBuild UP-TO-DATE
+Skipping task ':app:preBuild' as it has no actions.
+Resolve mutations for :app:preDebugBuild (Thread[#393,included builds,5,main]) started.
+:app:preDebugBuild (Thread[#393,included builds,5,main]) started.
+
+> Task :app:preDebugBuild UP-TO-DATE
+Skipping task ':app:preDebugBuild' as it has no actions.
+Resolve mutations for :app:checkDebugAarMetadata (Thread[#393,included builds,5,main]) started.
+:app:checkDebugAarMetadata (Thread[#393,included builds,5,main]) started.
+
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+Caching disabled for task ':app:checkDebugAarMetadata' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:checkDebugAarMetadata' as it is up-to-date.
+Resolve mutations for :app:generateDebugResValues (Thread[#393,included builds,5,main]) started.
+:app:generateDebugResValues (Thread[#393,included builds,5,main]) started.
+
+> Task :app:generateDebugResValues UP-TO-DATE
+Caching disabled for task ':app:generateDebugResValues' because:
+  Build cache is disabled
+Skipping task ':app:generateDebugResValues' as it is up-to-date.
+Resolve mutations for :app:processDebugGoogleServices (Thread[#393,included builds,5,main]) started.
+:app:processDebugGoogleServices (Thread[#393,included builds,5,main]) started.
+
+> Task :app:processDebugGoogleServices UP-TO-DATE
+Caching disabled for task ':app:processDebugGoogleServices' because:
+  Build cache is disabled
+Skipping task ':app:processDebugGoogleServices' as it is up-to-date.
+Resolve mutations for :app:mapDebugSourceSetPaths (Thread[#393,included builds,5,main]) started.
+:app:mapDebugSourceSetPaths (Thread[#393,included builds,5,main]) started.
+
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+Caching disabled for task ':app:mapDebugSourceSetPaths' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:mapDebugSourceSetPaths' as it is up-to-date.
+Resolve mutations for :app:generateDebugResources (Thread[#393,included builds,5,main]) started.
+:app:generateDebugResources (Thread[#393,included builds,5,main]) started.
+
+> Task :app:generateDebugResources UP-TO-DATE
+Caching disabled for task ':app:generateDebugResources' because:
+  Build cache is disabled
+Skipping task ':app:generateDebugResources' as it is up-to-date.
+Resolve mutations for :app:mergeDebugResources (Thread[#393,included builds,5,main]) started.
+:app:mergeDebugResources (Thread[#393,included builds,5,main]) started.
+
+> Task :app:mergeDebugResources UP-TO-DATE
+Caching disabled for task ':app:mergeDebugResources' because:
+  Build cache is disabled
+Skipping task ':app:mergeDebugResources' as it is up-to-date.
+Resolve mutations for :app:packageDebugResources (Thread[#393,included builds,5,main]) started.
+:app:packageDebugResources (Thread[#393,included builds,5,main]) started.
+
+> Task :app:packageDebugResources UP-TO-DATE
+Caching disabled for task ':app:packageDebugResources' because:
+  Build cache is disabled
+Skipping task ':app:packageDebugResources' as it is up-to-date.
+Resolve mutations for :app:parseDebugLocalResources (Thread[#393,included builds,5,main]) started.
+:app:parseDebugLocalResources (Thread[#393,included builds,5,main]) started.
+
+> Task :app:parseDebugLocalResources UP-TO-DATE
+Caching disabled for task ':app:parseDebugLocalResources' because:
+  Build cache is disabled
+Skipping task ':app:parseDebugLocalResources' as it is up-to-date.
+Resolve mutations for :app:createDebugCompatibleScreenManifests (Thread[#393,included builds,5,main]) started.
+:app:createDebugCompatibleScreenManifests (Thread[#393,included builds,5,main]) started.
+
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+Caching disabled for task ':app:createDebugCompatibleScreenManifests' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:createDebugCompatibleScreenManifests' as it is up-to-date.
+Resolve mutations for :app:extractDeepLinksDebug (Thread[#393,included builds,5,main]) started.
+:app:extractDeepLinksDebug (Thread[#393,included builds,5,main]) started.
+
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+Caching disabled for task ':app:extractDeepLinksDebug' because:
+  Build cache is disabled
+Skipping task ':app:extractDeepLinksDebug' as it is up-to-date.
+Resolve mutations for :app:processDebugMainManifest (Thread[#393,included builds,5,main]) started.
+:app:processDebugMainManifest (Thread[#393,included builds,5,main]) started.
+
+> Task :app:processDebugMainManifest UP-TO-DATE
+Caching disabled for task ':app:processDebugMainManifest' because:
+  Build cache is disabled
+Skipping task ':app:processDebugMainManifest' as it is up-to-date.
+Resolve mutations for :app:processDebugManifest (Thread[#393,included builds,5,main]) started.
+:app:processDebugManifest (Thread[#393,included builds,5,main]) started.
+
+> Task :app:processDebugManifest UP-TO-DATE
+Caching disabled for task ':app:processDebugManifest' because:
+  Build cache is disabled
+Skipping task ':app:processDebugManifest' as it is up-to-date.
+Resolve mutations for :app:processDebugManifestForPackage (Thread[#393,included builds,5,main]) started.
+:app:processDebugManifestForPackage (Thread[#393,included builds,5,main]) started.
+
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+Custom actions are attached to task ':app:processDebugManifestForPackage'.
+Caching disabled for task ':app:processDebugManifestForPackage' because:
+  Build cache is disabled
+Skipping task ':app:processDebugManifestForPackage' as it is up-to-date.
+Resolve mutations for :app:processDebugResources (Thread[#393,included builds,5,main]) started.
+:app:processDebugResources (Thread[#393,included builds,5,main]) started.
+
+> Task :app:processDebugResources UP-TO-DATE
+Registered task dependencies: app:debugCompileClasspath
+Skipping misunderstood TO dep string: androidx.compose.ui:ui-tooling
+Skipping misunderstood TO dep string: androidx.compose.ui:ui
+Skipping misunderstood TO dep string: androidx.compose.ui:ui-graphics
+Skipping misunderstood TO dep string: androidx.compose.ui:ui-tooling-preview
+Skipping misunderstood TO dep string: androidx.compose.material3:material3
+Skipping misunderstood TO dep string: androidx.compose.material:material-icons-extended
+Skipping misunderstood TO dep string: androidx.activity:activity-compose
+Skipping misunderstood TO dep string: com.google.firebase:firebase-auth
+Skipping misunderstood TO dep string: com.google.firebase:firebase-firestore
+Skipping misunderstood TO dep string: com.google.firebase:firebase-analytics
+Skipping misunderstood TO dep string: org.jetbrains.kotlin:kotlin-stdlib
+Starting dependency analysis
+Caching disabled for task ':app:processDebugResources' because:
+  Build cache is disabled
+Skipping task ':app:processDebugResources' as it is up-to-date.
+Resolve mutations for :app:kspDebugKotlin (Thread[#393,included builds,5,main]) started.
+:app:kspDebugKotlin (Thread[#393,included builds,5,main]) started.
+
+> Task :app:kspDebugKotlin
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/kotlin', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/java', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/kotlin', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/java', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/kotlin', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/java', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/kotlin', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/java', not found
+GradleBuildProject.Builder should not be accessed through AnalyticsConfiguratorService after AnalyticsService is created. Analytics information of this build might be incomplete.
+Registered task dependencies: app:kotlinCompilerClasspath
+Starting dependency analysis
+Caching disabled for task ':app:kspDebugKotlin' because:
+  Build cache is disabled
+Task ':app:kspDebugKotlin' is not up-to-date because:
+  Task has failed previously.
+The input changes require a full rebuild for incremental task ':app:kspDebugKotlin'.
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/kotlin', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/java', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/kotlin', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/java', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/kotlin', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/java', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/kotlin', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/kotlin', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/java', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/kotlin', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/java', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/kotlin', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/java', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/kotlin', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/java', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/kotlin', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/java', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/kotlin', not found
+file or directory '/Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/debug/java', not found
+Kotlin source files: /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/viewmodel/EditGoalViewModel.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/viewmodel/AuthViewModel.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/viewmodel/AddIncomeViewModel.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/viewmodel/AddExpenseViewModel.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/viewmodel/GoalViewModel.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/viewmodel/TransactionsViewModel.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/viewmodel/ProfileViewModel.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/viewmodel/AnalyticsViewModel.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/viewmodel/DashboardViewModel.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/screens/AnalyticsScreen.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/screens/GoalTrackerScreen.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/screens/TransactionsScreen.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/screens/LoginScreen.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/screens/DashboardScreen.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/screens/SplashScreen.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/screens/AddIncomeScreen.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/screens/AddExpenseScreen.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/screens/EditGoalScreen.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/screens/RegisterScreen.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/screens/ProfileScreen.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/screens/PrimaryGoalScreen.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/components/Common.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/components/LoadingOverlay.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/components/SectionHeader.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/components/EmptyState.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/components/ErrorBanner.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/components/TransactionIcon.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/components/StatCard.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/theme/Color.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/theme/Theme.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/ui/theme/Type.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/repository/ExpenseRepository.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/repository/GoalRepository.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/repository/IncomeRepository.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/repository/AuthRepository.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/MainActivity.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/di/AppModule.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/di/RepositoryModule.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/di/WorkerModule.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/SpendlyApplication.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/navigation/BottomNavItem.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/navigation/Screen.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/navigation/SpendlyNavGraph.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/navigation/SpendlyBottomNavBar.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/utils/SyncManager.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/utils/Mappers.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/utils/Formatters.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/utils/FormatUtils.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/worker/SyncWorker.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/local/entity/ExpenseEntryEntity.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/local/entity/SavingsGoalEntity.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/local/entity/IncomeEntryEntity.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/local/dao/GoalDao.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/local/dao/IncomeDao.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/local/dao/ExpenseDao.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/local/pref/UserPreferencesRepository.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/local/db/SpendlyTypeConverters.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/local/db/SpendlyDatabase.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/model/TransactionItem.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/model/enums/IncomeSource.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/model/enums/ExpenseType.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/model/enums/PaymentMethod.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/model/enums/InvoiceStatus.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/model/enums/Currency.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/model/enums/ExpenseCategory.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/model/enums/TransactionFilter.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/model/ExpenseEntry.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/model/IncomeEntry.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/model/User.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/model/SavingsGoal.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/remote/IncomeRepositoryImpl.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/remote/AuthRepositoryImpl.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/remote/ExpenseRepositoryImpl.kt, /Users/chamikalakshan/AndroidStudioProjects/Spendly/app/src/main/java/com/spendly/app/data/remote/GoalRepositoryImpl.kt
+Java source files: 
+Script source files: 
+Script file extensions: 
+[KOTLIN] Kotlin compilation 'jdkHome' argument: null
+i: [ksp] loaded provider(s): [dagger.hilt.processor.internal.uninstallmodules.KspUninstallModulesProcessor$Provider, dagger.hilt.processor.internal.definecomponent.KspDefineComponentProcessor$Provider, dagger.hilt.android.processor.internal.androidentrypoint.KspAndroidEntryPointProcessor$Provider, dagger.hilt.processor.internal.root.KspRootProcessor$Provider, dagger.hilt.android.processor.internal.viewmodel.KspViewModelProcessor$Provider, dagger.hilt.android.processor.internal.bindvalue.KspBindValueProcessor$Provider, dagger.hilt.processor.internal.root.KspComponentTreeDepsProcessor$Provider, dagger.hilt.processor.internal.aliasof.KspAliasOfProcessor$Provider, dagger.hilt.processor.internal.generatesrootinput.KspGeneratesRootInputProcessor$Provider, dagger.hilt.processor.internal.originatingelement.KspOriginatingElementProcessor$Provider, dagger.hilt.processor.internal.earlyentrypoint.KspEarlyEntryPointProcessor$Provider, dagger.hilt.android.processor.internal.customtestapplication.KspCustomTestApplicationProcessor$Provider, dagger.hilt.processor.internal.aggregateddeps.KspAggregatedDepsProcessor$Provider, androidx.hilt.AndroidXHiltKspProcessor$Provider, androidx.room.RoomKspProcessor$Provider, dagger.internal.codegen.KspComponentProcessor$Provider]
+e: file:///Users/chamikalakshan/.gradle/caches/9.2.1/transforms/16a5ab9b4f0f8d4e6519220423633500/transformed/firebase-auth-24.1.0-api.jar!/META-INF/java.com.google.android.gmscore.integ.client.firebase-auth-api_firebase-auth-api.kotlin_module Module was compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+Finished executing kotlin compiler using DAEMON strategy
+
+> Task :app:kspDebugKotlin FAILED
+
+[Incubating] Problems report is available at: file:///Users/chamikalakshan/AndroidStudioProjects/Spendly/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:kspDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --debug option to get more log output.
+> Run with --scan to generate a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 11s
+15 actionable tasks: 1 executed, 14 up-to-date
+Watched directory hierarchies: [/Users/chamikalakshan/AndroidStudioProjects/Spendly]
