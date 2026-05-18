@@ -3,6 +3,7 @@ package com.spendly.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.spendly.app.data.model.User
+import com.spendly.app.data.model.enums.Currency
 import com.spendly.app.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,7 +49,13 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun register(name: String, email: String, password: String, confirmPassword: String) {
+    fun register(
+        name: String,
+        email: String,
+        password: String,
+        confirmPassword: String,
+        defaultCurrency: Currency = Currency.LKR
+    ) {
         if (name.isBlank() || email.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
             _uiState.value = AuthUiState.Error("Please fill in all fields")
             return
@@ -68,7 +75,7 @@ class AuthViewModel @Inject constructor(
 
         _uiState.value = AuthUiState.Loading
         viewModelScope.launch {
-            authRepository.register(name, email, password)
+            authRepository.register(name, email, password, defaultCurrency)
                 .onSuccess { user ->
                     _uiState.value = AuthUiState.Success(user)
                 }

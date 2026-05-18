@@ -27,8 +27,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.spendly.app.navigation.Screen
-import com.spendly.app.navigation.SpendlyBottomNavBar
 import com.spendly.app.ui.theme.*
+import com.spendly.app.utils.FormatUtils
 import com.spendly.app.viewmodel.ProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,9 +52,6 @@ fun ProfileScreen(
             TopAppBar(
                 title = { Text("Profile", style = SpendlyTypography.titleLarge, fontWeight = FontWeight.Bold) }
             )
-        },
-        bottomBar = {
-            SpendlyBottomNavBar(navController = navController, currentRoute = Screen.Profile.route)
         }
     ) { padding ->
         Column(
@@ -83,12 +80,12 @@ fun ProfileScreen(
                 }
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    text = uiState.user?.name ?: "User Name",
+                    text = uiState.user?.name?.takeIf { it.isNotBlank() } ?: "Spendly User",
                     style = SpendlyTypography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = uiState.user?.email ?: "user@email.com",
+                    text = uiState.user?.email?.takeIf { it.isNotBlank() } ?: "No email available",
                     style = SpendlyTypography.bodyMedium,
                     color = SpendlyGray500
                 )
@@ -105,7 +102,7 @@ fun ProfileScreen(
                 ProfileItem(
                     icon = Icons.Default.Settings,
                     label = "USD to LKR Rate",
-                    value = "Rs. ${uiState.user?.usdToLkrRate ?: 320.5}"
+                    value = FormatUtils.formatLKR(uiState.user?.usdToLkrRate ?: 320.5)
                 )
             }
 

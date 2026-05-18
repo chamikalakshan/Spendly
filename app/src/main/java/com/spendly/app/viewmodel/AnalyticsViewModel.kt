@@ -28,7 +28,9 @@ data class AnalyticsUiState(
     val expensesByCategory: Map<ExpenseCategory, Double> = emptyMap(),
     val incomeBySource: Map<IncomeSource, Double> = emptyMap(),
     val committedTotal: Double = 0.0,
+    val committedPercent: Int = 0,
     val discretionaryTotal: Double = 0.0,
+    val discretionaryPercent: Int = 0,
     val committedSubcategories: String = "",
     val discretionarySubcategories: String = "",
     val monthlyOverviewData: List<MonthlyOverviewItem> = emptyList(),
@@ -44,6 +46,50 @@ class AnalyticsViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(AnalyticsUiState())
     val uiState: StateFlow<AnalyticsUiState> = _uiState.asStateFlow()
+
+    val totalIncome: StateFlow<Double> = uiState
+        .map { it.totalIncome }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val totalExpenses: StateFlow<Double> = uiState
+        .map { it.totalExpense }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val expensesByCategory: StateFlow<Map<ExpenseCategory, Double>> = uiState
+        .map { it.expensesByCategory }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    val committedTotal: StateFlow<Double> = uiState
+        .map { it.committedTotal }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val committedPercent: StateFlow<Int> = uiState
+        .map { it.committedPercent }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    val discretionaryTotal: StateFlow<Double> = uiState
+        .map { it.discretionaryTotal }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val discretionaryPercent: StateFlow<Int> = uiState
+        .map { it.discretionaryPercent }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    val monthlyIncome: StateFlow<List<Double>> = uiState
+        .map { state -> state.monthlyOverviewData.map { it.income } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val monthlyExpenses: StateFlow<List<Double>> = uiState
+        .map { state -> state.monthlyOverviewData.map { it.expense } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val monthLabels: StateFlow<List<String>> = uiState
+        .map { state -> state.monthlyOverviewData.map { it.monthLabel } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val incomeBySource: StateFlow<Map<IncomeSource, Double>> = uiState
+        .map { it.incomeBySource }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     private val calendar = Calendar.getInstance()
 
@@ -116,6 +162,8 @@ class AnalyticsViewModel @Inject constructor(
 
                 val committedTotal = committed.sumOf { it.amount }
                 val discretionaryTotal = discretionary.sumOf { it.amount }
+                val committedPercent = if (totalEx > 0.0) ((committedTotal / totalEx) * 100).toInt() else 0
+                val discretionaryPercent = if (totalEx > 0.0) ((discretionaryTotal / totalEx) * 100).toInt() else 0
 
                 val committedSub = committed.map { it.category.displayName }.distinct().joinToString(" · ")
                 val discretionarySub = discretionary.map { it.category.displayName }.distinct().joinToString(" · ")
@@ -126,7 +174,9 @@ class AnalyticsViewModel @Inject constructor(
                     expensesByCategory = expByCategory,
                     incomeBySource = incBySource,
                     committedTotal = committedTotal,
+                    committedPercent = committedPercent,
                     discretionaryTotal = discretionaryTotal,
+                    discretionaryPercent = discretionaryPercent,
                     committedSubcategories = committedSub,
                     discretionarySubcategories = discretionarySub,
                     isLoading = false

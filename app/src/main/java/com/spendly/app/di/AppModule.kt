@@ -51,11 +51,14 @@ object AppModule {
     }
 
     @Provides
+    @Singleton
     fun provideIncomeDao(db: SpendlyDatabase): IncomeDao = db.incomeDao()
 
     @Provides
+    @Singleton
     fun provideExpenseDao(db: SpendlyDatabase): ExpenseDao = db.expenseDao()
 
     @Provides
+    @Singleton
     fun provideGoalDao(db: SpendlyDatabase): GoalDao = db.goalDao()
 }

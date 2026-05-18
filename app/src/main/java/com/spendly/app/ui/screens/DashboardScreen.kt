@@ -31,10 +31,8 @@ import com.spendly.app.navigation.Screen
 import com.spendly.app.ui.components.NoTransactionsState
 import com.spendly.app.ui.components.TransactionIcon
 import com.spendly.app.ui.theme.*
+import com.spendly.app.utils.FormatUtils
 import com.spendly.app.viewmodel.DashboardViewModel
-import java.text.NumberFormat
-import java.text.SimpleDateFormat
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,7 +80,7 @@ fun DashboardScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                "Good morning,",
+                                "${FormatUtils.getGreeting()},",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.White.copy(alpha = 0.85f)
                             )
@@ -221,7 +219,7 @@ fun DashboardScreen(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { navController.navigate(Screen.GoalTracker.route) },
+                                .clickable { navController.navigate(Screen.PrimaryGoal.route) },
                             colors = CardDefaults.cardColors(containerColor = Color.White),
                             border = BorderStroke(0.5.dp, SpendlyGray300)
                         ) {
@@ -244,7 +242,7 @@ fun DashboardScreen(
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(goal.goalName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                                         Text(
-                                            "Target: ${formatMonthYear(goal.targetDate)}",
+                                            "Target: ${FormatUtils.formatMonthYear(goal.targetDate)}",
                                             style = SpendlyTypography.labelSmall,
                                             color = SpendlyGray500
                                         )
@@ -312,7 +310,7 @@ fun DashboardScreen(
                                         modifier = Modifier.weight(1f)
                                     )
                                     TextButton(
-                                        onClick = { navController.navigate(Screen.GoalTracker.route) },
+                                        onClick = { navController.navigate(Screen.PrimaryGoal.route) },
                                         contentPadding = PaddingValues(0.dp),
                                         modifier = Modifier.height(24.dp)
                                     ) {
@@ -430,24 +428,9 @@ private fun TransactionRow(tx: TransactionItem) {
 }
 
 private fun formatLKR(amount: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("en", "LK"))
-    formatter.currency = java.util.Currency.getInstance("LKR")
-    return formatter.format(amount).replace("LKR", "Rs.")
-}
-
-private fun formatMonthYear(timeMs: Long): String {
-    return SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(Date(timeMs))
+    return FormatUtils.formatLKR(amount)
 }
 
 private fun formatDateShort(timeMs: Long): String {
-    val now = Calendar.getInstance()
-    val date = Calendar.getInstance().apply { timeInMillis = timeMs }
-    
-    return if (now.get(Calendar.DATE) == date.get(Calendar.DATE) &&
-        now.get(Calendar.MONTH) == date.get(Calendar.MONTH) &&
-        now.get(Calendar.YEAR) == date.get(Calendar.YEAR)) {
-        "Today"
-    } else {
-        SimpleDateFormat("dd MMM", Locale.getDefault()).format(Date(timeMs))
-    }
+    return FormatUtils.formatDateShort(timeMs)
 }

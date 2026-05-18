@@ -38,9 +38,14 @@ import java.util.*
 @Composable
 fun AddExpenseScreen(
     navController: NavController,
+    editExpenseId: String? = null,
     viewModel: AddExpenseViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(editExpenseId) {
+        viewModel.loadExpenseForEdit(editExpenseId)
+    }
 
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) {
@@ -100,7 +105,7 @@ fun AddExpenseScreen(
                         Icon(Icons.Default.Close, contentDescription = "Close")
                     }
                 },
-                title = { Text("Add Expense") },
+                title = { Text(if (editExpenseId.isNullOrBlank()) "Add Expense" else "Edit Expense") },
                 actions = {
                     Button(
                         onClick = { viewModel.saveExpense() },
@@ -234,7 +239,11 @@ fun AddExpenseScreen(
                         )
                     }
                     uiState.customCategories.forEach { custom ->
-                        FilterChip(selected = false, onClick = {}, label = { Text(custom) })
+                        FilterChip(
+                            selected = uiState.selectedCustomCategory == custom,
+                            onClick = { viewModel.onCustomCategorySelected(custom) },
+                            label = { Text(custom) }
+                        )
                     }
                 }
                 if (uiState.categoryError != null) {

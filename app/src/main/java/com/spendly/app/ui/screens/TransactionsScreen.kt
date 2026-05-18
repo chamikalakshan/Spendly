@@ -35,10 +35,8 @@ import com.spendly.app.navigation.Screen
 import com.spendly.app.ui.components.NoTransactionsState
 import com.spendly.app.ui.components.TransactionIcon
 import com.spendly.app.ui.theme.*
+import com.spendly.app.utils.FormatUtils
 import com.spendly.app.viewmodel.TransactionsViewModel
-import java.text.NumberFormat
-import java.text.SimpleDateFormat
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -188,7 +186,13 @@ fun TransactionsScreen(
                                 isExpanded = uiState.expandedItemId == tx.id,
                                 onTap = { viewModel.toggleExpand(tx.id) },
                                 onEdit = {
-                                    navController.navigate(if (tx.isIncome) Screen.AddIncome.route else Screen.AddExpense.route)
+                                    navController.navigate(
+                                        if (tx.isIncome) {
+                                            Screen.AddIncome.editRoute(tx.id)
+                                        } else {
+                                            Screen.AddExpense.editRoute(tx.id)
+                                        }
+                                    )
                                 },
                                 onDelete = { viewModel.confirmDelete(tx) }
                             )
@@ -311,10 +315,9 @@ private fun TransactionListItem(
 }
 
 private fun formatLKR(amount: Double): String {
-    val formatter = NumberFormat.getNumberInstance(Locale.US)
-    return "Rs. " + formatter.format(amount)
+    return FormatUtils.formatLKR(amount)
 }
 
 private fun formatDateFull(timeMs: Long): String {
-    return SimpleDateFormat("dd MMMM yyyy, HH:mm", Locale.US).format(Date(timeMs))
+    return FormatUtils.formatDateShort(timeMs)
 }

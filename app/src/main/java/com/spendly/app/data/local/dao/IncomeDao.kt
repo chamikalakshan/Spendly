@@ -21,6 +21,9 @@ interface IncomeDao {
     @Query("DELETE FROM income_entries WHERE id = :id")
     suspend fun deleteById(id: String)
 
+    @Query("SELECT * FROM income_entries WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): IncomeEntryEntity?
+
     @Query("SELECT * FROM income_entries WHERE userId = :userId ORDER BY date DESC")
     fun getAllByUser(userId: String): Flow<List<IncomeEntryEntity>>
 

@@ -25,7 +25,7 @@ fun LoadingOverlay(isLoading: Boolean) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.35f))
-                .clickable(enabled = false) { },
+                .clickable { },
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(color = SpendlyGreen)

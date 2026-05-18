@@ -29,20 +29,23 @@ import co.yml.charts.ui.barchart.BarChart
 import co.yml.charts.ui.barchart.models.BarChartData
 import co.yml.charts.ui.barchart.models.BarData
 import com.spendly.app.navigation.Screen
-import com.spendly.app.navigation.SpendlyBottomNavBar
+import com.spendly.app.ui.components.NoGoalState
 import com.spendly.app.ui.theme.*
+import com.spendly.app.utils.FormatUtils
 import com.spendly.app.viewmodel.GoalViewModel
-import java.text.NumberFormat
-import java.text.SimpleDateFormat
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrimaryGoalScreen(
     navController: NavController,
+    goalId: String? = null,
     viewModel: GoalViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(goalId) {
+        viewModel.selectGoal(goalId)
+    }
 
     if (uiState.showAddSavingsDialog) {
         AlertDialog(
@@ -103,9 +106,16 @@ fun PrimaryGoalScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                title = { Text("Goal Details", style = SpendlyTypography.titleLarge, fontWeight = FontWeight.Bold) },
+                title = { Text("Primary Goal", style = SpendlyTypography.titleLarge, fontWeight = FontWeight.Bold) },
                 actions = {
-                    TextButton(onClick = { navController.navigate(Screen.EditGoal.route) }) {
+                    TextButton(
+                        onClick = {
+                            val id = uiState.primaryGoal?.id
+                            navController.navigate(
+                                if (id.isNullOrBlank()) Screen.EditGoal.route else Screen.EditGoal.editRoute(id)
+                            )
+                        }
+                    ) {
                         Text("Edit", color = SpendlyGreen)
                     }
                     IconButton(onClick = { viewModel.confirmDeleteGoal() }) {
@@ -113,15 +123,12 @@ fun PrimaryGoalScreen(
                     }
                 }
             )
-        },
-        bottomBar = {
-            SpendlyBottomNavBar(navController = navController, currentRoute = Screen.GoalTracker.route)
         }
     ) { padding ->
         val goal = uiState.primaryGoal
         if (goal == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = SpendlyGreen)
+                NoGoalState(onSetGoal = { navController.navigate(Screen.EditGoal.route) })
             }
         } else {
             LazyColumn(
@@ -170,7 +177,7 @@ fun PrimaryGoalScreen(
 
                             Text(goal.goalName, style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.Bold)
                             Text(
-                                "Target: ${formatMonthYear(goal.targetDate)}   Remaining: ${formatLKR(uiState.remainingAmount)}",
+                                "Target: ${FormatUtils.formatMonthYear(goal.targetDate)}   Remaining: ${formatLKR(uiState.remainingAmount)}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.White.copy(alpha = 0.8f)
                             )
@@ -184,7 +191,7 @@ fun PrimaryGoalScreen(
 
                             Row {
                                 Text(
-                                    "LKR ${uiState.progressDisplay}% (${formatLKR(uiState.savedAmount)})",
+                                    "${uiState.progressDisplay}% (${formatLKR(uiState.savedAmount)})",
                                     style = SpendlyTypography.labelSmall,
                                     color = Color.White.copy(alpha = 0.8f)
                                 )
@@ -288,7 +295,7 @@ fun PrimaryGoalScreen(
                         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Icon(Icons.AutoMirrored.Filled.TrendingUp, null, tint = SpendlyGreen, modifier = Modifier.size(16.dp))
-                                Text("Live Projection", style = SpendlyTypography.labelSmall, color = SpendlyGreen, fontWeight = FontWeight.Bold)
+                                Text("Live Projection (optional only)", style = SpendlyTypography.labelSmall, color = SpendlyGreen, fontWeight = FontWeight.Bold)
                             }
                             
                             Text(uiState.projectedDate, style = MaterialTheme.typography.headlineMedium, color = SpendlyGreenDark, fontWeight = FontWeight.Bold)
@@ -318,10 +325,5 @@ fun PrimaryGoalScreen(
 }
 
 private fun formatLKR(amount: Double): String {
-    val formatter = NumberFormat.getNumberInstance(Locale.US)
-    return "Rs. " + formatter.format(amount)
-}
-
-private fun formatMonthYear(timeMs: Long): String {
-    return SimpleDateFormat("MMM yyyy", Locale.US).format(Date(timeMs))
+    return FormatUtils.formatLKR(amount)
 }

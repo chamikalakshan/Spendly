@@ -10,11 +10,10 @@ import com.spendly.app.data.model.id
 import com.spendly.app.repository.AuthRepository
 import com.spendly.app.repository.ExpenseRepository
 import com.spendly.app.repository.IncomeRepository
+import com.spendly.app.utils.FormatUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
 import javax.inject.Inject
 
 data class TransactionsUiState(
@@ -87,7 +86,6 @@ class TransactionsViewModel @Inject constructor(
 
     fun deleteTransaction(item: TransactionItem) {
         viewModelScope.launch {
-            val userId = authRepository.getCurrentUserId() ?: return@launch
             when (item) {
                 is TransactionItem.Income -> incomeRepository.deleteIncome(item.id)
                 is TransactionItem.Expense -> expenseRepository.deleteExpense(item.id)
@@ -121,49 +119,10 @@ class TransactionsViewModel @Inject constructor(
     }
 
     private fun generateAvailableMonths(): List<Triple<String, Long, Long>> {
-        val months = mutableListOf<Triple<String, Long, Long>>()
-        val calendar = Calendar.getInstance()
-        val sdf = SimpleDateFormat("MMMM yyyy", Locale.US)
-
-        for (i in 0 until 12) {
-            val label = sdf.format(calendar.time)
-            val start = (calendar.clone() as Calendar).apply {
-                set(Calendar.DAY_OF_MONTH, 1)
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.timeInMillis
-            val end = (calendar.clone() as Calendar).apply {
-                set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH))
-                set(Calendar.HOUR_OF_DAY, 23)
-                set(Calendar.MINUTE, 59)
-                set(Calendar.SECOND, 59)
-                set(Calendar.MILLISECOND, 999)
-            }.timeInMillis
-
-            months.add(Triple(label, start, end))
-            calendar.add(Calendar.MONTH, -1)
-        }
-        return months
+        return FormatUtils.getLast6Months().asReversed()
     }
 
     private fun formatDateLabel(timeMs: Long): String {
-        val now = Calendar.getInstance()
-        val date = Calendar.getInstance().apply { timeInMillis = timeMs }
-        return when {
-            isSameDay(now, date) -> "Today"
-            isYesterday(now, date) -> "Yesterday"
-            else -> SimpleDateFormat("EEE, dd MMM yyyy", Locale.US).format(Date(timeMs))
-        }
-    }
-
-    private fun isSameDay(cal1: Calendar, cal2: Calendar): Boolean =
-        cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
-        cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
-
-    private fun isYesterday(now: Calendar, date: Calendar): Boolean {
-        val yesterday = (now.clone() as Calendar).apply { add(Calendar.DATE, -1) }
-        return isSameDay(yesterday, date)
+        return FormatUtils.formatDateGroupHeader(timeMs)
     }
 }

@@ -2,13 +2,26 @@ package com.spendly.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.spendly.app.data.model.ExpenseEntry
+import com.spendly.app.data.model.IncomeEntry
 import com.spendly.app.data.model.SavingsGoal
-import com.spendly.app.repository.*
+import com.spendly.app.repository.AuthRepository
+import com.spendly.app.repository.ExpenseRepository
+import com.spendly.app.repository.GoalRepository
+import com.spendly.app.repository.IncomeRepository
+import com.spendly.app.utils.FormatUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Calendar
+import java.util.UUID
 import javax.inject.Inject
+import kotlin.math.max
 
 data class GoalUiState(
     val allGoals: List<SavingsGoal> = emptyList(),
@@ -43,62 +56,132 @@ class GoalViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(GoalUiState())
+    private val _uiState = MutableStateFlow(GoalUiState(isLoading = true))
     val uiState: StateFlow<GoalUiState> = _uiState.asStateFlow()
+
+    private val userId = authRepository.getCurrentUserId().orEmpty()
+    private var manualSavingsAdjustment = 0.0
+    private var selectedGoalId: String? = null
 
     init {
         loadGoalsData()
     }
 
     private fun loadGoalsData() {
-        // Hardcoded sample data as requested
-        val sampleGoals = listOf(
-            SavingsGoal(
-                id = "1",
-                goalName = "MacBook Pro M4",
-                targetAmount = 490000.0,
-                savedAmount = 107200.0,
-                targetDate = GregorianCalendar(2027, Calendar.MAY, 1).timeInMillis
-            ),
-            SavingsGoal(
-                id = "2",
-                goalName = "Emergency Fund",
-                targetAmount = 200000.0,
-                savedAmount = 150000.0,
-                targetDate = GregorianCalendar(2026, Calendar.DECEMBER, 1).timeInMillis
-            ),
-            SavingsGoal(
-                id = "3",
-                goalName = "Trip to Ella",
-                targetAmount = 50000.0,
-                savedAmount = 10000.0,
-                targetDate = GregorianCalendar(2026, Calendar.AUGUST, 1).timeInMillis
-            )
+        if (userId.isBlank()) {
+            _uiState.update { it.copy(isLoading = false, error = "Please log in again") }
+            return
+        }
+
+        viewModelScope.launch {
+            combine(
+                goalRepository.getGoals(userId),
+                incomeRepository.getAllIncome(userId),
+                expenseRepository.getAllExpenses(userId)
+            ) { goals, income, expenses ->
+                buildState(goals, income, expenses, manualSavingsAdjustment)
+            }.catch { e ->
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }.collect { calculated ->
+                _uiState.update { current ->
+                    calculated.copy(
+                        showDeleteDialog = current.showDeleteDialog,
+                        showAddSavingsDialog = current.showAddSavingsDialog,
+                        addSavingsAmount = current.addSavingsAmount,
+                        isSaved = current.isSaved,
+                        isDeleted = current.isDeleted,
+                        error = current.error
+                    )
+                }
+            }
+        }
+    }
+
+    private fun buildState(
+        goals: List<SavingsGoal>,
+        income: List<IncomeEntry>,
+        expenses: List<ExpenseEntry>,
+        adjustment: Double
+    ): GoalUiState {
+        val totalIncome = income.sumOf { it.amountLKR }
+        val totalExpenses = expenses.sumOf { it.amount }
+        val saved = (totalIncome - totalExpenses + adjustment).coerceAtLeast(0.0)
+        val primary = selectedGoalId
+            ?.let { id -> goals.firstOrNull { it.id == id } }
+            ?: goals.firstOrNull()
+        val remaining = (primary?.targetAmount ?: 0.0).minus(saved).coerceAtLeast(0.0)
+        val monthsLeft = monthsUntil(primary?.targetDate ?: System.currentTimeMillis())
+        val requiredMonthly = if (remaining > 0.0) remaining / monthsLeft.coerceAtLeast(1) else 0.0
+        val currentMonthSavings = currentMonthSavings(income, expenses)
+        val progress = getGoalProgress(primary, saved)
+        val monthlyPairs = monthlySavings(income, expenses)
+
+        return GoalUiState(
+            allGoals = goals,
+            primaryGoal = primary,
+            otherGoals = if (selectedGoalId == null) {
+                goals.drop(1)
+            } else {
+                goals.filterNot { it.id == primary?.id }
+            },
+            savedAmount = saved,
+            progressPercent = progress,
+            progressDisplay = (progress * 100).toInt(),
+            remainingAmount = remaining,
+            monthsLeft = monthsLeft,
+            requiredMonthly = requiredMonthly,
+            currentMonthlySavings = currentMonthSavings,
+            isOnTrack = currentMonthSavings >= requiredMonthly || remaining == 0.0,
+            projectionText = buildProjectionText(saved, primary, currentMonthSavings),
+            projectedDate = projectedDate(saved, primary, currentMonthSavings),
+            monthlySavings = monthlyPairs.map { it.second },
+            monthLabels = monthlyPairs.map { it.first },
+            isLoading = false
         )
+    }
+
+    fun selectGoal(goalId: String?) {
+        selectedGoalId = goalId?.takeIf { it.isNotBlank() }
+        val current = _uiState.value
+        if (current.allGoals.isEmpty()) return
+
+        val selected = selectedGoalId
+            ?.let { id -> current.allGoals.firstOrNull { it.id == id } }
+            ?: current.allGoals.firstOrNull()
+
+        val saved = current.savedAmount
+        val remaining = (selected?.targetAmount ?: 0.0).minus(saved).coerceAtLeast(0.0)
+        val monthsLeft = monthsUntil(selected?.targetDate ?: System.currentTimeMillis())
+        val requiredMonthly = if (remaining > 0.0) remaining / monthsLeft.coerceAtLeast(1) else 0.0
+        val progress = getGoalProgress(selected, saved)
 
         _uiState.update {
             it.copy(
-                allGoals = sampleGoals,
-                primaryGoal = sampleGoals[0],
-                otherGoals = sampleGoals.drop(1),
-                savedAmount = 107200.0,
-                progressPercent = 0.22f,
-                progressDisplay = 22,
-                remainingAmount = 382800.0,
-                monthsLeft = 10,
-                requiredMonthly = 38280.0,
-                currentMonthlySavings = 127213.0,
-                isOnTrack = true,
-                projectedDate = "September 2026",
-                projectionText = "At your current rate, you'll reach your goal by September 2026 — ahead of schedule ✓",
-                monthlySavings = listOf(12000.0, 44000.0, 14000.0, 76000.0, 127213.0),
-                monthLabels = listOf("Jan", "Feb", "Mar", "Apr", "May")
+                primaryGoal = selected,
+                otherGoals = if (selectedGoalId == null) {
+                    it.allGoals.drop(1)
+                } else {
+                    it.allGoals.filterNot { goal -> goal.id == selected?.id }
+                },
+                progressPercent = progress,
+                progressDisplay = (progress * 100).toInt(),
+                remainingAmount = remaining,
+                monthsLeft = monthsLeft,
+                requiredMonthly = requiredMonthly,
+                isOnTrack = it.currentMonthlySavings >= requiredMonthly || remaining == 0.0,
+                projectionText = buildProjectionText(saved, selected, it.currentMonthlySavings),
+                projectedDate = projectedDate(saved, selected, it.currentMonthlySavings)
             )
         }
     }
 
-    fun getGoalProgress(goal: SavingsGoal): Float {
-        return if (goal.targetAmount > 0) (goal.savedAmount / goal.targetAmount).toFloat() else 0f
+    fun getGoalProgress(goal: SavingsGoal?): Float {
+        return getGoalProgress(goal, _uiState.value.savedAmount)
+    }
+
+    private fun getGoalProgress(goal: SavingsGoal?, savedAmount: Double): Float {
+        if (goal == null || goal.targetAmount <= 0.0) return 0f
+        return (savedAmount / goal.targetAmount).coerceIn(0.0, 1.0).toFloat()
     }
 
     fun showAddSavingsDialog() {
@@ -113,22 +196,23 @@ class GoalViewModel @Inject constructor(
 
     fun confirmAddSavings() {
         val extra = _uiState.value.addSavingsAmount.toDoubleOrNull() ?: 0.0
-        if (extra > 0) {
-            val primary = _uiState.value.primaryGoal ?: return
-            val updated = primary.copy(savedAmount = primary.savedAmount + extra)
-            viewModelScope.launch {
-                goalRepository.saveGoal(updated)
-                    .onSuccess {
-                        _uiState.update {
-                            it.copy(
-                                showAddSavingsDialog = false,
-                                savedAmount = it.savedAmount + extra,
-                                progressPercent = ((it.savedAmount + extra) / primary.targetAmount).toFloat(),
-                                progressDisplay = (((it.savedAmount + extra) / primary.targetAmount) * 100).toInt()
-                            )
-                        }
-                    }
-            }
+        if (extra <= 0.0) {
+            _uiState.update { it.copy(error = "Enter a valid savings amount") }
+            return
+        }
+
+        manualSavingsAdjustment += extra
+        _uiState.update {
+            val saved = it.savedAmount + extra
+            val progress = getGoalProgress(it.primaryGoal, saved)
+            it.copy(
+                showAddSavingsDialog = false,
+                addSavingsAmount = "",
+                savedAmount = saved,
+                remainingAmount = ((it.primaryGoal?.targetAmount ?: 0.0) - saved).coerceAtLeast(0.0),
+                progressPercent = progress,
+                progressDisplay = (progress * 100).toInt()
+            )
         }
     }
 
@@ -137,9 +221,21 @@ class GoalViewModel @Inject constructor(
     }
 
     fun saveGoal(goal: SavingsGoal) {
-        _uiState.update { it.copy(isLoading = true) }
+        if (userId.isBlank()) {
+            _uiState.update { it.copy(error = "Please log in again") }
+            return
+        }
+
+        _uiState.update { it.copy(isLoading = true, isSaved = false) }
         viewModelScope.launch {
-            goalRepository.saveGoal(goal)
+            val finalGoal = goal.copy(
+                id = goal.id.ifBlank { UUID.randomUUID().toString() },
+                userId = goal.userId.ifBlank { userId },
+                isSynced = false,
+                createdAt = if (goal.createdAt == 0L) System.currentTimeMillis() else goal.createdAt
+            )
+
+            goalRepository.saveGoal(finalGoal)
                 .onSuccess {
                     _uiState.update { it.copy(isLoading = false, isSaved = true) }
                 }
@@ -163,26 +259,85 @@ class GoalViewModel @Inject constructor(
     }
 
     fun deleteGoal(id: String) {
+        _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             goalRepository.deleteGoal(id)
                 .onSuccess {
-                    _uiState.update { state ->
-                        state.copy(
-                            allGoals = state.allGoals.filterNot { it.id == id },
-                            otherGoals = state.otherGoals.filterNot { it.id == id },
-                            primaryGoal = state.primaryGoal?.takeUnless { it.id == id },
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
                             isDeleted = true,
                             showDeleteDialog = false
                         )
                     }
                 }
                 .onFailure { e ->
-                    _uiState.update { it.copy(error = e.message, showDeleteDialog = false) }
+                    _uiState.update { it.copy(isLoading = false, error = e.message, showDeleteDialog = false) }
                 }
+        }
+    }
+
+    fun buildProjectionText(
+        savedAmount: Double = _uiState.value.savedAmount,
+        goal: SavingsGoal? = _uiState.value.primaryGoal,
+        monthlySavings: Double = _uiState.value.currentMonthlySavings
+    ): String {
+        if (goal == null) return "Create a goal to see your live projection."
+        if (goal.targetAmount <= savedAmount) return "Goal reached. Keep the momentum going."
+        if (monthlySavings <= 0.0) return "Add positive monthly savings to calculate a completion date."
+
+        val monthsNeeded = max(((goal.targetAmount - savedAmount) / monthlySavings).toInt(), 1)
+        val projected = Calendar.getInstance().apply { add(Calendar.MONTH, monthsNeeded) }
+        val target = Calendar.getInstance().apply { timeInMillis = goal.targetDate }
+        val projectedText = FormatUtils.formatMonthYear(projected.timeInMillis)
+
+        return if (projected.timeInMillis <= target.timeInMillis) {
+            "At your current rate, you'll reach your goal by $projectedText, ahead of schedule."
+        } else {
+            "At your current rate, you'll reach your goal by $projectedText, after your target date."
         }
     }
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    private fun projectedDate(savedAmount: Double, goal: SavingsGoal?, monthlySavings: Double): String {
+        if (goal == null || monthlySavings <= 0.0) return "Not available"
+        if (goal.targetAmount <= savedAmount) return FormatUtils.formatMonthYear(System.currentTimeMillis())
+
+        val monthsNeeded = max(((goal.targetAmount - savedAmount) / monthlySavings).toInt(), 1)
+        return FormatUtils.formatMonthYear(
+            Calendar.getInstance().apply { add(Calendar.MONTH, monthsNeeded) }.timeInMillis
+        )
+    }
+
+    private fun monthsUntil(targetDate: Long): Int {
+        val now = Calendar.getInstance()
+        val target = Calendar.getInstance().apply { timeInMillis = targetDate }
+        val months = ((target.get(Calendar.YEAR) - now.get(Calendar.YEAR)) * 12) +
+            (target.get(Calendar.MONTH) - now.get(Calendar.MONTH))
+        return max(months, 1)
+    }
+
+    private fun currentMonthSavings(income: List<IncomeEntry>, expenses: List<ExpenseEntry>): Double {
+        val now = Calendar.getInstance()
+        val (start, end) = FormatUtils.getMonthBoundaries(
+            now.get(Calendar.YEAR),
+            now.get(Calendar.MONTH)
+        )
+        return income.filter { it.date in start..end }.sumOf { it.amountLKR } -
+            expenses.filter { it.date in start..end }.sumOf { it.amount }
+    }
+
+    private fun monthlySavings(
+        income: List<IncomeEntry>,
+        expenses: List<ExpenseEntry>
+    ): List<Pair<String, Double>> {
+        return FormatUtils.getLast6Months().map { (label, start, end) ->
+            val savings = income.filter { it.date in start..end }.sumOf { it.amountLKR } -
+                expenses.filter { it.date in start..end }.sumOf { it.amount }
+            label.take(3) to savings
+        }
     }
 }

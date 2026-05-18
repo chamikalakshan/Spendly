@@ -71,18 +71,20 @@ class IncomeRepositoryImpl @Inject constructor(
 
     override suspend fun deleteIncome(id: String): Result<Unit> {
         return try {
-            // Get user id first if needed for firestore, but typically we might store it or pass it.
-            // For deletion, if we don't have the full entry, we might need a way to find the userId.
-            // Assuming we manage deletion with just ID in Room, but Firestore needs the path.
-            // In a real app, we'd either pass userId or fetch it. 
-            // Let's assume we delete from Room and attempt Firestore if we had the context.
-            // A common pattern is to fetch the item from Room before deleting it.
-            
-            // Since the interface signature is deleteIncome(id: String), let's stick to Room deletion
-            // and maybe mark for deletion in Firestore if we had more info.
-            // For now, simple implementation as requested:
+            val existing = incomeDao.getById(id)
             incomeDao.deleteById(id)
-            // Firestore deletion would require userId: .document(userId).collection("income").document(id).delete()
+
+            existing?.let { entity ->
+                try {
+                    firestore.collection("users")
+                        .document(entity.userId)
+                        .collection("income")
+                        .document(id)
+                        .delete()
+                        .await()
+                } catch (e: Exception) { }
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

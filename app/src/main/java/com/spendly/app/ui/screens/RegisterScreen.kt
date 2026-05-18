@@ -17,7 +17,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.spendly.app.data.model.enums.Currency
 import com.spendly.app.navigation.Screen
+import com.spendly.app.ui.components.ErrorBanner
 import com.spendly.app.ui.theme.SpendlyGreen
 import com.spendly.app.viewmodel.AuthUiState
 import com.spendly.app.viewmodel.AuthViewModel
@@ -200,16 +202,10 @@ fun RegisterScreen(
             }
 
             if (uiState is AuthUiState.Error) {
-                Snackbar(
-                    action = {
-                        TextButton(onClick = { viewModel.resetState() }) {
-                            Text("Dismiss")
-                        }
-                    },
-                    modifier = Modifier.padding(vertical = 8.dp)
-                ) {
-                    Text((uiState as AuthUiState.Error).message)
-                }
+                ErrorBanner(
+                    message = (uiState as AuthUiState.Error).message,
+                    onDismiss = { viewModel.resetState() }
+                )
             }
 
             Button(
@@ -233,7 +229,13 @@ fun RegisterScreen(
                     }
 
                     if (isValid) {
-                        viewModel.register(name, email, password, confirmPassword)
+                        viewModel.register(
+                            name,
+                            email,
+                            password,
+                            confirmPassword,
+                            Currency.valueOf(selectedCurrency)
+                        )
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),

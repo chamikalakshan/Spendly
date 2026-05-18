@@ -2,7 +2,7 @@ package com.spendly.app.utils
 
 import android.content.Context
 import androidx.work.*
-import com.spendly.app.worker.SyncWorker
+import com.spendly.app.worker.SpendlySyncWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -14,19 +14,10 @@ class SyncManager @Inject constructor(
     private val workManager: WorkManager
 ) {
     fun schedulePeriodicSync() {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(1, TimeUnit.HOURS)
-            .setConstraints(constraints)
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.MINUTES)
-            .build()
-
         workManager.enqueueUniquePeriodicWork(
-            "SpendlyPeriodicSync",
+            SpendlySyncWorker.UNIQUE_WORK_NAME,
             ExistingPeriodicWorkPolicy.KEEP,
-            syncRequest
+            SpendlySyncWorker.buildRequest()
         )
     }
 
@@ -35,7 +26,7 @@ class SyncManager @Inject constructor(
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
+        val syncRequest = OneTimeWorkRequestBuilder<SpendlySyncWorker>()
             .setConstraints(constraints)
             .build()
 

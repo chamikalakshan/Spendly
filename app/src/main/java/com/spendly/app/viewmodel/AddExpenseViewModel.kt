@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,6 +21,7 @@ data class AddExpenseUiState(
     val amount: String = "",
     val name: String = "",
     val selectedCategory: ExpenseCategory? = null,
+    val selectedCustomCategory: String? = null,
     val customCategories: List<String> = emptyList(),
     val expenseType: ExpenseType = ExpenseType.DISCRETIONARY,
     val paymentMethod: PaymentMethod = PaymentMethod.CARD,
@@ -34,7 +36,9 @@ data class AddExpenseUiState(
     val error: String? = null,
     val amountError: String? = null,
     val categoryError: String? = null,
-    val isSaved: Boolean = false
+    val isSaved: Boolean = false,
+    val editingExpenseId: String? = null,
+    val editingCreatedAt: Long = 0L
 )
 
 @HiltViewModel
@@ -66,7 +70,20 @@ class AddExpenseViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 selectedCategory = category,
+                selectedCustomCategory = null,
                 expenseType = autoType,
+                categoryError = null
+            )
+        }
+    }
+
+    fun onCustomCategorySelected(category: String) {
+        _uiState.update {
+            it.copy(
+                selectedCategory = ExpenseCategory.OTHER,
+                selectedCustomCategory = category,
+                expenseType = ExpenseType.DISCRETIONARY,
+                name = it.name.ifBlank { category },
                 categoryError = null
             )
         }
@@ -128,6 +145,10 @@ class AddExpenseViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     customCategories = it.customCategories + input,
+                    selectedCategory = ExpenseCategory.OTHER,
+                    selectedCustomCategory = input,
+                    name = it.name.ifBlank { input },
+                    categoryError = null,
                     showAddCategoryDialog = false
                 )
             }
@@ -140,6 +161,48 @@ class AddExpenseViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    fun loadExpenseForEdit(id: String?) {
+        if (id.isNullOrBlank() || _uiState.value.editingExpenseId == id) return
+
+        val userId = authRepository.getCurrentUserId()
+        if (userId.isNullOrBlank()) {
+            _uiState.update { it.copy(error = "Please log in again") }
+            return
+        }
+
+        _uiState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            try {
+                val entry = expenseRepository.getAllExpenses(userId)
+                    .first()
+                    .firstOrNull { it.id == id }
+
+                if (entry == null) {
+                    _uiState.update { it.copy(isLoading = false, error = "Expense entry not found") }
+                    return@launch
+                }
+
+                _uiState.update {
+                    it.copy(
+                        amount = entry.amount.toString(),
+                        name = entry.name,
+                        selectedCategory = entry.category,
+                        selectedCustomCategory = null,
+                        expenseType = entry.expenseType,
+                        paymentMethod = entry.paymentMethod,
+                        selectedDate = entry.date,
+                        note = entry.note.orEmpty(),
+                        isLoading = false,
+                        editingExpenseId = entry.id,
+                        editingCreatedAt = entry.createdAt
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message ?: "Failed to load expense") }
+            }
+        }
     }
 
     fun saveExpense() {
@@ -166,6 +229,7 @@ class AddExpenseViewModel @Inject constructor(
 
         viewModelScope.launch {
             val entry = ExpenseEntry(
+                id = state.editingExpenseId.orEmpty(),
                 userId = userId,
                 name = state.name,
                 amount = amountVal,
@@ -174,10 +238,16 @@ class AddExpenseViewModel @Inject constructor(
                 paymentMethod = state.paymentMethod,
                 date = state.selectedDate,
                 note = state.note.ifBlank { null },
-                createdAt = System.currentTimeMillis()
+                createdAt = state.editingCreatedAt.takeIf { it != 0L } ?: System.currentTimeMillis()
             )
 
-            expenseRepository.addExpense(entry)
+            val result = if (state.editingExpenseId.isNullOrBlank()) {
+                expenseRepository.addExpense(entry)
+            } else {
+                expenseRepository.updateExpense(entry)
+            }
+
+            result
                 .onSuccess {
                     _uiState.update { it.copy(isLoading = false, isSaved = true) }
                 }

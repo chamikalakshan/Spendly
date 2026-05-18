@@ -6,8 +6,7 @@ import java.util.*
 
 object Formatters {
     fun formatLKR(amount: Double): String {
-        val formatter = NumberFormat.getNumberInstance(Locale.US)
-        return "Rs. " + formatter.format(amount)
+        return FormatUtils.formatLKR(amount)
     }
 
     fun formatMonthYear(timeMs: Long): String {

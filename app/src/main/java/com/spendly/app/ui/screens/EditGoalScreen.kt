@@ -28,7 +28,7 @@ import com.spendly.app.navigation.Screen
 import com.spendly.app.ui.components.ErrorBanner
 import com.spendly.app.ui.components.LoadingOverlay
 import com.spendly.app.ui.theme.*
-import com.spendly.app.utils.Formatters
+import com.spendly.app.utils.FormatUtils
 import com.spendly.app.viewmodel.GoalViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -37,22 +37,35 @@ import java.util.*
 @Composable
 fun EditGoalScreen(
     navController: NavController,
+    goalId: String? = null,
     viewModel: GoalViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val primaryGoal = uiState.primaryGoal
+    val primaryGoal = if (goalId.isNullOrBlank()) null else uiState.primaryGoal
 
     // Local form state
     var goalName by remember { mutableStateOf("") }
     var targetAmount by remember { mutableStateOf("") }
     var targetDateMs by remember { mutableStateOf(System.currentTimeMillis()) }
 
-    // Sync local state when primaryGoal is loaded
-    LaunchedEffect(primaryGoal) {
-        primaryGoal?.let {
-            goalName = it.goalName
-            targetAmount = it.targetAmount.toLong().toString()
-            targetDateMs = it.targetDate
+    LaunchedEffect(goalId) {
+        if (!goalId.isNullOrBlank()) {
+            viewModel.selectGoal(goalId)
+        }
+    }
+
+    // Sync local state only when editing an existing goal.
+    LaunchedEffect(goalId, primaryGoal) {
+        if (!goalId.isNullOrBlank()) {
+            primaryGoal?.let {
+                goalName = it.goalName
+                targetAmount = it.targetAmount.toLong().toString()
+                targetDateMs = it.targetDate
+            }
+        } else {
+            goalName = ""
+            targetAmount = ""
+            targetDateMs = System.currentTimeMillis()
         }
     }
 
@@ -113,8 +126,7 @@ fun EditGoalScreen(
                                     id = primaryGoal?.id ?: UUID.randomUUID().toString(),
                                     goalName = goalName,
                                     targetAmount = targetAmount.toDoubleOrNull() ?: 0.0,
-                                    targetDate = targetDateMs,
-                                    savedAmount = primaryGoal?.savedAmount ?: 0.0
+                                    targetDate = targetDateMs
                                 )
                             )
                         },
@@ -228,7 +240,7 @@ fun EditGoalScreen(
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text("Current Savings (auto-calculated)", style = SpendlyTypography.labelSmall, color = SpendlyGray500)
                 OutlinedTextField(
-                    value = Formatters.formatLKR(uiState.savedAmount),
+                    value = FormatUtils.formatLKR(uiState.savedAmount),
                     onValueChange = {},
                     enabled = false,
                     modifier = Modifier.fillMaxWidth(),
@@ -254,7 +266,7 @@ fun EditGoalScreen(
                             .background(SpendlyGreenLight, RoundedCornerShape(3.dp))
                     )
                     Text(
-                        text = "${uiState.progressDisplay}% of ${Formatters.formatLKR(primaryGoal?.targetAmount ?: 0.0)}",
+                        text = "${uiState.progressDisplay}% of ${FormatUtils.formatLKR(primaryGoal?.targetAmount ?: 0.0)}",
                         style = SpendlyTypography.labelSmall,
                         color = SpendlyGreen
                     )

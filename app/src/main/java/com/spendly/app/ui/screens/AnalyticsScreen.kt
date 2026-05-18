@@ -35,8 +35,6 @@ import co.yml.charts.ui.piechart.charts.DonutPieChart
 import co.yml.charts.ui.piechart.models.PieChartConfig
 import co.yml.charts.ui.piechart.models.PieChartData
 import com.spendly.app.data.model.enums.IncomeSource
-import com.spendly.app.navigation.Screen
-import com.spendly.app.navigation.SpendlyBottomNavBar
 import com.spendly.app.ui.components.NoAnalyticsState
 import com.spendly.app.ui.theme.*
 import com.spendly.app.utils.FormatUtils
@@ -103,9 +101,6 @@ fun AnalyticsScreen(
                     Spacer(Modifier.width(16.dp))
                 }
             )
-        },
-        bottomBar = {
-            SpendlyBottomNavBar(navController = navController, currentRoute = Screen.Analytics.route)
         }
     ) { padding ->
         if (uiState.totalIncome == 0.0 && uiState.totalExpense == 0.0 && !uiState.isLoading) {
@@ -216,9 +211,8 @@ fun AnalyticsScreen(
                             Text("Committed vs Discretionary", style = SpendlyTypography.titleSmall, fontWeight = FontWeight.Bold)
                             Text("Your spending split — committed costs cannot easily be reduced.", style = SpendlyTypography.labelSmall, color = SpendlyGray500)
 
-                            val totalExp = uiState.totalExpense
-                            val committedPct = if (totalExp > 0) (uiState.committedTotal / totalExp).toFloat() else 0f
-                            val discretionaryPct = if (totalExp > 0) (uiState.discretionaryTotal / totalExp).toFloat() else 0f
+                            val committedPct = uiState.committedPercent / 100f
+                            val discretionaryPct = uiState.discretionaryPercent / 100f
 
                             // Committed bar
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -227,7 +221,7 @@ fun AnalyticsScreen(
                                         Text("Committed", style = SpendlyTypography.bodySmall, fontWeight = FontWeight.Bold)
                                         Text(uiState.committedSubcategories.ifEmpty { "None" }, style = SpendlyTypography.labelSmall, color = SpendlyGray500)
                                     }
-                                    Text("${FormatUtils.formatLKR(uiState.committedTotal)} (${(committedPct * 100).toInt()}%)", style = SpendlyTypography.bodySmall, fontWeight = FontWeight.Bold)
+                                    Text("${FormatUtils.formatLKR(uiState.committedTotal)} (${uiState.committedPercent}%)", style = SpendlyTypography.bodySmall, fontWeight = FontWeight.Bold)
                                 }
                                 LinearProgressIndicator(
                                     progress = { committedPct },
@@ -244,7 +238,7 @@ fun AnalyticsScreen(
                                         Text("Discretionary", style = SpendlyTypography.bodySmall, fontWeight = FontWeight.Bold)
                                         Text(uiState.discretionarySubcategories.ifEmpty { "None" }, style = SpendlyTypography.labelSmall, color = SpendlyGray500)
                                     }
-                                    Text("${FormatUtils.formatLKR(uiState.discretionaryTotal)} (${(discretionaryPct * 100).toInt()}%)", style = SpendlyTypography.bodySmall, fontWeight = FontWeight.Bold)
+                                    Text("${FormatUtils.formatLKR(uiState.discretionaryTotal)} (${uiState.discretionaryPercent}%)", style = SpendlyTypography.bodySmall, fontWeight = FontWeight.Bold)
                                 }
                                 LinearProgressIndicator(
                                     progress = { discretionaryPct },

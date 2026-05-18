@@ -11,9 +11,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
 import com.spendly.app.ui.screens.*
 
 @Composable
@@ -48,11 +50,35 @@ fun SpendlyNavGraph(navController: NavHostController) {
             composable(Screen.Dashboard.route) {
                 DashboardScreen(navController)
             }
-            composable(Screen.AddIncome.route) {
-                AddIncomeScreen(navController)
+            composable(
+                route = Screen.AddIncome.routeWithArgs,
+                arguments = listOf(
+                    navArgument(Screen.AddIncome.ARG_INCOME_ID) {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    }
+                )
+            ) { entry ->
+                AddIncomeScreen(
+                    navController = navController,
+                    editIncomeId = entry.arguments?.getString(Screen.AddIncome.ARG_INCOME_ID)
+                )
             }
-            composable(Screen.AddExpense.route) {
-                AddExpenseScreen(navController)
+            composable(
+                route = Screen.AddExpense.routeWithArgs,
+                arguments = listOf(
+                    navArgument(Screen.AddExpense.ARG_EXPENSE_ID) {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    }
+                )
+            ) { entry ->
+                AddExpenseScreen(
+                    navController = navController,
+                    editExpenseId = entry.arguments?.getString(Screen.AddExpense.ARG_EXPENSE_ID)
+                )
             }
             composable(Screen.Transactions.route) {
                 TransactionsScreen(navController)
@@ -63,11 +89,35 @@ fun SpendlyNavGraph(navController: NavHostController) {
             composable(Screen.GoalTracker.route) {
                 GoalTrackerScreen(navController)
             }
-            composable(Screen.EditGoal.route) {
-                EditGoalScreen(navController)
+            composable(
+                route = Screen.EditGoal.routeWithArgs,
+                arguments = listOf(
+                    navArgument(Screen.EditGoal.ARG_GOAL_ID) {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    }
+                )
+            ) { entry ->
+                EditGoalScreen(
+                    navController = navController,
+                    goalId = entry.arguments?.getString(Screen.EditGoal.ARG_GOAL_ID)
+                )
             }
-            composable(Screen.PrimaryGoal.route) {
-                PrimaryGoalScreen(navController)
+            composable(
+                route = Screen.PrimaryGoal.routeWithArgs,
+                arguments = listOf(
+                    navArgument(Screen.PrimaryGoal.ARG_GOAL_ID) {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    }
+                )
+            ) { entry ->
+                PrimaryGoalScreen(
+                    navController = navController,
+                    goalId = entry.arguments?.getString(Screen.PrimaryGoal.ARG_GOAL_ID)
+                )
             }
             composable(Screen.Profile.route) {
                 ProfileScreen(navController)

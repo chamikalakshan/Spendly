@@ -3,14 +3,39 @@ package com.spendly.app.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Laptop
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,12 +50,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.spendly.app.data.model.SavingsGoal
 import com.spendly.app.navigation.Screen
-import com.spendly.app.navigation.SpendlyBottomNavBar
-import com.spendly.app.ui.theme.*
+import com.spendly.app.ui.components.NoGoalState
+import com.spendly.app.ui.theme.SpendlyGray300
+import com.spendly.app.ui.theme.SpendlyGray500
+import com.spendly.app.ui.theme.SpendlyGray700
+import com.spendly.app.ui.theme.SpendlyGray900
+import com.spendly.app.ui.theme.SpendlyGreen
+import com.spendly.app.ui.theme.SpendlyGreenDark
+import com.spendly.app.ui.theme.SpendlyGreenLight
+import com.spendly.app.ui.theme.SpendlyTypography
+import com.spendly.app.utils.FormatUtils
 import com.spendly.app.viewmodel.GoalViewModel
-import java.text.NumberFormat
-import java.text.SimpleDateFormat
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,32 +69,10 @@ fun GoalTrackerScreen(
     viewModel: GoalViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val goals = uiState.allGoals
-    val totalSavedAmount = goals.sumOf { it.savedAmount }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Savings Goals", style = SpendlyTypography.titleLarge, fontWeight = FontWeight.Bold) },
-                actions = {
-                    IconButton(onClick = { /* Help or Info */ }) {
-                        Icon(Icons.Default.Info, contentDescription = null)
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate(Screen.EditGoal.route) },
-                containerColor = SpendlyGreen,
-                contentColor = Color.White,
-                shape = CircleShape
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Goal")
-            }
-        },
-        bottomBar = {
-            SpendlyBottomNavBar(navController = navController, currentRoute = Screen.GoalTracker.route)
+            TopAppBar(title = { Text("Goal Tracker", fontWeight = FontWeight.Bold) })
         }
     ) { padding ->
         LazyColumn(
@@ -74,208 +82,190 @@ fun GoalTrackerScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Total Savings Available Card
             item {
-                Card(
+                OutlinedButton(
+                    onClick = { navController.navigate(Screen.EditGoal.route) },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = SpendlyGreenDark),
-                    shape = RoundedCornerShape(24.dp)
+                    border = BorderStroke(1.dp, SpendlyGreen),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = SpendlyGreen)
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text(
-                            "Total Accumulated Savings",
-                            style = SpendlyTypography.labelSmall,
-                            color = Color.White.copy(alpha = 0.7f)
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Add New Goal")
+                }
+            }
+
+            if (uiState.allGoals.isEmpty()) {
+                item {
+                    NoGoalState(onSetGoal = { navController.navigate(Screen.EditGoal.route) })
+                }
+            } else {
+                uiState.primaryGoal?.let { goal ->
+                    item {
+                        Text("Primary Goal", style = SpendlyTypography.titleMedium, fontWeight = FontWeight.Bold)
+                    }
+                    item {
+                        PrimaryGoalCard(
+                            goal = goal,
+                            savedAmount = uiState.savedAmount,
+                            progress = uiState.progressPercent,
+                            remaining = uiState.remainingAmount,
+                            isOnTrack = uiState.isOnTrack,
+                            onClick = { navController.navigate(Screen.PrimaryGoal.detailRoute(goal.id)) }
                         )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            formatLKR(totalSavedAmount),
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "This is your total income minus all expenses across all time.",
-                            style = SpendlyTypography.labelSmall,
-                            color = Color.White.copy(alpha = 0.5f),
-                            lineHeight = 14.sp
+                    }
+                }
+
+                if (uiState.otherGoals.isNotEmpty()) {
+                    item {
+                        Text("Other Goals", style = SpendlyTypography.titleMedium, fontWeight = FontWeight.Bold)
+                    }
+                    items(uiState.otherGoals, key = { it.id }) { goal ->
+                        OtherGoalRow(
+                            goal = goal,
+                            savedAmount = uiState.savedAmount,
+                            onClick = { navController.navigate(Screen.PrimaryGoal.detailRoute(goal.id)) }
                         )
                     }
                 }
             }
 
-            item {
-                Text(
-                    "Active Goals",
-                    style = SpendlyTypography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            if (goals.isEmpty()) {
-                item {
-                    EmptyGoalsState { navController.navigate(Screen.EditGoal.route) }
-                }
-            } else {
-                items(goals, key = { it.id }) { goal ->
-                    GoalProgressItem(
-                        goal = goal,
-                        totalAvailable = totalSavedAmount,
-                        onDelete = { viewModel.deleteGoal(goal.id) }
-                    )
-                }
-            }
-            
             item { Spacer(Modifier.height(80.dp)) }
         }
     }
 }
 
 @Composable
-fun GoalProgressItem(
+private fun PrimaryGoalCard(
     goal: SavingsGoal,
-    totalAvailable: Double,
-    onDelete: () -> Unit
+    savedAmount: Double,
+    progress: Float,
+    remaining: Double,
+    isOnTrack: Boolean,
+    onClick: () -> Unit
 ) {
-    // Logic: Each goal "claims" from the total accumulated savings.
-    // In a real app, you might reorder goals to prioritize them.
-    // For now, we show how much of the total savings goes towards this specific target.
-    val progress = if (goal.targetAmount > 0) (totalAvailable / goal.targetAmount).coerceIn(0.0, 1.0).toFloat() else 0f
-    val savedAmount = totalAvailable.coerceAtMost(goal.targetAmount)
-    val remaining = (goal.targetAmount - totalAvailable).coerceAtLeast(0.0)
-    
-    // Calculate months left
-    val monthsLeft = calculateMonthsLeft(goal.targetDate)
-    val requiredPerMonth = if (monthsLeft > 0) remaining / monthsLeft else remaining
-
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(0.5.dp, SpendlyGray300)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = SpendlyGreen),
+        shape = RoundedCornerShape(16.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(SpendlyGray100, RoundedCornerShape(10.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Flag, null, tint = SpendlyGreen, modifier = Modifier.size(20.dp))
-                }
-                Spacer(Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(goal.goalName, style = SpendlyTypography.bodyLarge, fontWeight = FontWeight.Bold)
-                    Text(
-                        "Target: ${formatMonthYear(goal.targetDate)}",
-                        style = SpendlyTypography.labelSmall,
-                        color = SpendlyGray500
-                    )
-                }
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.DeleteOutline, null, tint = SpendlyRed, modifier = Modifier.size(20.dp))
-                }
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(10.dp)
-                        .clip(RoundedCornerShape(5.dp)),
-                    color = SpendlyGreen,
-                    trackColor = SpendlyGreenLight
+                Text(
+                    goal.goalName,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
                 )
-                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        "${(progress * 100).toInt()}% achieved",
-                        style = SpendlyTypography.labelSmall,
-                        color = SpendlyGreen,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        "${formatLKR(savedAmount)} / ${formatLKR(goal.targetAmount)}",
-                        style = SpendlyTypography.labelSmall,
-                        color = SpendlyGray500
-                    )
-                }
-            }
-
-            if (remaining > 0) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(SpendlyGray50, RoundedCornerShape(8.dp))
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Surface(
+                    color = if (isOnTrack) SpendlyGreenDark else Color.White.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(20.dp)
                 ) {
-                    Icon(Icons.Default.TrendingUp, null, tint = SpendlyGray700, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Column {
-                        Text(
-                            "Saving required per month",
-                            style = SpendlyTypography.labelSmall,
-                            color = SpendlyGray500,
-                            fontSize = 10.sp
-                        )
-                        Text(
-                            "${formatLKR(requiredPerMonth)} /mo",
-                            style = SpendlyTypography.bodySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = SpendlyGray900
-                        )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+                        Text("ON TRACK", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp)
                     }
                 }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(SpendlyGreenLight, RoundedCornerShape(8.dp))
-                        .padding(12.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("GOAL ACHIEVED! 🥳", style = SpendlyTypography.labelSmall, color = SpendlyGreen, fontWeight = FontWeight.Bold)
-                }
+            }
+
+            Text(
+                "${FormatUtils.formatMonthYear(goal.targetDate)} - ${FormatUtils.formatLKR(remaining)} remaining",
+                style = SpendlyTypography.bodySmall,
+                color = Color.White.copy(alpha = 0.82f)
+            )
+
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = Color.White,
+                trackColor = Color.White.copy(alpha = 0.3f)
+            )
+
+            Row {
+                Text(
+                    FormatUtils.formatLKR(savedAmount.coerceAtMost(goal.targetAmount)),
+                    style = SpendlyTypography.labelMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    " / ${FormatUtils.formatLKR(goal.targetAmount)}",
+                    style = SpendlyTypography.labelMedium,
+                    color = Color.White.copy(alpha = 0.8f)
+                )
             }
         }
     }
 }
 
 @Composable
-fun EmptyGoalsState(onAdd: () -> Unit) {
-    Column(
+private fun OtherGoalRow(
+    goal: SavingsGoal,
+    savedAmount: Double,
+    onClick: () -> Unit
+) {
+    val progress = if (goal.targetAmount > 0.0) {
+        (savedAmount / goal.targetAmount).coerceIn(0.0, 1.0).toFloat()
+    } else {
+        0f
+    }
+
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 40.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(0.5.dp, SpendlyGray300),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Icon(Icons.Default.TrackChanges, null, tint = SpendlyGray300, modifier = Modifier.size(64.dp))
-        Spacer(Modifier.height(16.dp))
-        Text("No savings goals yet", style = SpendlyTypography.bodyLarge, color = SpendlyGray700)
-        Text("Track your progress for a car, house or travel.", style = SpendlyTypography.bodyMedium, color = SpendlyGray500)
-        Spacer(Modifier.height(24.dp))
-        Button(onClick = onAdd, colors = ButtonDefaults.buttonColors(containerColor = SpendlyGreen)) {
-            Text("Set your first goal")
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(SpendlyGreenLight, RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    if (goal.goalName.contains("laptop", ignoreCase = true)) Icons.Default.Laptop else Icons.Default.Flag,
+                    contentDescription = null,
+                    tint = SpendlyGreen
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row {
+                    Text(goal.goalName, modifier = Modifier.weight(1f), color = SpendlyGray900, fontWeight = FontWeight.Bold)
+                    Text("${(progress * 100).toInt()}%", color = SpendlyGreen, fontWeight = FontWeight.Bold)
+                }
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = SpendlyGreen,
+                    trackColor = SpendlyGreenLight
+                )
+                Text(
+                    "${FormatUtils.formatLKR(savedAmount.coerceAtMost(goal.targetAmount))} / ${FormatUtils.formatLKR(goal.targetAmount)}",
+                    style = SpendlyTypography.labelSmall,
+                    color = SpendlyGray500
+                )
+            }
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = SpendlyGray700)
         }
     }
-}
-
-private fun calculateMonthsLeft(targetDate: Long): Int {
-    val now = Calendar.getInstance()
-    val target = Calendar.getInstance().apply { timeInMillis = targetDate }
-    val years = target.get(Calendar.YEAR) - now.get(Calendar.YEAR)
-    val months = target.get(Calendar.MONTH) - now.get(Calendar.MONTH)
-    return (years * 12 + months).coerceAtLeast(0)
-}
-
-private fun formatLKR(amount: Double): String {
-    val formatter = NumberFormat.getNumberInstance(Locale.US)
-    return "Rs. " + formatter.format(amount)
-}
-
-private fun formatMonthYear(timeMs: Long): String {
-    return SimpleDateFormat("MMMM yyyy", Locale.US).format(Date(timeMs))
 }

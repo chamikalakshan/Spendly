@@ -14,7 +14,6 @@ data class SavingsGoalEntity(
     val userId: String,
     val goalName: String,
     val targetAmount: Double,
-    val savedAmount: Double,
     val targetDate: Long,
     val isSynced: Boolean = false,
     val createdAt: Long

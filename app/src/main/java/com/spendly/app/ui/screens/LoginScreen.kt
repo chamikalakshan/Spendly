@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.spendly.app.navigation.Screen
+import com.spendly.app.ui.components.ErrorBanner
 import com.spendly.app.ui.theme.SpendlyGreen
 import com.spendly.app.ui.theme.SpendlyGreenLight
 import com.spendly.app.viewmodel.AuthUiState
@@ -130,16 +131,10 @@ fun LoginScreen(
         )
 
         if (uiState is AuthUiState.Error) {
-            Snackbar(
-                action = {
-                    TextButton(onClick = { viewModel.resetState() }) {
-                        Text("Dismiss")
-                    }
-                },
-                modifier = Modifier.padding(vertical = 8.dp)
-            ) {
-                Text((uiState as AuthUiState.Error).message)
-            }
+            ErrorBanner(
+                message = (uiState as AuthUiState.Error).message,
+                onDismiss = { viewModel.resetState() }
+            )
         }
 
         Text(

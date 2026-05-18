@@ -67,9 +67,20 @@ class ExpenseRepositoryImpl @Inject constructor(
 
     override suspend fun deleteExpense(id: String): Result<Unit> {
         return try {
+            val existing = expenseDao.getById(id)
             expenseDao.deleteById(id)
-            // Note: Full Firestore deletion requires userId. 
-            // In a complete implementation, we'd fetch the entry first.
+
+            existing?.let { entity ->
+                try {
+                    firestore.collection("users")
+                        .document(entity.userId)
+                        .collection("expenses")
+                        .document(id)
+                        .delete()
+                        .await()
+                } catch (e: Exception) { }
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -83,11 +94,8 @@ class ExpenseRepositoryImpl @Inject constructor(
     }
 
     override fun getMonthlyExpenses(userId: String, startMs: Long, endMs: Long): Flow<List<ExpenseEntry>> {
-        // Need to add getByMonth to ExpenseDao if not present. 
-        // Based on the prompt, it was requested in IncomeDao, let's assume it exists or use getAll and filter.
-        // For consistency with Income, let's assume the user wants it similar.
-        return expenseDao.getAllByUser(userId).map { list ->
-            list.filter { it.date in startMs..endMs }.map { it.toModel() }
+        return expenseDao.getByMonth(userId, startMs, endMs).map { list ->
+            list.map { it.toModel() }
         }
     }
 

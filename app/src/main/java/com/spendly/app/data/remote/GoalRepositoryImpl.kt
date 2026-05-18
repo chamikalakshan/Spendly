@@ -49,7 +49,20 @@ class GoalRepositoryImpl @Inject constructor(
 
     override suspend fun deleteGoal(id: String): Result<Unit> {
         return try {
+            val existing = goalDao.getById(id)
             goalDao.deleteById(id)
+
+            existing?.let { entity ->
+                try {
+                    firestore.collection("users")
+                        .document(entity.userId)
+                        .collection("goals")
+                        .document(id)
+                        .delete()
+                        .await()
+                } catch (e: Exception) { }
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

@@ -8,18 +8,19 @@ import com.spendly.app.data.model.enums.IncomeSource
 import com.spendly.app.data.model.enums.InvoiceStatus
 import com.spendly.app.repository.AuthRepository
 import com.spendly.app.repository.IncomeRepository
+import com.spendly.app.utils.FormatUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.text.NumberFormat
-import java.util.Locale
 import javax.inject.Inject
 
 data class AddIncomeUiState(
     val selectedSource: IncomeSource = IncomeSource.SALARY,
+    val selectedCustomSource: String? = null,
     val customSources: List<String> = emptyList(),
     val name: String = "",
     val amount: String = "",
@@ -36,7 +37,9 @@ data class AddIncomeUiState(
     val newSourceInput: String = "",
     val isLoading: Boolean = false,
     val error: String? = null,
-    val isSaved: Boolean = false
+    val isSaved: Boolean = false,
+    val editingIncomeId: String? = null,
+    val editingCreatedAt: Long = 0L
 )
 
 @HiltViewModel
@@ -60,13 +63,20 @@ class AddIncomeViewModel @Inject constructor(
     }
 
     private fun formatLKRValue(amount: Double): String {
-        val formatter = NumberFormat.getCurrencyInstance(Locale("en", "LK"))
-        formatter.currency = java.util.Currency.getInstance("LKR")
-        return formatter.format(amount).replace("LKR", "Rs. ")
+        return FormatUtils.formatLKR(amount)
     }
 
     fun onSourceSelected(source: IncomeSource) {
-        _uiState.update { it.copy(selectedSource = source) }
+        _uiState.update { it.copy(selectedSource = source, selectedCustomSource = null) }
+    }
+
+    fun onCustomSourceSelected(source: String) {
+        _uiState.update {
+            it.copy(
+                selectedCustomSource = source,
+                name = it.name.ifBlank { source }
+            )
+        }
     }
 
     fun onNameChanged(value: String) {
@@ -134,6 +144,8 @@ class AddIncomeViewModel @Inject constructor(
         if (input.isNotBlank()) {
             _uiState.update { it.copy(
                 customSources = it.customSources + input,
+                selectedCustomSource = input,
+                name = it.name.ifBlank { input },
                 showAddSourceDialog = false
             ) }
         }
@@ -145,6 +157,53 @@ class AddIncomeViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    fun loadIncomeForEdit(id: String?) {
+        if (id.isNullOrBlank() || _uiState.value.editingIncomeId == id) return
+
+        val userId = authRepository.getCurrentUserId()
+        if (userId.isNullOrBlank()) {
+            _uiState.update { it.copy(error = "Please log in again") }
+            return
+        }
+
+        _uiState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            try {
+                val entry = incomeRepository.getAllIncome(userId)
+                    .first()
+                    .firstOrNull { it.id == id }
+
+                if (entry == null) {
+                    _uiState.update { it.copy(isLoading = false, error = "Income entry not found") }
+                    return@launch
+                }
+
+                _uiState.update {
+                    it.copy(
+                        selectedSource = entry.sourceType,
+                        selectedCustomSource = null,
+                        name = entry.name,
+                        amount = entry.amount.toString(),
+                        currency = entry.currency,
+                        exchangeRate = entry.exchangeRate.toString(),
+                        amountLKR = if (entry.amountLKR > 0.0) formatLKRValue(entry.amountLKR) else "",
+                        coin = entry.coin.orEmpty(),
+                        projectName = entry.projectName.orEmpty(),
+                        invoiceStatus = entry.invoiceStatus ?: InvoiceStatus.RECEIVED,
+                        selectedDate = entry.date,
+                        isRecurring = entry.isRecurring,
+                        note = entry.note.orEmpty(),
+                        isLoading = false,
+                        editingIncomeId = entry.id,
+                        editingCreatedAt = entry.createdAt
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message ?: "Failed to load income") }
+            }
+        }
     }
 
     fun saveIncome() {
@@ -179,7 +238,9 @@ class AddIncomeViewModel @Inject constructor(
             val amountLKRVal = if (state.currency == Currency.USD) amountVal * rateVal else amountVal
             
             val entry = IncomeEntry(
+                id = state.editingIncomeId.orEmpty(),
                 userId = userId,
+                name = state.name,
                 sourceType = state.selectedSource,
                 amount = amountVal,
                 currency = state.currency,
@@ -191,10 +252,16 @@ class AddIncomeViewModel @Inject constructor(
                 date = state.selectedDate,
                 isRecurring = state.isRecurring,
                 note = state.note.ifBlank { null },
-                createdAt = System.currentTimeMillis()
+                createdAt = state.editingCreatedAt.takeIf { it != 0L } ?: System.currentTimeMillis()
             )
 
-            incomeRepository.addIncome(entry)
+            val result = if (state.editingIncomeId.isNullOrBlank()) {
+                incomeRepository.addIncome(entry)
+            } else {
+                incomeRepository.updateIncome(entry)
+            }
+
+            result
                 .onSuccess {
                     _uiState.update { it.copy(isLoading = false, isSaved = true) }
                 }

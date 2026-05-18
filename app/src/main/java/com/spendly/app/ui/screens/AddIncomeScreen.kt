@@ -40,9 +40,14 @@ import java.util.*
 @Composable
 fun AddIncomeScreen(
     navController: NavController,
+    editIncomeId: String? = null,
     viewModel: AddIncomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(editIncomeId) {
+        viewModel.loadIncomeForEdit(editIncomeId)
+    }
 
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) {
@@ -84,7 +89,7 @@ fun AddIncomeScreen(
                         Icon(Icons.Default.Close, contentDescription = "Close")
                     }
                 },
-                title = { Text("Add Income") },
+                title = { Text(if (editIncomeId.isNullOrBlank()) "Add Income" else "Edit Income") },
                 actions = {
                     Button(
                         onClick = { viewModel.saveIncome() },
@@ -124,7 +129,7 @@ fun AddIncomeScreen(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f)
                     )
-                    TextButton(onClick = { /* visual only for now */ }) {
+                    TextButton(onClick = { viewModel.showAddSourceDialog() }) {
                         Text("Edit", color = SpendlyGreen, style = MaterialTheme.typography.labelMedium)
                     }
                 }
@@ -146,8 +151,8 @@ fun AddIncomeScreen(
                     }
                     uiState.customSources.forEach { custom ->
                         FilterChip(
-                            selected = false,
-                            onClick = { /* select custom */ },
+                            selected = uiState.selectedCustomSource == custom,
+                            onClick = { viewModel.onCustomSourceSelected(custom) },
                             label = { Text(custom) }
                         )
                     }

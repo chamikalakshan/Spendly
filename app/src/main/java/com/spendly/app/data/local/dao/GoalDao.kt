@@ -15,6 +15,9 @@ interface GoalDao {
     @Query("DELETE FROM savings_goals WHERE id = :id")
     suspend fun deleteById(id: String)
 
+    @Query("SELECT * FROM savings_goals WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): SavingsGoalEntity?
+
     @Query("SELECT * FROM savings_goals WHERE userId = :userId ORDER BY createdAt DESC")
     fun getAllByUser(userId: String): Flow<List<SavingsGoalEntity>>
 
