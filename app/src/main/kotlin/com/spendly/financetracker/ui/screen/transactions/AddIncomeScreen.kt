@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -96,6 +97,7 @@ fun AddIncomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0.dp),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.Close, contentDescription = "Close")
@@ -129,55 +131,60 @@ fun AddIncomeScreen(
             }
 
             // Amount
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                AddIncomeLabel("Amount")
                 val amountCurrency = if (state.isCrypto) state.customCryptoCoin.ifBlank { state.selectedCoin } else state.selectedCurrency
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                    Text("Amount", style = MaterialTheme.typography.labelSmall, color = SpendlyGray500, textAlign = TextAlign.Center)
-                    if (!state.isCrypto) {
-                        Surface(onClick = { currencyMenuExpanded = true }, shape = RoundedCornerShape(16.dp), color = Color.Transparent) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)) {
-                                Text("($amountCurrency", style = MaterialTheme.typography.labelSmall, color = SpendlyGray500)
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Select currency", tint = SpendlyGray500, modifier = Modifier.size(16.dp))
-                                Text(")", style = MaterialTheme.typography.labelSmall, color = SpendlyGray500)
-                            }
-                        }
-                        DropdownMenu(expanded = currencyMenuExpanded, onDismissRequest = { currencyMenuExpanded = false }) {
-                            state.visibleCurrencies.forEach { currency ->
-                                DropdownMenuItem(
-                                    text = { Text(currency) },
-                                    onClick = {
-                                        viewModel.onCurrencySelected(currency)
-                                        currencyMenuExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    } else {
-                        Text(" ($amountCurrency)", style = MaterialTheme.typography.labelSmall, color = SpendlyGray500)
-                    }
-                }
-                Box(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color.White,
+                    border = androidx.compose.foundation.BorderStroke(0.8.dp, SpendlyGray300)
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(amountCurrency, style = MaterialTheme.typography.headlineMedium, color = SpendlyGreen, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.width(4.dp))
+                        Box {
+                            Row(
+                                modifier = Modifier
+                                    .width(104.dp)
+                                    .clickable(enabled = !state.isCrypto) { currencyMenuExpanded = true }
+                                    .padding(horizontal = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(amountCurrency, style = MaterialTheme.typography.titleSmall, color = SpendlyGreen, fontWeight = FontWeight.Bold)
+                                if (!state.isCrypto) Icon(Icons.Default.ArrowDropDown, contentDescription = "Select currency", tint = SpendlyGray500, modifier = Modifier.size(18.dp))
+                            }
+                            DropdownMenu(expanded = currencyMenuExpanded, onDismissRequest = { currencyMenuExpanded = false }) {
+                                state.visibleCurrencies.forEach { currency ->
+                                    DropdownMenuItem(
+                                        text = { Text(currency) },
+                                        onClick = {
+                                            viewModel.onCurrencySelected(currency)
+                                            currencyMenuExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        Box(modifier = Modifier.width(1.dp).height(58.dp).background(SpendlyGray300))
                         BasicTextField(
                             value = state.amount,
                             onValueChange = viewModel::onAmountChanged,
+                            modifier = Modifier.weight(1f).padding(horizontal = 14.dp),
                             textStyle = TextStyle(
-                                fontSize = 48.sp, fontWeight = FontWeight.Bold,
-                                color = if (state.amount.isEmpty()) SpendlyGray300 else SpendlyGreen,
-                                textAlign = TextAlign.Center
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = SpendlyGreen
                             ),
+                            singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             visualTransformation = AmountVisualTransformation,
                             decorationBox = { inner ->
-                                if (state.amount.isEmpty()) Text("0", fontSize = 48.sp, color = SpendlyGray300, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                                if (state.amount.isEmpty()) Text("Enter Amount", fontSize = 16.sp, color = SpendlyGray500)
                                 inner()
                             }
                         )
                     }
                 }
-                Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(SpendlyGreen))
             }
 
             // Source

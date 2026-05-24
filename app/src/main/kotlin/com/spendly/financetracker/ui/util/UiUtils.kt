@@ -10,7 +10,8 @@ fun formatMoney(cents: Long, currency: String = "LKR"): String {
     val sign = if (cents < 0L) "-" else ""
     val absolute = kotlin.math.abs(cents)
     val amount = absolute / 100.0
-    val formatted = DecimalFormat("#,##0.00").format(amount)
+    val pattern = if (absolute % 100L == 0L) "#,##0" else "#,##0.00"
+    val formatted = DecimalFormat(pattern).format(amount)
     return "${sign}${currency.ifBlank { "LKR" }} $formatted"
 }
 

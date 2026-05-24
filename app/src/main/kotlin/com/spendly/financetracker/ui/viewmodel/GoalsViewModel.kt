@@ -111,7 +111,8 @@ class GoalsViewModel @Inject constructor(
             isPrimary = draft.isPrimary && normalizedStatus != "Done",
             createdAtMillis = existing?.createdAtMillis ?: 0L,
             initialSavedCents = existing?.initialSavedCents ?: initialSaved,
-            defaultCurrency = draft.defaultCurrency
+            defaultCurrency = draft.defaultCurrency,
+            iconKey = draft.iconKey
         )
         viewModelScope.launch {
             goalRepository.saveGoal(goal)

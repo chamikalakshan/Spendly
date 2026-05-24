@@ -90,7 +90,8 @@ class GoalRepositoryImpl @Inject constructor(
                 createdAtMillis = (data["createdAtMillis"] as? Number)?.toLong() ?: 0L,
                 updatedAtMillis = (data["updatedAtMillis"] as? Number)?.toLong() ?: 0L,
                 initialSavedCents = (data["initialSavedCents"] as? Number)?.toLong() ?: 0L,
-                defaultCurrency = data["defaultCurrency"] as? String ?: "LKR"
+                defaultCurrency = data["defaultCurrency"] as? String ?: "LKR",
+                iconKey = data["iconKey"] as? String ?: "goal"
             )
         }.forEach { remote ->
             val local = goalDao.getById(remote.id)
@@ -166,6 +167,7 @@ class GoalRepositoryImpl @Inject constructor(
         "createdAtMillis" to createdAtMillis,
         "updatedAtMillis" to updatedAtMillis,
         "initialSavedCents" to initialSavedCents,
-        "defaultCurrency" to defaultCurrency
+        "defaultCurrency" to defaultCurrency,
+        "iconKey" to iconKey
     )
 }

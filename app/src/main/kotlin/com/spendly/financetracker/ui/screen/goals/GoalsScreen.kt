@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -29,10 +31,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Laptop
 import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -59,6 +59,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -83,6 +84,9 @@ import com.spendly.financetracker.ui.theme.SpendlyGreenDark
 import com.spendly.financetracker.ui.theme.SpendlyGreenLight
 import com.spendly.financetracker.ui.theme.SpendlyRed
 import com.spendly.financetracker.ui.util.formatMoney
+import com.spendly.financetracker.ui.util.goalIconForKey
+import com.spendly.financetracker.ui.util.goalIconOptions
+import com.spendly.financetracker.ui.util.suggestedGoalIconKey
 import com.spendly.financetracker.ui.viewmodel.FinanceUiState
 import com.spendly.financetracker.ui.viewmodel.Goal
 import com.spendly.financetracker.ui.viewmodel.GoalDraft
@@ -113,7 +117,10 @@ internal fun GoalsScreenContent(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Goal Tracker", fontWeight = FontWeight.Bold) })
+            TopAppBar(
+                windowInsets = WindowInsets(0.dp),
+                title = { Text("Goal Tracker", fontWeight = FontWeight.Bold) }
+            )
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -205,6 +212,7 @@ internal fun EditGoalScreenContent(
     var targetAmount by rememberSaveable { mutableStateOf((goal.targetCents / 100L).toString()) }
     var targetDate by rememberSaveable { mutableStateOf(goal.dueDate) }
     var isPrimary by rememberSaveable { mutableStateOf(goal.isPrimary) }
+    var selectedIconKey by rememberSaveable { mutableStateOf(goal.iconKey.ifBlank { suggestedGoalIconKey(goal.title) }) }
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
@@ -215,13 +223,15 @@ internal fun EditGoalScreenContent(
             targetAmount = targetAmount,
             targetDate = targetDate,
             initialSaved = "",
-            isPrimary = isPrimary
+            isPrimary = isPrimary,
+            iconKey = selectedIconKey
         ))
     }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
+                windowInsets = WindowInsets(0.dp),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -312,6 +322,10 @@ internal fun EditGoalScreenContent(
                 onValueChange = { goalName = it },
                 placeholder = "e.g. Dream Vacation"
             )
+            GoalIconSelector(
+                selectedIconKey = selectedIconKey,
+                onIconSelected = { selectedIconKey = it }
+            )
             GoalStatusSelector(
                 selectedStatus = status,
                 onStatusSelected = { status = it }
@@ -399,8 +413,14 @@ internal fun AddGoalScreenContent(
     var targetDate by rememberSaveable { mutableStateOf("") }
     var initialSaved by rememberSaveable { mutableStateOf("") }
     var isPrimary by rememberSaveable { mutableStateOf(false) }
+    var selectedIconKey by rememberSaveable { mutableStateOf("goal") }
+    var iconManuallySelected by rememberSaveable { mutableStateOf(false) }
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
+
+    LaunchedEffect(goalName) {
+        if (!iconManuallySelected) selectedIconKey = suggestedGoalIconKey(goalName)
+    }
 
     fun saveGoal() {
         onSave(
@@ -410,7 +430,8 @@ internal fun AddGoalScreenContent(
                 targetAmount = targetAmount,
                 targetDate = targetDate,
                 initialSaved = initialSaved,
-                isPrimary = isPrimary
+                isPrimary = isPrimary,
+                iconKey = selectedIconKey
             )
         )
     }
@@ -418,6 +439,7 @@ internal fun AddGoalScreenContent(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
+                windowInsets = WindowInsets(0.dp),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -483,6 +505,13 @@ internal fun AddGoalScreenContent(
                 value = goalName,
                 onValueChange = { goalName = it },
                 placeholder = "e.g. Dream Vacation"
+            )
+            GoalIconSelector(
+                selectedIconKey = selectedIconKey,
+                onIconSelected = {
+                    selectedIconKey = it
+                    iconManuallySelected = true
+                }
             )
             GoalStatusSelector(
                 selectedStatus = status,
@@ -630,6 +659,51 @@ private fun GoalDateField(
 }
 
 @Composable
+private fun GoalIconSelector(
+    selectedIconKey: String,
+    onIconSelected: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "Icon",
+            style = MaterialTheme.typography.labelSmall,
+            color = SpendlyGray900,
+            fontWeight = FontWeight.Bold
+        )
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(goalIconOptions, key = { it.key }) { option ->
+                val selected = option.key == selectedIconKey
+                Surface(
+                    onClick = { onIconSelected(option.key) },
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (selected) SpendlyGreen else SpendlyGreenLight,
+                    border = if (selected) null else BorderStroke(0.5.dp, SpendlyGray300)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            option.icon,
+                            contentDescription = option.label,
+                            tint = if (selected) Color.White else SpendlyGreen,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            option.label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (selected) Color.White else SpendlyGray700,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun GoalFormField(
     label: String,
     value: String,
@@ -675,6 +749,20 @@ private fun PrimaryGoalCard(
     ) {
         Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .background(Color.White.copy(alpha = 0.18f), RoundedCornerShape(10.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        goalIconForKey(goal.iconKey.ifBlank { suggestedGoalIconKey(goal.title) }),
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(Modifier.width(10.dp))
                 Text(
                     goal.title,
                     modifier = Modifier.weight(1f),
@@ -754,7 +842,7 @@ private fun OtherGoalRow(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    if (goal.title.contains("mac", ignoreCase = true)) Icons.Default.Laptop else Icons.Default.Flag,
+                    goalIconForKey(goal.iconKey.ifBlank { suggestedGoalIconKey(goal.title) }),
                     contentDescription = null,
                     tint = SpendlyGreen
                 )
@@ -808,6 +896,7 @@ internal fun GoalDetailScreenContent(
     Scaffold(
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0.dp),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -904,7 +993,7 @@ private fun GoalDetailSummaryCard(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            if (goal.title.contains("mac", ignoreCase = true)) Icons.Default.Laptop else Icons.Default.Flag,
+                            goalIconForKey(goal.iconKey.ifBlank { suggestedGoalIconKey(goal.title) }),
                             contentDescription = null,
                             tint = Color.White
                         )

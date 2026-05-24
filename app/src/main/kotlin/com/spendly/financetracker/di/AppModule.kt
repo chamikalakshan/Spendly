@@ -40,7 +40,7 @@ object AppModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): SpendlyDatabase =
         Room.databaseBuilder(context, SpendlyDatabase::class.java, "spendly_database")
-            .addMigrations(SpendlyDatabase.MIGRATION_1_2, SpendlyDatabase.MIGRATION_2_3)
+            .addMigrations(SpendlyDatabase.MIGRATION_1_2, SpendlyDatabase.MIGRATION_2_3, SpendlyDatabase.MIGRATION_3_4)
             .build()
 
     @Provides

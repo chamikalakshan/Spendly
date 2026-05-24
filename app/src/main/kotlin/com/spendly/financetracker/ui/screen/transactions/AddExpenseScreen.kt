@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -103,6 +104,7 @@ fun AddExpenseScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0.dp),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.Close, contentDescription = "Close")
@@ -136,50 +138,59 @@ fun AddExpenseScreen(
             }
 
             // Amount
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                    Text("Amount", style = MaterialTheme.typography.labelSmall, color = SpendlyGray500, textAlign = TextAlign.Center)
-                    Surface(onClick = { currencyMenuExpanded = true }, shape = RoundedCornerShape(16.dp), color = Color.Transparent) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)) {
-                            Text("(${state.selectedCurrency}", style = MaterialTheme.typography.labelSmall, color = SpendlyGray500)
-                            Icon(Icons.Default.ArrowDropDown, contentDescription = "Select currency", tint = SpendlyGray500, modifier = Modifier.size(16.dp))
-                            Text(")", style = MaterialTheme.typography.labelSmall, color = SpendlyGray500)
-                        }
-                    }
-                    DropdownMenu(expanded = currencyMenuExpanded, onDismissRequest = { currencyMenuExpanded = false }) {
-                        state.visibleCurrencies.forEach { currency ->
-                            DropdownMenuItem(
-                                text = { Text(currency) },
-                                onClick = {
-                                    viewModel.onCurrencySelected(currency)
-                                    currencyMenuExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-                Box(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                AddExpenseLabel("Amount")
+                Surface(
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color.White,
+                    border = androidx.compose.foundation.BorderStroke(0.8.dp, SpendlyGray300)
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(state.selectedCurrency, style = MaterialTheme.typography.headlineMedium, color = SpendlyRed, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.width(4.dp))
+                        Box {
+                            Row(
+                                modifier = Modifier
+                                    .width(104.dp)
+                                    .clickable { currencyMenuExpanded = true }
+                                    .padding(horizontal = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(state.selectedCurrency, style = MaterialTheme.typography.titleSmall, color = SpendlyRed, fontWeight = FontWeight.Bold)
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Select currency", tint = SpendlyGray500, modifier = Modifier.size(18.dp))
+                            }
+                            DropdownMenu(expanded = currencyMenuExpanded, onDismissRequest = { currencyMenuExpanded = false }) {
+                                state.visibleCurrencies.forEach { currency ->
+                                    DropdownMenuItem(
+                                        text = { Text(currency) },
+                                        onClick = {
+                                            viewModel.onCurrencySelected(currency)
+                                            currencyMenuExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        Box(modifier = Modifier.width(1.dp).height(58.dp).background(SpendlyGray300))
                         BasicTextField(
                             value = state.amount,
                             onValueChange = viewModel::onAmountChanged,
+                            modifier = Modifier.weight(1f).padding(horizontal = 14.dp),
                             textStyle = TextStyle(
-                                fontSize = 48.sp, fontWeight = FontWeight.Bold,
-                                color = if (state.amount.isEmpty()) SpendlyGray300 else SpendlyRed,
-                                textAlign = TextAlign.Center
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = SpendlyRed
                             ),
+                            singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             visualTransformation = AmountVisualTransformation,
                             decorationBox = { inner ->
-                                if (state.amount.isEmpty()) Text("0", fontSize = 48.sp, color = SpendlyGray300, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                                if (state.amount.isEmpty()) Text("Enter Amount", fontSize = 16.sp, color = SpendlyGray500)
                                 inner()
                             }
                         )
                     }
                 }
-                Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(SpendlyRed))
             }
 
             // Category

@@ -71,7 +71,8 @@ fun SavingsGoalEntity.toModel(): SavingsGoal = SavingsGoal(
     createdAtMillis = createdAtMillis,
     updatedAtMillis = updatedAtMillis,
     initialSavedCents = initialSavedCents,
-    defaultCurrency = defaultCurrency
+    defaultCurrency = defaultCurrency,
+    iconKey = iconKey
 )
 
 fun SavingsGoal.toEntity(): SavingsGoalEntity = SavingsGoalEntity(
@@ -88,7 +89,8 @@ fun SavingsGoal.toEntity(): SavingsGoalEntity = SavingsGoalEntity(
     createdAtMillis = createdAtMillis,
     updatedAtMillis = updatedAtMillis,
     initialSavedCents = initialSavedCents,
-    defaultCurrency = defaultCurrency
+    defaultCurrency = defaultCurrency,
+    iconKey = iconKey
 )
 
 fun UserProfileEntity.toModel(): UserProfile = UserProfile(

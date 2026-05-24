@@ -144,9 +144,12 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
                                 }
                                 if (currentRoute != route) {
                                     navController.navigate(route) {
-                                        popUpTo(Screen.Home.route) { saveState = true }
+                                        popUpTo(Screen.Home.route) {
+                                            saveState = tab != AppTab.HOME
+                                            inclusive = false
+                                        }
                                         launchSingleTop = true
-                                        restoreState = true
+                                        restoreState = tab != AppTab.HOME
                                     }
                                 }
                             }

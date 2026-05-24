@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Laptop
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -57,6 +56,7 @@ import com.spendly.financetracker.ui.util.currentMonthLabel
 import com.spendly.financetracker.ui.util.displayNameFromEmail
 import com.spendly.financetracker.ui.util.formatMoney
 import com.spendly.financetracker.ui.util.greetingForNow
+import com.spendly.financetracker.ui.util.goalIconForKey
 import com.spendly.financetracker.ui.util.initialsFromEmail
 import com.spendly.financetracker.ui.viewmodel.FinanceUiState
 import androidx.core.view.WindowInsetsControllerCompat
@@ -145,7 +145,7 @@ fun HomeScreen(
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
-                                            Icons.Default.Laptop,
+                                            goalIconForKey(goal.iconKey),
                                             contentDescription = null,
                                             tint = SpendlyGray700,
                                             modifier = Modifier.size(20.dp)
@@ -365,7 +365,7 @@ private fun DashboardHeader(
 
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color.White,
+                color = SpendlyGreenLight.copy(alpha = 0.92f),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Column(
