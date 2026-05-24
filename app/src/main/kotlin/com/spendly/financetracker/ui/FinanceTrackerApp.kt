@@ -11,7 +11,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -28,6 +30,7 @@ import com.spendly.financetracker.ui.navigation.bottomNavRoutes
 import com.spendly.financetracker.ui.screen.AuthScreen
 import com.spendly.financetracker.ui.screen.CreateAccountScreen
 import com.spendly.financetracker.ui.screen.FirebaseSetupScreen
+import com.spendly.financetracker.ui.screen.SplashScreen
 import com.spendly.financetracker.ui.screen.analytics.AnalyticsScreen
 import com.spendly.financetracker.ui.screen.goals.GoalsScreen
 import com.spendly.financetracker.ui.screen.goals.AddGoalScreen
@@ -46,6 +49,7 @@ import com.spendly.financetracker.ui.viewmodel.GoalsViewModel
 fun FinanceTrackerApp(viewModel: FinanceViewModel) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    var splashFinished by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.message) {
         val message = state.message ?: return@LaunchedEffect
@@ -54,6 +58,7 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
     }
 
     when {
+        !splashFinished -> SplashScreen(onFinished = { splashFinished = true })
         !state.isFirebaseConfigured -> Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
             FirebaseSetupScreen(contentPadding = padding)
         }
@@ -74,6 +79,7 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
                             onEmailChange = viewModel::updateEmail,
                             onPasswordChange = viewModel::updatePassword,
                             onSubmit = viewModel::submitAuth,
+                            onForgotPassword = viewModel::sendPasswordReset,
                             onToggleMode = viewModel::toggleAuthMode,
                             onCreateAccount = { authNavController.navigate(Screen.CreateAccount.route) }
                         )
@@ -97,12 +103,12 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 bottomBar = {
                     if (currentRoute in bottomNavRoutes) {
-                        val currentTab = when (currentRoute) {
-                            Screen.Home.route -> AppTab.HOME
-                            Screen.Events.route -> AppTab.TRANSACTIONS
-                            Screen.Analytics.route -> AppTab.ANALYTICS
-                            Screen.Goals.route -> AppTab.GOALS
-                            Screen.Profile.route -> AppTab.PROFILE
+                        val currentTab = when {
+                            currentRoute == Screen.Home.route || currentRoute?.startsWith("${Screen.Home.route}/") == true -> AppTab.HOME
+                            currentRoute == Screen.Events.route -> AppTab.TRANSACTIONS
+                            currentRoute == Screen.Analytics.route -> AppTab.ANALYTICS
+                            currentRoute == Screen.Goals.route -> AppTab.GOALS
+                            currentRoute == Screen.Profile.route -> AppTab.PROFILE
                             else -> AppTab.HOME
                         }
                         AppBottomNavigation(
@@ -141,8 +147,8 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
                                 state.primaryGoal?.let { navController.navigate(Screen.GoalDetails.detailRoute(it.id)) }
                                     ?: navController.navigate(Screen.Goals.route)
                             },
-                            onAddExpense = { navController.navigate(Screen.AddExpense.route) },
-                            onDeleteTransaction = viewModel::deleteTransaction
+                            onAddIncome = { navController.navigate(Screen.AddIncome.route) },
+                            onAddExpense = { navController.navigate(Screen.AddExpense.route) }
                         )
                     }
 
@@ -151,7 +157,7 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
                     }
 
                     composable(Screen.Analytics.route) {
-                        AnalyticsScreen(state = state)
+                        AnalyticsScreen()
                     }
 
                     composable(Screen.Goals.route) {
@@ -222,6 +228,8 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
                     composable(Screen.Profile.route) {
                         ProfileScreen(
                             state = state,
+                            onUpdateProfile = viewModel::updateProfile,
+                            onChangePassword = viewModel::changePassword,
                             onSignOut = {
                                 viewModel.signOut()
                             }

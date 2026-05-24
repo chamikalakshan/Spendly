@@ -1,5 +1,6 @@
 package com.spendly.financetracker.ui.screen.home
 
+import android.app.Activity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,13 +20,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Laptop
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -33,14 +32,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.spendly.financetracker.ui.components.NoTransactionsState
+import com.spendly.financetracker.ui.components.SpendlyAddActionMenu
 import com.spendly.financetracker.ui.components.TransactionListItem
 import com.spendly.financetracker.ui.theme.SpendlyAmber
 import com.spendly.financetracker.ui.theme.SpendlyGray100
@@ -56,6 +59,7 @@ import com.spendly.financetracker.ui.util.formatMoney
 import com.spendly.financetracker.ui.util.greetingForNow
 import com.spendly.financetracker.ui.util.initialsFromEmail
 import com.spendly.financetracker.ui.viewmodel.FinanceUiState
+import androidx.core.view.WindowInsetsControllerCompat
 
 @Composable
 fun HomeScreen(
@@ -63,12 +67,25 @@ fun HomeScreen(
     onOpenProfile: () -> Unit,
     onOpenTransactions: () -> Unit,
     onOpenGoal: () -> Unit,
-    onAddExpense: () -> Unit,
-    onDeleteTransaction: (String) -> Unit
+    onAddIncome: () -> Unit,
+    onAddExpense: () -> Unit
 ) {
-    val recentTransactions = state.transactions
-        .sortedByDescending { it.dateMillis }
-        .take(6)
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val window = (view.context as? Activity)?.window
+        val previousColor = window?.statusBarColor
+        if (window != null) {
+            window.statusBarColor = SpendlyGreen.toArgb()
+            WindowInsetsControllerCompat(window, view).isAppearanceLightStatusBars = false
+        }
+        onDispose {
+            if (window != null && previousColor != null) {
+                window.statusBarColor = previousColor
+                WindowInsetsControllerCompat(window, view).isAppearanceLightStatusBars = true
+            }
+        }
+    }
+    val recentTransactions = state.recentTransactions
     val userName = state.profile?.name?.takeIf { it.isNotBlank() } ?: displayNameFromEmail(state.session?.email)
     val userInitials = initialsFromEmail(userName)
 
@@ -189,7 +206,7 @@ fun HomeScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        "Need: ${formatMoney(goal.remainingCents / 12L)}/mo",
+                                        "Need: ${formatMoney(state.primaryGoalMonthlyNeedCents)}/mo",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = SpendlyGray700,
                                         modifier = Modifier.weight(1f)
@@ -255,8 +272,7 @@ fun HomeScreen(
                                 recentTransactions.forEachIndexed { index, transaction ->
                                     TransactionListItem(
                                         transaction = transaction,
-                                        showContainer = false,
-                                        onDelete = { onDeleteTransaction(transaction.id) }
+                                        showContainer = false
                                     )
                                     if (index < recentTransactions.lastIndex) {
                                         HorizontalDivider(thickness = 0.5.dp, color = SpendlyGray100)
@@ -273,12 +289,9 @@ fun HomeScreen(
             }
         }
 
-        ExtendedFloatingActionButton(
-            text = { Text("Add expense") },
-            icon = { Icon(Icons.Default.Add, contentDescription = null) },
-            containerColor = SpendlyGreen,
-            contentColor = Color.White,
-            onClick = onAddExpense,
+        SpendlyAddActionMenu(
+            onAddIncome = onAddIncome,
+            onAddExpense = onAddExpense,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
@@ -418,6 +431,11 @@ private fun NetSavingsCard(state: FinanceUiState) {
                 style = MaterialTheme.typography.labelSmall,
                 color = SpendlyGray500,
                 modifier = Modifier.align(Alignment.End)
+            )
+            Text(
+                "Yearly total savings: ${formatMoney(state.currentYearSavingsCents)}",
+                style = MaterialTheme.typography.labelSmall,
+                color = SpendlyGray500
             )
             Spacer(modifier = Modifier.height(8.dp))
             LinearProgressIndicator(

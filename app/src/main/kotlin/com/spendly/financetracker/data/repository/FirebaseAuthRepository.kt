@@ -55,7 +55,12 @@ class FirebaseAuthRepository @Inject constructor(
             defaultCurrency = defaultCurrency.trim().ifBlank { "LKR" }.uppercase(),
             createdAtMillis = now,
             updatedAtMillis = now,
-            isSynced = false
+            isSynced = false,
+            profileImageUri = null,
+            exchangeRateSettings = "",
+            notificationFrequency = null,
+            reminderTime = null,
+            categorySettingsJson = ""
         )
         userProfileDao.upsert(profile)
         firestore.collection("users").document(uid).collection("profile").document("main")
@@ -66,11 +71,25 @@ class FirebaseAuthRepository @Inject constructor(
                     "email" to profile.email,
                     "defaultCurrency" to profile.defaultCurrency,
                     "createdAtMillis" to profile.createdAtMillis,
-                    "updatedAtMillis" to profile.updatedAtMillis
+                    "updatedAtMillis" to profile.updatedAtMillis,
+                    "profileImageUri" to profile.profileImageUri,
+                    "exchangeRateSettings" to profile.exchangeRateSettings,
+                    "notificationFrequency" to profile.notificationFrequency,
+                    "reminderTime" to profile.reminderTime,
+                    "categorySettingsJson" to profile.categorySettingsJson
                 )
             )
             .await()
         userProfileDao.markAsSynced(uid)
+    }
+
+    override suspend fun sendPasswordResetEmail(email: String): Result<Unit> = runCatching {
+        auth.sendPasswordResetEmail(email.trim()).await()
+    }
+
+    override suspend fun updatePassword(newPassword: String): Result<Unit> = runCatching {
+        val user = auth.currentUser ?: error("Please sign in again")
+        user.updatePassword(newPassword).await()
     }
 
     override fun signOut() {

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.spendly.financetracker.data.firebase.FirebaseBootstrap
 import com.spendly.financetracker.data.model.TransactionDraft
 import com.spendly.financetracker.data.model.TransactionType
+import com.spendly.financetracker.data.model.UserProfile
 import com.spendly.financetracker.data.repository.AuthRepository
 import com.spendly.financetracker.data.repository.GoalRepository
 import com.spendly.financetracker.data.repository.TransactionRepository
@@ -77,7 +78,10 @@ class FinanceViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isBusy = true, message = null) }
             val result = authRepository.signIn(email, password)
-            if (result.isSuccess) syncManager.startImmediateSync()
+            if (result.isSuccess) {
+                authRepository.getCurrentUserId()?.let { syncNow(it) }
+                syncManager.startImmediateSync()
+            }
             _uiState.update {
                 it.copy(
                     isBusy = false,
@@ -94,6 +98,49 @@ class FinanceViewModel @Inject constructor(
         authRepository.signOut()
         _uiState.update {
             FinanceUiState(isFirebaseConfigured = it.isFirebaseConfigured, isLoading = false)
+        }
+    }
+
+    fun updateProfile(profile: UserProfile) {
+        viewModelScope.launch {
+            userRepository.upsertProfile(profile)
+                .onSuccess { _uiState.update { it.copy(message = "Profile updated.") } }
+                .onFailure { error -> _uiState.update { it.copy(message = error.userMessage()) } }
+        }
+    }
+
+    fun sendPasswordReset() {
+        val email = _uiState.value.email.trim()
+        if (email.isBlank() || "@" !in email) {
+            _uiState.update { it.copy(message = "Enter your email address first.") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isBusy = true, message = null) }
+            val result = authRepository.sendPasswordResetEmail(email)
+            _uiState.update {
+                it.copy(
+                    isBusy = false,
+                    message = if (result.isSuccess) "Password reset email sent." else result.exceptionOrNull()?.userMessage()
+                )
+            }
+        }
+    }
+
+    fun changePassword(newPassword: String) {
+        if (newPassword.length < 6) {
+            _uiState.update { it.copy(message = "Password must be at least 6 characters.") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isBusy = true, message = null) }
+            val result = authRepository.updatePassword(newPassword)
+            _uiState.update {
+                it.copy(
+                    isBusy = false,
+                    message = if (result.isSuccess) "Password updated." else result.exceptionOrNull()?.userMessage()
+                )
+            }
         }
     }
 
@@ -167,6 +214,7 @@ class FinanceViewModel @Inject constructor(
                         )
                     }
                     if (session != null) {
+                        syncNow(session.uid)
                         syncManager.startImmediateSync()
                         observeUserData(session.uid)
                     }
@@ -189,6 +237,16 @@ class FinanceViewModel @Inject constructor(
                     it.copy(profile = profile, transactions = transactions, goals = goals)
                 }
             }
+        }
+    }
+
+    private suspend fun syncNow(uid: String) {
+        runCatching {
+            userRepository.syncWithFirestore(uid)
+            transactionRepository.syncWithFirestore(uid)
+            goalRepository.syncWithFirestore(uid)
+        }.onFailure { error ->
+            _uiState.update { it.copy(message = error.userMessage()) }
         }
     }
 

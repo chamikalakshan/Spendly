@@ -1,6 +1,7 @@
 package com.spendly.financetracker.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,6 +61,7 @@ fun AuthScreen(
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onSubmit: () -> Unit,
+    onForgotPassword: () -> Unit,
     onToggleMode: () -> Unit,
     onCreateAccount: () -> Unit
 ) {
@@ -152,11 +154,21 @@ fun AuthScreen(
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
 
+            if (state.message != null) {
+                Text(
+                    text = state.message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
             Text(
                 text = "Forgot password?",
                 modifier = Modifier
                     .align(Alignment.End)
-                    .padding(vertical = 4.dp),
+                    .padding(vertical = 4.dp)
+                    .clickable(onClick = onForgotPassword),
                 color = SpendlyGreen,
                 style = MaterialTheme.typography.labelMedium
             )

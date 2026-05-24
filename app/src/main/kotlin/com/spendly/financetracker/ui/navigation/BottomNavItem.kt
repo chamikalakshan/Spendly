@@ -22,7 +22,7 @@ data class BottomNavItem(
 
 val bottomNavItems = listOf(
     BottomNavItem("Home", Screen.Home.route, Icons.Filled.Home, Icons.Outlined.Home),
-    BottomNavItem("Events", Screen.Events.route, Icons.Filled.Receipt, Icons.Outlined.Receipt),
+    BottomNavItem("History", Screen.Events.route, Icons.Filled.Receipt, Icons.Outlined.Receipt),
     BottomNavItem("Analytics", Screen.Analytics.route, Icons.Filled.BarChart, Icons.Outlined.BarChart),
     BottomNavItem("Goal", Screen.Goals.route, Icons.Filled.TrackChanges, Icons.Outlined.TrackChanges),
     BottomNavItem("Profile", Screen.Profile.route, Icons.Filled.Person, Icons.Outlined.Person)

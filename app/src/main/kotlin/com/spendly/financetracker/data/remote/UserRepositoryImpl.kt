@@ -33,10 +33,9 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun syncWithFirestore(uid: String) {
-        userProfileDao.getUnsynced(uid).forEach { syncOne(it) }
+        val unsynced = userProfileDao.getUnsynced(uid)
         val doc = firestore.collection("users").document(uid).collection("profile").document("main").get().await()
-        val data = doc.data ?: return
-        userProfileDao.upsert(
+        val remote = doc.data?.let { data ->
             UserProfileEntity(
                 uid = uid,
                 name = data["name"] as? String ?: "",
@@ -44,9 +43,19 @@ class UserRepositoryImpl @Inject constructor(
                 defaultCurrency = data["defaultCurrency"] as? String ?: "LKR",
                 createdAtMillis = (data["createdAtMillis"] as? Number)?.toLong() ?: 0L,
                 updatedAtMillis = (data["updatedAtMillis"] as? Number)?.toLong() ?: 0L,
-                isSynced = true
+                isSynced = true,
+                profileImageUri = data["profileImageUri"] as? String,
+                exchangeRateSettings = data["exchangeRateSettings"] as? String ?: "",
+                notificationFrequency = data["notificationFrequency"] as? String,
+                reminderTime = data["reminderTime"] as? String,
+                categorySettingsJson = data["categorySettingsJson"] as? String ?: ""
             )
-        )
+        }
+        val newestLocal = unsynced.maxByOrNull { it.updatedAtMillis }
+        when {
+            newestLocal != null && (remote == null || newestLocal.updatedAtMillis >= remote.updatedAtMillis) -> syncOne(newestLocal)
+            remote != null -> userProfileDao.upsert(remote)
+        }
     }
 
     private suspend fun syncOne(entity: UserProfileEntity) {
@@ -57,12 +66,17 @@ class UserRepositoryImpl @Inject constructor(
         userProfileDao.markAsSynced(entity.uid)
     }
 
-    private fun UserProfileEntity.toFirestoreMap(): Map<String, Any> = mapOf(
+    private fun UserProfileEntity.toFirestoreMap(): Map<String, Any?> = mapOf(
         "uid" to uid,
         "name" to name,
         "email" to email,
         "defaultCurrency" to defaultCurrency,
         "createdAtMillis" to createdAtMillis,
-        "updatedAtMillis" to updatedAtMillis
+        "updatedAtMillis" to updatedAtMillis,
+        "profileImageUri" to profileImageUri,
+        "exchangeRateSettings" to exchangeRateSettings,
+        "notificationFrequency" to notificationFrequency,
+        "reminderTime" to reminderTime,
+        "categorySettingsJson" to categorySettingsJson
     )
 }

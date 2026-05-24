@@ -13,22 +13,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -42,11 +43,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.spendly.financetracker.data.model.FinanceTransaction
+import com.spendly.financetracker.data.model.TransactionType
 import com.spendly.financetracker.ui.components.NoRecordsState
+import com.spendly.financetracker.ui.components.SpendlyAddActionMenu
 import com.spendly.financetracker.ui.components.TransactionListItem
 import com.spendly.financetracker.ui.navigation.Screen
 import com.spendly.financetracker.ui.theme.SpendlyGray100
@@ -54,8 +56,7 @@ import com.spendly.financetracker.ui.theme.SpendlyGray300
 import com.spendly.financetracker.ui.theme.SpendlyGray500
 import com.spendly.financetracker.ui.theme.SpendlyGray700
 import com.spendly.financetracker.ui.theme.SpendlyGreen
-import com.spendly.financetracker.ui.util.currentMonthLabel
-import com.spendly.financetracker.ui.util.formatDateFull
+import com.spendly.financetracker.ui.theme.SpendlyRed
 import com.spendly.financetracker.ui.viewmodel.TransactionTab
 import com.spendly.financetracker.ui.viewmodel.TransactionsViewModel
 
@@ -68,26 +69,32 @@ fun TransactionsScreen(
 ) {
     val viewModel: TransactionsViewModel = hiltViewModel()
     val state by viewModel.uiState.collectAsState()
-
-    val groupedTransactions = state.filtered.groupBy { formatDateFull(it.createdAtMillis) }
+    var monthMenuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Events", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) },
+                title = { Text("History", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) },
                 actions = {
-                    Surface(
-                        color = SpendlyGray100,
-                        shape = RoundedCornerShape(20.dp),
-                        modifier = Modifier.padding(end = 16.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Default.CalendarMonth, null, tint = SpendlyGray700, modifier = Modifier.size(14.dp))
-                            Spacer(Modifier.size(4.dp))
-                            Text(currentMonthLabel(), style = MaterialTheme.typography.labelMedium, color = SpendlyGray700)
+                    Box(modifier = Modifier.padding(end = 16.dp)) {
+                        Surface(color = SpendlyGray100, shape = RoundedCornerShape(20.dp), onClick = { monthMenuExpanded = true }) {
+                            Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CalendarMonth, null, tint = SpendlyGray700, modifier = Modifier.size(14.dp))
+                                Spacer(Modifier.size(4.dp))
+                                Text(state.selectedMonthLabel, style = MaterialTheme.typography.labelMedium, color = SpendlyGray700)
+                                Icon(Icons.Default.ArrowDropDown, null, tint = SpendlyGray700, modifier = Modifier.size(16.dp))
+                            }
+                        }
+                        DropdownMenu(expanded = monthMenuExpanded, onDismissRequest = { monthMenuExpanded = false }) {
+                            state.monthOptions.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option.label) },
+                                    onClick = {
+                                        viewModel.selectMonth(option.startMillis)
+                                        monthMenuExpanded = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -138,24 +145,31 @@ fun TransactionsScreen(
                     }
                 } else {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        groupedTransactions.forEach { (dateLabel, transactions) ->
+                        state.groupedTransactions.forEach { group ->
                             stickyHeader {
                                 Box(
                                     modifier = Modifier.fillMaxWidth().background(SpendlyGray100).padding(horizontal = 16.dp, vertical = 6.dp)
                                 ) {
                                     Text(
-                                        "$dateLabel - ${transactions.size}",
+                                        "${group.label} - ${group.transactions.size}",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = SpendlyGray500,
                                         letterSpacing = 0.5.sp
                                     )
                                 }
                             }
-                            items(items = transactions, key = FinanceTransaction::id) { transaction ->
+                            items(items = group.transactions, key = FinanceTransaction::id) { transaction ->
                                 TransactionListItem(
                                     transaction = transaction,
                                     showContainer = false,
-                                    onDelete = { viewModel.delete(transaction) }
+                                    onEdit = {
+                                        val route = when (transaction.type) {
+                                            TransactionType.INCOME -> Screen.AddIncome.editRoute(transaction.id)
+                                            TransactionType.EXPENSE -> Screen.AddExpense.editRoute(transaction.id)
+                                        }
+                                        navController.navigate(route)
+                                    },
+                                    onDelete = { viewModel.requestDelete(transaction) }
                                 )
                                 HorizontalDivider(thickness = 0.5.dp, color = SpendlyGray100)
                             }
@@ -164,37 +178,29 @@ fun TransactionsScreen(
                 }
             }
 
-            // FAB with Income/Expense expand
-            var fabExpanded by remember { mutableStateOf(false) }
-            Column(
-                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 24.dp),
-                horizontalAlignment = Alignment.End
-            ) {
-                if (fabExpanded) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Income", style = MaterialTheme.typography.labelMedium, color = SpendlyGray700, modifier = Modifier.padding(end = 8.dp))
-                        Spacer(Modifier.size(8.dp))
-                        SmallFloatingActionButton(
-                            onClick = { fabExpanded = false; navController.navigate(Screen.AddIncome.route) },
-                            containerColor = SpendlyGreen, shape = CircleShape
-                        ) { Icon(Icons.Default.Add, contentDescription = "Add income", tint = Color.White) }
-                    }
-                    Spacer(Modifier.size(8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Expense", style = MaterialTheme.typography.labelMedium, color = SpendlyGray700, modifier = Modifier.padding(end = 8.dp))
-                        Spacer(Modifier.size(8.dp))
-                        SmallFloatingActionButton(
-                            onClick = { fabExpanded = false; navController.navigate(Screen.AddExpense.route) },
-                            containerColor = SpendlyGreen, shape = CircleShape
-                        ) { Icon(Icons.Default.Add, contentDescription = "Add expense", tint = Color.White) }
-                    }
-                    Spacer(Modifier.size(8.dp))
-                }
-                FloatingActionButton(
-                    onClick = { fabExpanded = !fabExpanded },
-                    containerColor = SpendlyGreen, shape = CircleShape
-                ) { Icon(Icons.Default.Add, contentDescription = "Add") }
-            }
+            SpendlyAddActionMenu(
+                onAddIncome = { navController.navigate(Screen.AddIncome.route) },
+                onAddExpense = { navController.navigate(Screen.AddExpense.route) },
+                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 24.dp)
+            )
         }
+    }
+
+    state.transactionPendingDelete?.let { transaction ->
+        AlertDialog(
+            onDismissRequest = viewModel::cancelDelete,
+            title = { Text("Delete transaction?") },
+            text = { Text("This will remove ${transaction.title} from your records.") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.delete(transaction) }) {
+                    Text("Delete", color = SpendlyRed)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::cancelDelete) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

@@ -29,19 +29,27 @@ class IncomeRepositoryImpl @Inject constructor(
     ): Flow<List<FinanceTransaction>> =
         incomeDao.observeByMonth(userId, startMillis, endMillis).map { rows -> rows.map { it.toTransaction() } }
 
+    override suspend fun getIncome(id: String): FinanceTransaction? = incomeDao.getById(id)?.toTransaction()
+
     override suspend fun addIncome(userId: String, draft: TransactionDraft): Result<Unit> = runCatching {
         val now = System.currentTimeMillis()
-        val entity = IncomeEntryEntity(
+        val entity = draft.toEntity(
             id = UUID.randomUUID().toString(),
             userId = userId,
-            name = draft.title,
-            amountCents = draft.amountCents,
-            source = draft.source.ifBlank { "Salary" },
-            dateMillis = draft.dateMillis,
-            note = draft.note,
-            isSynced = false,
             createdAtMillis = now,
             updatedAtMillis = now
+        )
+        incomeDao.insert(entity)
+        syncOne(entity)
+    }
+
+    override suspend fun updateIncome(id: String, draft: TransactionDraft): Result<Unit> = runCatching {
+        val existing = incomeDao.getById(id) ?: error("Income not found")
+        val entity = draft.toEntity(
+            id = id,
+            userId = existing.userId,
+            createdAtMillis = existing.createdAtMillis,
+            updatedAtMillis = System.currentTimeMillis()
         )
         incomeDao.insert(entity)
         syncOne(entity)
@@ -59,7 +67,7 @@ class IncomeRepositoryImpl @Inject constructor(
     override suspend fun syncWithFirestore(userId: String) {
         incomeDao.getUnsynced(userId).forEach { syncOne(it) }
         val snapshot = firestore.collection("users").document(userId).collection("income").get().await()
-        incomeDao.insertAll(snapshot.documents.mapNotNull { doc ->
+        val remoteRows = snapshot.documents.mapNotNull { doc ->
             val data = doc.data ?: return@mapNotNull null
             IncomeEntryEntity(
                 id = doc.id,
@@ -71,9 +79,24 @@ class IncomeRepositoryImpl @Inject constructor(
                 note = data["note"] as? String ?: "",
                 isSynced = true,
                 createdAtMillis = (data["createdAtMillis"] as? Number)?.toLong() ?: 0L,
-                updatedAtMillis = (data["updatedAtMillis"] as? Number)?.toLong() ?: 0L
+                updatedAtMillis = (data["updatedAtMillis"] as? Number)?.toLong() ?: 0L,
+                originalAmount = (data["originalAmount"] as? Number)?.toDouble()
+                    ?: ((data["amountCents"] as? Number)?.toLong() ?: 0L) / 100.0,
+                originalCurrency = data["originalCurrency"] as? String ?: data["defaultCurrency"] as? String ?: "LKR",
+                defaultCurrency = data["defaultCurrency"] as? String ?: "LKR",
+                exchangeRate = (data["exchangeRate"] as? Number)?.toDouble(),
+                isRecurring = data["isRecurring"] as? Boolean ?: false,
+                cryptoCoin = data["cryptoCoin"] as? String,
+                cryptoAmount = (data["cryptoAmount"] as? Number)?.toDouble(),
+                cryptoRate = (data["cryptoRate"] as? Number)?.toDouble(),
+                cryptoRateSource = data["cryptoRateSource"] as? String,
+                cryptoRateFetchedAt = (data["cryptoRateFetchedAt"] as? Number)?.toLong()
             )
-        })
+        }.filter { remote ->
+            val local = incomeDao.getById(remote.id)
+            local == null || remote.updatedAtMillis >= local.updatedAtMillis
+        }
+        incomeDao.insertAll(remoteRows)
     }
 
     private suspend fun syncOne(entity: IncomeEntryEntity) {
@@ -84,7 +107,35 @@ class IncomeRepositoryImpl @Inject constructor(
         incomeDao.markAsSynced(entity.id)
     }
 
-    private fun IncomeEntryEntity.toFirestoreMap(): Map<String, Any> = mapOf(
+    private fun TransactionDraft.toEntity(
+        id: String,
+        userId: String,
+        createdAtMillis: Long,
+        updatedAtMillis: Long
+    ): IncomeEntryEntity = IncomeEntryEntity(
+        id = id,
+        userId = userId,
+        name = title,
+        amountCents = amountCents,
+        source = source.ifBlank { "Salary" },
+        dateMillis = dateMillis,
+        note = note,
+        isSynced = false,
+        createdAtMillis = createdAtMillis,
+        updatedAtMillis = updatedAtMillis,
+        originalAmount = originalAmount,
+        originalCurrency = originalCurrency,
+        defaultCurrency = defaultCurrency,
+        exchangeRate = exchangeRate,
+        isRecurring = isRecurring,
+        cryptoCoin = cryptoCoin,
+        cryptoAmount = cryptoAmount,
+        cryptoRate = cryptoRate,
+        cryptoRateSource = cryptoRateSource,
+        cryptoRateFetchedAt = cryptoRateFetchedAt
+    )
+
+    private fun IncomeEntryEntity.toFirestoreMap(): Map<String, Any?> = mapOf(
         "id" to id,
         "userId" to userId,
         "name" to name,
@@ -93,6 +144,16 @@ class IncomeRepositoryImpl @Inject constructor(
         "dateMillis" to dateMillis,
         "note" to note,
         "createdAtMillis" to createdAtMillis,
-        "updatedAtMillis" to updatedAtMillis
+        "updatedAtMillis" to updatedAtMillis,
+        "originalAmount" to originalAmount,
+        "originalCurrency" to originalCurrency,
+        "defaultCurrency" to defaultCurrency,
+        "exchangeRate" to exchangeRate,
+        "isRecurring" to isRecurring,
+        "cryptoCoin" to cryptoCoin,
+        "cryptoAmount" to cryptoAmount,
+        "cryptoRate" to cryptoRate,
+        "cryptoRateSource" to cryptoRateSource,
+        "cryptoRateFetchedAt" to cryptoRateFetchedAt
     )
 }

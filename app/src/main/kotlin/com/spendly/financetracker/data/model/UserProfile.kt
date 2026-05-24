@@ -7,5 +7,10 @@ data class UserProfile(
     val defaultCurrency: String = "LKR",
     val createdAtMillis: Long = 0L,
     val updatedAtMillis: Long = 0L,
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
+    val profileImageUri: String? = null,
+    val exchangeRateSettings: String = "",
+    val notificationFrequency: String? = null,
+    val reminderTime: String? = null,
+    val categorySettingsJson: String = ""
 )

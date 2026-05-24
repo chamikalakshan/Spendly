@@ -21,10 +21,23 @@ class FirebaseTransactionRepository @Inject constructor(
             (income + expenses).sortedByDescending { it.dateMillis }
         }
 
+    override suspend fun getTransaction(id: String, type: TransactionType?): FinanceTransaction? =
+        when (type) {
+            TransactionType.INCOME -> incomeRepository.getIncome(id)
+            TransactionType.EXPENSE -> expenseRepository.getExpense(id)
+            null -> incomeRepository.getIncome(id) ?: expenseRepository.getExpense(id)
+        }
+
     override suspend fun addTransaction(userId: String, draft: TransactionDraft): Result<Unit> =
         when (draft.type) {
             TransactionType.INCOME -> incomeRepository.addIncome(userId, draft)
             TransactionType.EXPENSE -> expenseRepository.addExpense(userId, draft)
+        }
+
+    override suspend fun updateTransaction(id: String, draft: TransactionDraft): Result<Unit> =
+        when (draft.type) {
+            TransactionType.INCOME -> incomeRepository.updateIncome(id, draft)
+            TransactionType.EXPENSE -> expenseRepository.updateExpense(id, draft)
         }
 
     override suspend fun deleteTransaction(transaction: FinanceTransaction): Result<Unit> =

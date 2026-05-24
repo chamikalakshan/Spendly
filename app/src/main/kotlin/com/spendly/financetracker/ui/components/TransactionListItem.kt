@@ -54,6 +54,7 @@ fun TransactionListItem(
     transaction: FinanceTransaction,
     modifier: Modifier = Modifier,
     showContainer: Boolean = true,
+    onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null
 ) {
     var expanded by remember(transaction.id) { mutableStateOf(false) }
@@ -67,6 +68,7 @@ fun TransactionListItem(
             onToggle = { expanded = !expanded },
             amountPrefix = amountPrefix,
             amountColor = amountColor,
+            onEdit = onEdit,
             onDelete = onDelete
         )
     }
@@ -94,6 +96,7 @@ private fun TransactionItemContent(
     onToggle: () -> Unit,
     amountPrefix: String,
     amountColor: Color,
+    onEdit: (() -> Unit)?,
     onDelete: (() -> Unit)?
 ) {
     Column(
@@ -185,33 +188,35 @@ private fun TransactionItemContent(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                if (onEdit != null || onDelete != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedButton(
-                        onClick = { onDelete?.invoke() },
-                        enabled = onDelete != null,
-                        modifier = Modifier.height(32.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SpendlyGreen),
-                        border = BorderStroke(1.dp, SpendlyGray100)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Edit", style = MaterialTheme.typography.labelMedium)
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    OutlinedButton(
-                        onClick = {},
-                        enabled = false,
-                        modifier = Modifier.height(32.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SpendlyRed),
-                        border = BorderStroke(1.dp, SpendlyGray100)
-                    ) {
-                        Text("Delete", style = MaterialTheme.typography.labelMedium)
+                        OutlinedButton(
+                            onClick = { onEdit?.invoke() },
+                            enabled = onEdit != null,
+                            modifier = Modifier.height(32.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = SpendlyGreen),
+                            border = BorderStroke(1.dp, SpendlyGray100)
+                        ) {
+                            Text("Edit", style = MaterialTheme.typography.labelMedium)
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        OutlinedButton(
+                            onClick = { onDelete?.invoke() },
+                            enabled = onDelete != null,
+                            modifier = Modifier.height(32.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = SpendlyRed),
+                            border = BorderStroke(1.dp, SpendlyGray100)
+                        ) {
+                            Text("Delete", style = MaterialTheme.typography.labelMedium)
+                        }
                     }
                 }
             }

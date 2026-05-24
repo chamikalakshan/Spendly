@@ -2,6 +2,7 @@ package com.spendly.financetracker.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.Index
+import androidx.room.ColumnInfo
 import androidx.room.PrimaryKey
 
 @Entity(
@@ -23,5 +24,7 @@ data class SavingsGoalEntity(
     val isPrimary: Boolean,
     val isSynced: Boolean,
     val createdAtMillis: Long,
-    val updatedAtMillis: Long
+    val updatedAtMillis: Long,
+    @ColumnInfo(defaultValue = "0") val initialSavedCents: Long = 0L,
+    @ColumnInfo(defaultValue = "'LKR'") val defaultCurrency: String = "LKR"
 )

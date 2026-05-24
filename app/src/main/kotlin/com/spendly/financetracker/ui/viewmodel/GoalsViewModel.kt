@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
@@ -24,7 +25,33 @@ data class GoalsUiState(
     val isSaved: Boolean = false,
     val isDeleted: Boolean = false,
     val error: String? = null
+) {
+    val primaryGoal: SavingsGoal?
+        get() = goals.firstOrNull { it.isPrimary } ?: goals.firstOrNull()
+    val otherGoals: List<SavingsGoal>
+        get() = goals.filter { it.id != primaryGoal?.id }
+}
+
+data class GoalMonthlySavingUi(
+    val month: String,
+    val amountCents: Long,
+    val percent: Float
 )
+
+fun requiredMonthlySavingsCents(goal: SavingsGoal): Long {
+    if (goal.remainingCents <= 0L) return 0L
+    val monthsRemaining = monthsUntilDueDate(goal.dueDateMillis)
+    return (goal.remainingCents + monthsRemaining - 1L) / monthsRemaining
+}
+
+fun goalMonthlySavingsData(goal: SavingsGoal): List<GoalMonthlySavingUi> {
+    val labels = lastFiveMonthLabels()
+    val max = goal.savedCents.coerceAtLeast(1L)
+    return labels.mapIndexed { index, label ->
+        val amount = if (index == labels.lastIndex) goal.savedCents else 0L
+        GoalMonthlySavingUi(label, amount, (amount.toFloat() / max.toFloat()).coerceIn(0f, 1f))
+    }
+}
 
 @HiltViewModel
 class GoalsViewModel @Inject constructor(
@@ -54,7 +81,7 @@ class GoalsViewModel @Inject constructor(
         val dueDate = draft.dueDateMillis ?: parseGoalDateMillis(draft.targetDate)
         if (dueDate <= 0L) return fail("Select a target date")
         val initialSaved = parseAmountCents(draft.initialSaved.ifBlank { "0" }) ?: 0L
-        val currentGoals = _uiState.value.goals
+        if (initialSaved > targetCents) return fail("Initial saved amount cannot exceed target amount")
         val goal = SavingsGoal(
             id = existing?.id.orEmpty(),
             userId = uid,
@@ -64,8 +91,10 @@ class GoalsViewModel @Inject constructor(
             savedCents = existing?.savedCents ?: initialSaved,
             dueDateMillis = dueDate,
             category = draft.category,
-            isPrimary = existing?.isPrimary ?: currentGoals.none { it.isPrimary },
-            createdAtMillis = existing?.createdAtMillis ?: 0L
+            isPrimary = draft.isPrimary,
+            createdAtMillis = existing?.createdAtMillis ?: 0L,
+            initialSavedCents = existing?.initialSavedCents ?: initialSaved,
+            defaultCurrency = draft.defaultCurrency
         )
         viewModelScope.launch {
             goalRepository.saveGoal(goal)
@@ -87,11 +116,21 @@ class GoalsViewModel @Inject constructor(
     fun addSavings(id: String, amount: String): Boolean {
         val cents = parseAmountCents(amount) ?: return fail("Enter a valid savings amount")
         if (cents <= 0L) return fail("Enter a valid savings amount")
+        val goal = _uiState.value.goals.firstOrNull { it.id == id }
+        if (goal != null && cents > goal.remainingCents) return fail("Amount exceed target value")
         viewModelScope.launch {
             goalRepository.addSavings(id, cents)
                 .onFailure { e -> _uiState.update { it.copy(error = e.message) } }
         }
         return true
+    }
+
+    fun requiredMonthlySavingsCents(goal: SavingsGoal): Long {
+        return com.spendly.financetracker.ui.viewmodel.requiredMonthlySavingsCents(goal)
+    }
+
+    fun monthlySavingsData(goal: SavingsGoal): List<GoalMonthlySavingUi> {
+        return goalMonthlySavingsData(goal)
     }
 
     private fun fail(message: String): Boolean {
@@ -110,7 +149,7 @@ class GoalsViewModel @Inject constructor(
     }
 
     private fun parseGoalDateMillis(value: String): Long {
-        val patterns = listOf("MMM d, yyyy", "MMM yyyy", "MMMM yyyy")
+        val patterns = listOf("yyyy-MM", "MMM d, yyyy", "MMM yyyy", "MMMM yyyy")
         return patterns.firstNotNullOfOrNull { pattern ->
             runCatching {
                 SimpleDateFormat(pattern, Locale.getDefault()).apply { isLenient = false }
@@ -118,5 +157,26 @@ class GoalsViewModel @Inject constructor(
                     ?.time
             }.getOrNull()
         } ?: Date().time
+    }
+
+}
+
+private fun monthsUntilDueDate(dueDateMillis: Long): Long {
+    if (dueDateMillis <= 0L) return 12L
+    val now = Calendar.getInstance()
+    val target = Calendar.getInstance().apply { timeInMillis = dueDateMillis }
+    val monthDelta = (target.get(Calendar.YEAR) - now.get(Calendar.YEAR)) * 12 +
+        (target.get(Calendar.MONTH) - now.get(Calendar.MONTH))
+    val dayAdjustment = if (target.get(Calendar.DAY_OF_MONTH) > now.get(Calendar.DAY_OF_MONTH)) 1 else 0
+    return (monthDelta + dayAdjustment).coerceAtLeast(1).toLong()
+}
+
+private fun lastFiveMonthLabels(): List<String> {
+    val formatter = SimpleDateFormat("MMM", Locale.getDefault())
+    val calendar = Calendar.getInstance()
+    return (4 downTo 0).map { offset ->
+        val monthCalendar = calendar.clone() as Calendar
+        monthCalendar.add(Calendar.MONTH, -offset)
+        formatter.format(Date(monthCalendar.timeInMillis))
     }
 }

@@ -53,6 +53,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -83,8 +84,10 @@ import com.spendly.financetracker.ui.util.formatMoney
 import com.spendly.financetracker.ui.viewmodel.FinanceUiState
 import com.spendly.financetracker.ui.viewmodel.Goal
 import com.spendly.financetracker.ui.viewmodel.GoalDraft
+import com.spendly.financetracker.ui.viewmodel.GoalMonthlySavingUi
+import com.spendly.financetracker.ui.viewmodel.goalMonthlySavingsData
+import com.spendly.financetracker.ui.viewmodel.requiredMonthlySavingsCents
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -102,7 +105,8 @@ internal fun GoalsScreenContent(
     onAddGoal: OnAddGoal,
     onGoalSelected: OnGoalSelected
 ) {
-    val otherGoals = state.goals.filter { !it.isPrimary }
+    val primaryGoals = state.primaryGoals
+    val otherGoals = state.otherGoals
 
     Scaffold(
         topBar = {
@@ -134,20 +138,20 @@ internal fun GoalsScreenContent(
                     NoGoalState(onSetGoal = onAddGoal)
                 }
             } else {
-                state.primaryGoal?.let { goal ->
+                if (primaryGoals.isNotEmpty()) {
                     item {
                         Text(
-                            "Primary Goal",
+                            "Primary Goals",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
-                    item {
+                }
+                items(primaryGoals, key = { it.id }) { goal ->
                         PrimaryGoalCard(
                             goal = goal,
                             onClick = { onGoalSelected(goal.id) }
                         )
-                    }
                 }
 
                 if (otherGoals.isNotEmpty()) {
@@ -182,6 +186,7 @@ internal fun EditGoalScreenContent(
     var status by rememberSaveable { mutableStateOf(goal.status) }
     var targetAmount by rememberSaveable { mutableStateOf((goal.targetCents / 100L).toString()) }
     var targetDate by rememberSaveable { mutableStateOf(goal.dueDate) }
+    var isPrimary by rememberSaveable { mutableStateOf(goal.isPrimary) }
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
@@ -191,7 +196,8 @@ internal fun EditGoalScreenContent(
             status = status,
             targetAmount = targetAmount,
             targetDate = targetDate,
-            initialSaved = ""
+            initialSaved = "",
+            isPrimary = isPrimary
         ))
     }
 
@@ -292,6 +298,10 @@ internal fun EditGoalScreenContent(
                 selectedStatus = status,
                 onStatusSelected = { status = it }
             )
+            GoalPrimarySwitch(
+                checked = isPrimary,
+                onCheckedChange = { isPrimary = it }
+            )
             GoalFormField(
                 label = "Target Amount (LKR)",
                 value = targetAmount,
@@ -370,6 +380,7 @@ internal fun AddGoalScreenContent(
     var targetAmount by rememberSaveable { mutableStateOf("") }
     var targetDate by rememberSaveable { mutableStateOf("") }
     var initialSaved by rememberSaveable { mutableStateOf("") }
+    var isPrimary by rememberSaveable { mutableStateOf(false) }
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
@@ -380,7 +391,8 @@ internal fun AddGoalScreenContent(
                 status = status,
                 targetAmount = targetAmount,
                 targetDate = targetDate,
-                initialSaved = initialSaved
+                initialSaved = initialSaved,
+                isPrimary = isPrimary
             )
         )
     }
@@ -457,6 +469,10 @@ internal fun AddGoalScreenContent(
             GoalStatusSelector(
                 selectedStatus = status,
                 onStatusSelected = { status = it }
+            )
+            GoalPrimarySwitch(
+                checked = isPrimary,
+                onCheckedChange = { isPrimary = it }
             )
             GoalFormField(
                 label = "Target Amount",
@@ -538,6 +554,26 @@ private fun GoalStatusSelector(
 }
 
 @Composable
+private fun GoalPrimarySwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(SpendlyGreenLight, RoundedCornerShape(12.dp))
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text("Set as primary goal", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+            Text("Primary goals appear in the Primary Goals section.", style = MaterialTheme.typography.labelSmall, color = SpendlyGray700)
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
+@Composable
 private fun GoalDateField(
     label: String,
     value: String,
@@ -606,36 +642,6 @@ private fun GoalFormField(
 
 private fun formatGoalDate(timeMillis: Long): String =
     SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(timeMillis))
-
-private fun requiredMonthlySavingsCents(goal: Goal): Long {
-    if (goal.remainingCents <= 0L) return 0L
-
-    val monthsRemaining = monthsUntilDueDate(goal.dueDate)
-    return (goal.remainingCents + monthsRemaining - 1L) / monthsRemaining
-}
-
-private fun monthsUntilDueDate(dueDate: String): Long {
-    val due = parseGoalDueDate(dueDate) ?: return 12L
-    val now = Calendar.getInstance()
-    val target = Calendar.getInstance().apply { time = due }
-    val monthDelta = (target.get(Calendar.YEAR) - now.get(Calendar.YEAR)) * 12 +
-        (target.get(Calendar.MONTH) - now.get(Calendar.MONTH))
-    val dayAdjustment = if (target.get(Calendar.DAY_OF_MONTH) > now.get(Calendar.DAY_OF_MONTH)) 1 else 0
-
-    return (monthDelta + dayAdjustment).coerceAtLeast(1).toLong()
-}
-
-private fun parseGoalDueDate(dueDate: String): Date? {
-    val patterns = listOf("MMM d, yyyy", "MMM yyyy", "MMMM yyyy")
-
-    return patterns.firstNotNullOfOrNull { pattern ->
-        runCatching {
-            SimpleDateFormat(pattern, Locale.getDefault()).apply {
-                isLenient = false
-            }.parse(dueDate)
-        }.getOrNull()
-    }
-}
 
 @Composable
 private fun PrimaryGoalCard(
@@ -755,6 +761,11 @@ private fun OtherGoalRow(
                     style = MaterialTheme.typography.labelSmall,
                     color = SpendlyGray500
                 )
+                Text(
+                    "${goal.dueDate} • ${goal.status}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = SpendlyGray700
+                )
             }
             Icon(Icons.Default.ChevronRight, contentDescription = null, tint = SpendlyGray700)
         }
@@ -787,8 +798,16 @@ internal fun GoalDetailScreenContent(
                 title = { Text(goal?.title ?: "Goal Details", fontWeight = FontWeight.Bold) },
                 actions = {
                     if (goal != null) {
-                        IconButton(onClick = { onEdit(goal.id) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit Goal")
+                        Button(
+                            onClick = { onEdit(goal.id) },
+                            colors = ButtonDefaults.buttonColors(containerColor = SpendlyGreenLight, contentColor = SpendlyGreen),
+                            shape = RoundedCornerShape(20.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                            modifier = Modifier.padding(end = 8.dp).height(34.dp)
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(15.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Edit", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -972,7 +991,7 @@ private fun GoalDetailSummaryCard(
 
 @Composable
 private fun GoalMonthlySavingsCard(goal: Goal) {
-    val savings = monthlySavingsData(goal)
+    val savings = goalMonthlySavingsData(goal)
     val maxAmount = savings.maxOfOrNull { it.amountCents }?.coerceAtLeast(1L) ?: 1L
 
     Card(
@@ -999,6 +1018,15 @@ private fun GoalMonthlySavingsCard(goal: Goal) {
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.Bottom
             ) {
+                Column(
+                    modifier = Modifier.height(138.dp).padding(top = 4.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(formatCompactChartAmount(maxAmount), style = MaterialTheme.typography.labelSmall, color = SpendlyGray500)
+                    Text(formatCompactChartAmount(maxAmount / 2), style = MaterialTheme.typography.labelSmall, color = SpendlyGray500)
+                    Text("0", style = MaterialTheme.typography.labelSmall, color = SpendlyGray500)
+                }
                 savings.forEach { item ->
                     GoalMonthlySavingsBar(
                         item = item,
@@ -1013,11 +1041,12 @@ private fun GoalMonthlySavingsCard(goal: Goal) {
 
 @Composable
 private fun GoalMonthlySavingsBar(
-    item: GoalMonthlySaving,
+    item: GoalMonthlySavingUi,
     maxAmount: Long,
     modifier: Modifier = Modifier
 ) {
-    val percent = (item.amountCents.toFloat() / maxAmount.toFloat()).coerceIn(0f, 1f)
+    val percent = item.percent.takeIf { it > 0f }
+        ?: (item.amountCents.toFloat() / maxAmount.toFloat()).coerceIn(0f, 1f)
     val barHeight = if (item.amountCents <= 0L) 0.dp else 14.dp + (112.dp * percent)
 
     Column(
@@ -1102,32 +1131,6 @@ private fun AddSavingsDialog(
             }
         }
     )
-}
-
-private data class GoalMonthlySaving(
-    val month: String,
-    val amountCents: Long
-)
-
-private fun monthlySavingsData(goal: Goal): List<GoalMonthlySaving> {
-    val monthLabels = lastFiveGoalMonthLabels()
-    return monthLabels.mapIndexed { index, label ->
-        GoalMonthlySaving(
-            month = label,
-            amountCents = if (index == monthLabels.lastIndex) goal.savedCents else 0L
-        )
-    }
-}
-
-private fun lastFiveGoalMonthLabels(): List<String> {
-    val formatter = SimpleDateFormat("MMM", Locale.getDefault())
-    val calendar = Calendar.getInstance()
-
-    return (4 downTo 0).map { offset ->
-        val monthCalendar = calendar.clone() as Calendar
-        monthCalendar.add(Calendar.MONTH, -offset)
-        formatter.format(Date(monthCalendar.timeInMillis))
-    }
 }
 
 private fun formatCompactChartAmount(cents: Long): String {

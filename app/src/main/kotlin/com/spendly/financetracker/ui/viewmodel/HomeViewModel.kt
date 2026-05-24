@@ -21,7 +21,7 @@ data class HomeUiState(
     val incomeCents: Long get() = transactions.filter { it.type == TransactionType.INCOME }.sumOf { it.amountCents }
     val expenseCents: Long get() = transactions.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amountCents }
     val balanceCents: Long get() = transactions.sumOf { it.signedAmountCents }
-    val recentTransactions: List<FinanceTransaction> get() = transactions.sortedByDescending { it.createdAtMillis }.take(5)
+    val recentTransactions: List<FinanceTransaction> get() = transactions.sortedByDescending { it.dateMillis }.take(5)
 }
 
 class HomeViewModel(

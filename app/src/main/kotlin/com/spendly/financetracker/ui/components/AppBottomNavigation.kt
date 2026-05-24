@@ -37,7 +37,7 @@ private data class BottomNavSpec(
 fun AppBottomNavigation(currentTab: AppTab, onTabSelected: OnTabSelected) {
     val items = listOf(
         BottomNavSpec(AppTab.HOME, "Home", Icons.Filled.Home, Icons.Outlined.Home),
-        BottomNavSpec(AppTab.TRANSACTIONS, "Events", Icons.Filled.Receipt, Icons.Outlined.Receipt),
+        BottomNavSpec(AppTab.TRANSACTIONS, "History", Icons.Filled.Receipt, Icons.Outlined.Receipt),
         BottomNavSpec(AppTab.ANALYTICS, "Analytics", Icons.Filled.BarChart, Icons.Outlined.BarChart),
         BottomNavSpec(AppTab.GOALS, "Goal", Icons.Filled.TrackChanges, Icons.Outlined.TrackChanges),
         BottomNavSpec(AppTab.PROFILE, "Profile", Icons.Filled.Person, Icons.Outlined.Person)

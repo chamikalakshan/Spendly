@@ -6,12 +6,12 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-fun formatMoney(cents: Long): String {
+fun formatMoney(cents: Long, currency: String = "LKR"): String {
     val sign = if (cents < 0L) "-" else ""
     val absolute = kotlin.math.abs(cents)
     val amount = absolute / 100.0
     val formatted = DecimalFormat("#,##0.00").format(amount)
-    return "${sign}LKR $formatted"
+    return "${sign}${currency.ifBlank { "LKR" }} $formatted"
 }
 
 fun formatPercent(value: Int): String = "$value%"
