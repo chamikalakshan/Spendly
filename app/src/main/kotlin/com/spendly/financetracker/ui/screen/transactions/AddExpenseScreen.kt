@@ -77,6 +77,7 @@ import com.spendly.financetracker.ui.theme.SpendlyGray300
 import com.spendly.financetracker.ui.theme.SpendlyGray500
 import com.spendly.financetracker.ui.theme.SpendlyRed
 import com.spendly.financetracker.data.model.ExpenseType
+import com.spendly.financetracker.ui.util.AmountVisualTransformation
 import com.spendly.financetracker.ui.util.formatMoney
 import com.spendly.financetracker.ui.viewmodel.AddExpenseViewModel
 import java.text.SimpleDateFormat
@@ -93,6 +94,7 @@ fun AddExpenseScreen(
     var showCategoryDialog by remember { mutableStateOf(false) }
     var customCategory by remember { mutableStateOf("") }
     var currencyMenuExpanded by remember { mutableStateOf(false) }
+    var editCategories by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) onBack()
@@ -169,6 +171,7 @@ fun AddExpenseScreen(
                                 textAlign = TextAlign.Center
                             ),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            visualTransformation = AmountVisualTransformation,
                             decorationBox = { inner ->
                                 if (state.amount.isEmpty()) Text("0", fontSize = 48.sp, color = SpendlyGray300, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                                 inner()
@@ -182,6 +185,9 @@ fun AddExpenseScreen(
             // Category
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Category", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                TextButton(onClick = { editCategories = !editCategories }) {
+                    Text(if (editCategories) "Done" else "Edit")
+                }
             }
             FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 state.categories.forEach { cat ->
@@ -192,7 +198,7 @@ fun AddExpenseScreen(
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Icon(expenseCategoryIcon(cat), null, Modifier.size(14.dp))
                                 Text(cat)
-                                if (state.categories.size > 1) {
+                                if (editCategories && state.categories.size > 1) {
                                     Icon(
                                         Icons.Default.Close,
                                         contentDescription = "Delete category",
@@ -275,13 +281,16 @@ fun AddExpenseScreen(
             // Date
             AddExpenseLabel("Date")
             var showDatePicker by remember { mutableStateOf(false) }
-            OutlinedTextField(
-                value = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(state.selectedDate)),
-                onValueChange = {},
-                readOnly = true,
-                modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true },
-                trailingIcon = { Icon(Icons.Default.CalendarMonth, null) }
-            )
+            Box {
+                OutlinedTextField(
+                    value = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(state.selectedDate)),
+                    onValueChange = {},
+                    readOnly = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = { Icon(Icons.Default.CalendarMonth, null) }
+                )
+                Box(modifier = Modifier.matchParentSize().clickable { showDatePicker = true })
+            }
             if (showDatePicker) {
                 val dpState = rememberDatePickerState(initialSelectedDateMillis = state.selectedDate)
                 DatePickerDialog(

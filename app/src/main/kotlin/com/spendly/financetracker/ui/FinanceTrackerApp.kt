@@ -5,9 +5,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,6 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
@@ -98,6 +105,20 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
             val navController = rememberNavController()
             val currentBackStack by navController.currentBackStackEntryAsState()
             val currentRoute = currentBackStack?.destination?.route
+            var showInitialIncomeDialog by remember(state.session?.uid) { mutableStateOf(false) }
+            var initialIncomeAmount by remember(state.session?.uid) { mutableStateOf("") }
+
+            LaunchedEffect(state.profile?.uid, state.transactions.size) {
+                val profile = state.profile ?: return@LaunchedEffect
+                val isNewAccount = System.currentTimeMillis() - profile.createdAtMillis < 2 * 60 * 1000L
+                val hasInitialIncome = state.transactions.any {
+                    it.type == com.spendly.financetracker.data.model.TransactionType.INCOME &&
+                        it.source.equals("Initial Income", ignoreCase = true)
+                }
+                if (isNewAccount && !hasInitialIncome) {
+                    showInitialIncomeDialog = true
+                }
+            }
 
             Scaffold(
                 snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -170,6 +191,10 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
 
                     composable(Screen.AddGoal.route) {
                         val goalsViewModel: GoalsViewModel = hiltViewModel()
+                        val goalsState by goalsViewModel.uiState.collectAsStateWithLifecycle()
+                        LaunchedEffect(goalsState.error) {
+                            goalsState.error?.let { snackbarHostState.showSnackbar(it) }
+                        }
                         AddGoalScreen(
                             onBack = { navController.popBackStack() },
                             onSave = { draft ->
@@ -187,6 +212,10 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
                         })
                     ) { entry ->
                         val goalsViewModel: GoalsViewModel = hiltViewModel()
+                        val goalsState by goalsViewModel.uiState.collectAsStateWithLifecycle()
+                        LaunchedEffect(goalsState.error) {
+                            goalsState.error?.let { snackbarHostState.showSnackbar(it) }
+                        }
                         GoalDetailScreen(
                             state = state,
                             goalId = entry.arguments?.getString(Screen.GoalDetails.ARG_ID),
@@ -203,6 +232,10 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
                         })
                     ) { entry ->
                         val goalsViewModel: GoalsViewModel = hiltViewModel()
+                        val goalsState by goalsViewModel.uiState.collectAsStateWithLifecycle()
+                        LaunchedEffect(goalsState.error) {
+                            goalsState.error?.let { snackbarHostState.showSnackbar(it) }
+                        }
                         val goalId = entry.arguments?.getString(Screen.EditGoal.ARG_ID)
                         val goal = state.goals.firstOrNull { it.id == goalId }
                         if (goal != null) {
@@ -230,6 +263,7 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
                             state = state,
                             onUpdateProfile = viewModel::updateProfile,
                             onChangePassword = viewModel::changePassword,
+                            onDeleteAccount = viewModel::deleteAccount,
                             onSignOut = {
                                 viewModel.signOut()
                             }
@@ -258,6 +292,37 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
                         )
                     }
                 }
+            }
+
+            if (showInitialIncomeDialog) {
+                AlertDialog(
+                    onDismissRequest = { },
+                    title = { Text("Set initial income") },
+                    text = {
+                        OutlinedTextField(
+                            value = initialIncomeAmount,
+                            onValueChange = { value ->
+                                if (value.isEmpty() || (value.all { it.isDigit() || it == '.' } && value.count { it == '.' } <= 1)) {
+                                    initialIncomeAmount = value
+                                }
+                            },
+                            label = { Text("Initial income") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                        )
+                    },
+                    confirmButton = {
+                        Button(onClick = {
+                            viewModel.addInitialIncome(initialIncomeAmount)
+                            showInitialIncomeDialog = false
+                        }) { Text("Save") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showInitialIncomeDialog = false }) {
+                            Text("Skip")
+                        }
+                    }
+                )
             }
         }
     }

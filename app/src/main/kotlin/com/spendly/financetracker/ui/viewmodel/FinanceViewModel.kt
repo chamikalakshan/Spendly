@@ -86,7 +86,7 @@ class FinanceViewModel @Inject constructor(
                 it.copy(
                     isBusy = false,
                     password = if (result.isSuccess) "" else it.password,
-                    message = result.exceptionOrNull()?.userMessage()
+                    message = result.exceptionOrNull()?.let { "invalid user credentials" }
                 )
             }
         }
@@ -109,6 +109,38 @@ class FinanceViewModel @Inject constructor(
         }
     }
 
+    fun addInitialIncome(amount: String) {
+        val state = _uiState.value
+        val uid = state.session?.uid ?: return
+        val amountCents = parseAmountCents(amount)
+        if (amountCents == null || amountCents <= 0L) {
+            _uiState.update { it.copy(message = "Enter a valid initial income.") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isBusy = true, message = null) }
+            val currency = state.profile?.defaultCurrency ?: "LKR"
+            val result = transactionRepository.addTransaction(
+                uid,
+                TransactionDraft(
+                    title = "Initial Income",
+                    amountCents = amountCents,
+                    type = TransactionType.INCOME,
+                    source = "Initial Income",
+                    note = "Initial balance setup",
+                    dateMillis = System.currentTimeMillis(),
+                    originalAmount = amountCents / 100.0,
+                    originalCurrency = currency,
+                    defaultCurrency = currency
+                )
+            )
+            _uiState.update {
+                if (result.isSuccess) it.copy(isBusy = false, message = "Initial income saved.")
+                else it.copy(isBusy = false, message = result.exceptionOrNull()?.userMessage())
+            }
+        }
+    }
+
     fun sendPasswordReset() {
         val email = _uiState.value.email.trim()
         if (email.isBlank() || "@" !in email) {
@@ -127,19 +159,49 @@ class FinanceViewModel @Inject constructor(
         }
     }
 
-    fun changePassword(newPassword: String) {
+    fun changePassword(currentPassword: String, newPassword: String, confirmPassword: String) {
+        if (currentPassword.isBlank()) {
+            _uiState.update { it.copy(message = "Enter your current password.") }
+            return
+        }
         if (newPassword.length < 6) {
             _uiState.update { it.copy(message = "Password must be at least 6 characters.") }
             return
         }
+        if (newPassword != confirmPassword) {
+            _uiState.update { it.copy(message = "Passwords do not match.") }
+            return
+        }
         viewModelScope.launch {
             _uiState.update { it.copy(isBusy = true, message = null) }
-            val result = authRepository.updatePassword(newPassword)
+            val result = authRepository.updatePassword(currentPassword, newPassword)
             _uiState.update {
                 it.copy(
                     isBusy = false,
                     message = if (result.isSuccess) "Password updated." else result.exceptionOrNull()?.userMessage()
                 )
+            }
+        }
+    }
+
+    fun deleteAccount(currentPassword: String) {
+        if (currentPassword.isBlank()) {
+            _uiState.update { it.copy(message = "Enter your current password.") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isBusy = true, message = null) }
+            val result = authRepository.deleteAccount(currentPassword)
+            if (result.isSuccess) {
+                dataJob?.cancel()
+                dataJob = null
+            }
+            _uiState.update {
+                if (result.isSuccess) {
+                    FinanceUiState(isFirebaseConfigured = it.isFirebaseConfigured, isLoading = false, message = "Account deleted.")
+                } else {
+                    it.copy(isBusy = false, message = result.exceptionOrNull()?.userMessage())
+                }
             }
         }
     }

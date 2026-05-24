@@ -181,7 +181,7 @@ private fun DonutChart(categories: List<AnalyticsSlice>, modifier: Modifier = Mo
             drawArc(SpendlyGray100, start, 360f, false, topLeft = androidx.compose.ui.geometry.Offset(stroke.width / 2, stroke.width / 2), size = arcSize, style = stroke)
         } else {
             categories.forEachIndexed { index, item ->
-                val sweep = (item.percent.coerceAtLeast(1) / 100f) * 360f
+                val sweep = (item.percent.coerceAtLeast(1.0).toFloat() / 100f) * 360f
                 drawArc(
                     color = ChartColors[index % ChartColors.size],
                     startAngle = start,
@@ -202,7 +202,7 @@ private fun LegendRow(item: AnalyticsSlice, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Box(modifier = Modifier.size(10.dp).clip(RoundedCornerShape(3.dp)).background(color))
         Text(item.label, style = MaterialTheme.typography.bodyMedium, color = SpendlyGray700, modifier = Modifier.weight(1f))
-        Text("${item.percent}%", style = MaterialTheme.typography.bodyMedium, color = SpendlyGray700, fontWeight = FontWeight.Bold)
+        Text(formatPercent(item.percent), style = MaterialTheme.typography.bodyMedium, color = SpendlyGray700, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -211,24 +211,23 @@ private fun SpendingSplitCard(state: AnalyticsUiState) {
     val split = state.spendingSplit
     AnalyticsCard {
         Text("Committed vs Discretionary", style = MaterialTheme.typography.titleLarge, color = SpendlyGray900, fontWeight = FontWeight.Bold)
-        Text("Your spending split - committed costs cannot easily be reduced.", style = MaterialTheme.typography.bodyMedium, color = SpendlyGray500)
         SplitBar("Committed", "Rent • Gym • Subscriptions", split.committedCents, split.committedPercent, ChartPurple)
         SplitBar("Discretionary", "Food • Transport • Entertainment", split.discretionaryCents, split.discretionaryPercent, SpendlyGreen)
     }
 }
 
 @Composable
-private fun SplitBar(label: String, subtitle: String, amount: Long, percent: Int, color: Color) {
+private fun SplitBar(label: String, subtitle: String, amount: Long, percent: Double, color: Color) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.Bottom) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(label, style = MaterialTheme.typography.titleMedium, color = SpendlyGray900, fontWeight = FontWeight.Bold)
                 Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = SpendlyGray500)
             }
-            Text("${formatMoney(amount)} ($percent%)", style = MaterialTheme.typography.titleSmall, color = color, fontWeight = FontWeight.Bold)
+            Text("${formatMoney(amount)} (${formatPercent(percent)})", style = MaterialTheme.typography.titleSmall, color = color, fontWeight = FontWeight.Bold)
         }
         LinearProgressIndicator(
-            progress = { percent / 100f },
+            progress = { (percent.toFloat() / 100f).coerceIn(0f, 1f) },
             modifier = Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(8.dp)),
             color = color,
             trackColor = SpendlyGray100
@@ -285,8 +284,8 @@ private fun ChartBar(value: Long, maxValue: Long, color: Color, modifier: Modifi
 private fun IncomeSourcesCard(state: AnalyticsUiState) {
     AnalyticsCard {
         Text("Income Sources", style = MaterialTheme.typography.titleLarge, color = SpendlyGray900, fontWeight = FontWeight.Bold)
-        state.incomeSources.forEachIndexed { index, item ->
-            SplitBar(item.label, "${item.percent}% of total income", item.amountCents, item.percent, ChartColors[index % ChartColors.size])
+        state.incomeSources.forEach { item ->
+            SplitBar(item.label, "${formatPercent(item.percent)} of total income", item.amountCents, item.percent, SpendlyGreen)
         }
     }
 }
@@ -320,3 +319,6 @@ private fun formatCompactAmount(cents: Long): String {
         else -> "LKR $amount"
     }
 }
+
+private fun formatPercent(percent: Double): String =
+    "${String.format(java.util.Locale.US, "%.1f", percent)}%"

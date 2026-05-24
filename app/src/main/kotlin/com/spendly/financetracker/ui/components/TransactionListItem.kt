@@ -113,7 +113,7 @@ private fun TransactionItemContent(
         ) {
             TransactionIcon(
                 transactionType = transaction.type,
-                label = transactionCategoryLabel(transaction.type),
+                label = transactionLabel(transaction),
                 size = 38.dp
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -130,14 +130,16 @@ private fun TransactionItemContent(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = transactionCategoryLabel(transaction.type),
+                        text = transactionLabel(transaction),
                         style = MaterialTheme.typography.labelSmall,
                         color = SpendlyGray500
                     )
-                    TrackBadge(
-                        label = transactionTrackLabel(transaction.type),
-                        isIncome = transaction.type == TransactionType.INCOME
-                    )
+                    if (transaction.type == TransactionType.EXPENSE) {
+                        TrackBadge(
+                            label = transaction.expenseType?.name ?: "DISCRETIONARY",
+                            isIncome = false
+                        )
+                    }
                     Text(
                         text = formatDateShort(transaction.dateMillis),
                         style = MaterialTheme.typography.labelSmall,
@@ -223,3 +225,10 @@ private fun TransactionItemContent(
         }
     }
 }
+
+private fun transactionLabel(transaction: FinanceTransaction): String =
+    if (transaction.type == TransactionType.INCOME) {
+        transaction.source.ifBlank { "Income" }
+    } else {
+        transaction.category.ifBlank { "Expense" }
+    }

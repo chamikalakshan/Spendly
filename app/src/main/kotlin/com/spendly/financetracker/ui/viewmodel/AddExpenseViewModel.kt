@@ -9,6 +9,7 @@ import com.spendly.financetracker.data.model.TransactionType
 import com.spendly.financetracker.data.model.UserProfile
 import com.spendly.financetracker.data.repository.AuthRepository
 import com.spendly.financetracker.data.repository.ExpenseRepository
+import com.spendly.financetracker.data.repository.TransactionRepository
 import com.spendly.financetracker.data.repository.UserRepository
 import com.spendly.financetracker.ui.util.CategorySettings
 import com.spendly.financetracker.ui.util.parseCategorySettings
@@ -35,6 +36,7 @@ data class AddExpenseUiState(
     val exchangeRate: String = "",
     val convertedAmountCents: Long = 0L,
     val selectedDate: Long = System.currentTimeMillis(),
+    val availableBalanceCents: Long = 0L,
     val categorySettings: CategorySettings = CategorySettings(),
     val editId: String? = null,
     val isLoading: Boolean = false,
@@ -54,6 +56,7 @@ val defaultPaymentMethods = listOf("Card", "Cash", "Auto-debit")
 class AddExpenseViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val expenseRepository: ExpenseRepository,
+    private val transactionRepository: TransactionRepository,
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository
 ) : ViewModel() {
@@ -67,6 +70,13 @@ class AddExpenseViewModel @Inject constructor(
         _uiState.update { it.copy(editId = editId) }
         val uid = authRepository.getCurrentUserId()
         if (uid != null) {
+            viewModelScope.launch {
+                transactionRepository.observeTransactions(uid).collect { transactions ->
+                    _uiState.update { state ->
+                        state.copy(availableBalanceCents = transactions.sumOf { it.signedAmountCents })
+                    }
+                }
+            }
             viewModelScope.launch {
                 userRepository.observeProfile(uid).collect { profile ->
                     this@AddExpenseViewModel.profile = profile
@@ -156,9 +166,13 @@ class AddExpenseViewModel @Inject constructor(
             _uiState.update { it.copy(error = "Enter a valid exchange rate") }
             return
         }
-
         _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
+            val currentExpense = s.editId?.let { expenseRepository.getExpense(it)?.amountCents } ?: 0L
+            if (amountCents > s.availableBalanceCents + currentExpense) {
+                _uiState.update { it.copy(isLoading = false, error = "balance exceed") }
+                return@launch
+            }
             val draft = TransactionDraft(
                 title = s.name.trim(),
                 amountCents = amountCents,

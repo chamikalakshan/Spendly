@@ -18,11 +18,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CurrencyExchange
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Settings
@@ -74,7 +77,8 @@ import com.spendly.financetracker.ui.viewmodel.spendlyCurrencies
 fun ProfileScreen(
     state: FinanceUiState,
     onUpdateProfile: (UserProfile) -> Unit,
-    onChangePassword: (String) -> Unit,
+    onChangePassword: (String, String, String) -> Unit,
+    onDeleteAccount: (String) -> Unit,
     onSignOut: () -> Unit
 ) {
     val email = state.session?.email.orEmpty()
@@ -85,6 +89,7 @@ fun ProfileScreen(
     var showCurrencyDialog by remember { mutableStateOf(false) }
     var showExchangeRate by remember { mutableStateOf(false) }
     var showChangePassword by remember { mutableStateOf(false) }
+    var showDeleteAccount by remember { mutableStateOf(false) }
     var showLogoutConfirm by remember { mutableStateOf(false) }
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         val current = state.profile
@@ -136,7 +141,8 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 104.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
@@ -228,6 +234,13 @@ fun ProfileScreen(
                     labelColor = SpendlyRed,
                     showChevron = false,
                     onClick = { showLogoutConfirm = true }
+                )
+                ProfileItem(
+                    icon = Icons.Default.Delete,
+                    label = "Delete Account",
+                    labelColor = SpendlyRed,
+                    showChevron = false,
+                    onClick = { showDeleteAccount = true }
                 )
             }
         }
@@ -337,25 +350,67 @@ fun ProfileScreen(
     }
 
     if (showChangePassword) {
+        var currentPassword by remember(showChangePassword) { mutableStateOf("") }
         var newPassword by remember(showChangePassword) { mutableStateOf("") }
+        var confirmPassword by remember(showChangePassword) { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { showChangePassword = false },
             title = { Text("Change Password") },
             text = {
-                OutlinedTextField(
-                    value = newPassword,
-                    onValueChange = { newPassword = it },
-                    label = { Text("New password") },
-                    singleLine = true
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value = currentPassword,
+                        onValueChange = { currentPassword = it },
+                        label = { Text("Current password") },
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = newPassword,
+                        onValueChange = { newPassword = it },
+                        label = { Text("New password") },
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it },
+                        label = { Text("Confirm new password") },
+                        singleLine = true
+                    )
+                }
             },
             confirmButton = {
                 TextButton(onClick = {
-                    onChangePassword(newPassword)
+                    onChangePassword(currentPassword, newPassword, confirmPassword)
                     showChangePassword = false
                 }) { Text("Update") }
             },
             dismissButton = { TextButton(onClick = { showChangePassword = false }) { Text("Cancel") } }
+        )
+    }
+
+    if (showDeleteAccount) {
+        var currentPassword by remember(showDeleteAccount) { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showDeleteAccount = false },
+            title = { Text("Delete account?") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("This permanently deletes your Spendly account. Enter your current password to continue.")
+                    OutlinedTextField(
+                        value = currentPassword,
+                        onValueChange = { currentPassword = it },
+                        label = { Text("Current password") },
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDeleteAccount(currentPassword)
+                    showDeleteAccount = false
+                }) { Text("Delete", color = SpendlyRed) }
+            },
+            dismissButton = { TextButton(onClick = { showDeleteAccount = false }) { Text("Cancel") } }
         )
     }
 

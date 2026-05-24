@@ -8,7 +8,7 @@ data class SavingsGoal(
     val id: String = "",
     val userId: String = "",
     val title: String = "",
-    val status: String = "On track",
+    val status: String = "Tracking",
     val targetCents: Long = 0L,
     val savedCents: Long = 0L,
     val dueDateMillis: Long = 0L,

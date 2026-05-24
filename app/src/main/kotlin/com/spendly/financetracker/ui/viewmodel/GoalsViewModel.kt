@@ -6,6 +6,7 @@ import com.spendly.financetracker.data.model.GoalDraft
 import com.spendly.financetracker.data.model.SavingsGoal
 import com.spendly.financetracker.data.repository.AuthRepository
 import com.spendly.financetracker.data.repository.GoalRepository
+import com.spendly.financetracker.data.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +25,7 @@ data class GoalsUiState(
     val isLoading: Boolean = true,
     val isSaved: Boolean = false,
     val isDeleted: Boolean = false,
+    val availableBalanceCents: Long = 0L,
     val error: String? = null
 ) {
     val primaryGoal: SavingsGoal?
@@ -56,7 +58,8 @@ fun goalMonthlySavingsData(goal: SavingsGoal): List<GoalMonthlySavingUi> {
 @HiltViewModel
 class GoalsViewModel @Inject constructor(
     private val goalRepository: GoalRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val transactionRepository: TransactionRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(GoalsUiState())
     val uiState: StateFlow<GoalsUiState> = _uiState.asStateFlow()
@@ -71,6 +74,15 @@ class GoalsViewModel @Inject constructor(
                     .catch { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
                     .collect { goals -> _uiState.update { it.copy(goals = goals, isLoading = false) } }
             }
+            viewModelScope.launch {
+                transactionRepository.observeTransactions(uid)
+                    .catch { e -> _uiState.update { it.copy(error = e.message) } }
+                    .collect { transactions ->
+                        _uiState.update { state ->
+                            state.copy(availableBalanceCents = transactions.sumOf { it.signedAmountCents })
+                        }
+                    }
+            }
         }
     }
 
@@ -82,16 +94,21 @@ class GoalsViewModel @Inject constructor(
         if (dueDate <= 0L) return fail("Select a target date")
         val initialSaved = parseAmountCents(draft.initialSaved.ifBlank { "0" }) ?: 0L
         if (initialSaved > targetCents) return fail("Initial saved amount cannot exceed target amount")
+        if (existing == null && initialSaved > _uiState.value.availableBalanceCents) {
+            return fail("amount exceed total income")
+        }
+        val savedCents = existing?.savedCents ?: initialSaved
+        val normalizedStatus = normalizedGoalStatus(draft.status, savedCents, targetCents)
         val goal = SavingsGoal(
             id = existing?.id.orEmpty(),
             userId = uid,
             title = draft.title.trim(),
-            status = draft.status,
+            status = normalizedStatus,
             targetCents = targetCents,
-            savedCents = existing?.savedCents ?: initialSaved,
+            savedCents = savedCents,
             dueDateMillis = dueDate,
             category = draft.category,
-            isPrimary = draft.isPrimary,
+            isPrimary = draft.isPrimary && normalizedStatus != "Done",
             createdAtMillis = existing?.createdAtMillis ?: 0L,
             initialSavedCents = existing?.initialSavedCents ?: initialSaved,
             defaultCurrency = draft.defaultCurrency
@@ -118,6 +135,7 @@ class GoalsViewModel @Inject constructor(
         if (cents <= 0L) return fail("Enter a valid savings amount")
         val goal = _uiState.value.goals.firstOrNull { it.id == id }
         if (goal != null && cents > goal.remainingCents) return fail("Amount exceed target value")
+        if (cents > _uiState.value.availableBalanceCents) return fail("amount exceed total income")
         viewModelScope.launch {
             goalRepository.addSavings(id, cents)
                 .onFailure { e -> _uiState.update { it.copy(error = e.message) } }
@@ -136,6 +154,16 @@ class GoalsViewModel @Inject constructor(
     private fun fail(message: String): Boolean {
         _uiState.update { it.copy(error = message) }
         return false
+    }
+
+    private fun normalizedGoalStatus(status: String, savedCents: Long, targetCents: Long): String {
+        if (targetCents > 0L && savedCents >= targetCents) return "Done"
+        return when (status.lowercase()) {
+            "on track", "tracking" -> "Tracking"
+            "not on track", "stopped" -> "Stopped"
+            "done" -> "Done"
+            else -> "Tracking"
+        }
     }
 
     private fun parseAmountCents(input: String): Long? {

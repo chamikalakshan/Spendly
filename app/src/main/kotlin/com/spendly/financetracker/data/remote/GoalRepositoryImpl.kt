@@ -57,8 +57,12 @@ class GoalRepositoryImpl @Inject constructor(
         require(amountCents > 0L) { "Enter a valid savings amount" }
         require(amountCents <= remaining) { "Amount exceed target value" }
         val now = System.currentTimeMillis()
+        val newSavedCents = existing.savedCents + amountCents
+        val isDone = newSavedCents >= existing.targetCents && existing.targetCents > 0L
         val updated = existing.copy(
-            savedCents = existing.savedCents + amountCents,
+            savedCents = newSavedCents,
+            status = if (isDone) "Done" else existing.status,
+            isPrimary = if (isDone) false else existing.isPrimary,
             isSynced = false,
             updatedAtMillis = now
         )

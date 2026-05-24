@@ -35,7 +35,7 @@ enum class TransactionTab(val title: String) {
 data class AnalyticsSlice(
     val label: String,
     val amountCents: Long,
-    val percent: Int
+    val percent: Double
 )
 
 data class AnalyticsMonth(
@@ -47,8 +47,8 @@ data class AnalyticsMonth(
 data class SpendingSplitUi(
     val committedCents: Long = 0L,
     val discretionaryCents: Long = 0L,
-    val committedPercent: Int = 0,
-    val discretionaryPercent: Int = 0
+    val committedPercent: Double = 0.0,
+    val discretionaryPercent: Double = 0.0
 )
 
 data class FinanceUiState(
@@ -79,6 +79,19 @@ data class FinanceUiState(
     val balanceCents: Long
         get() = transactions.sumOf { it.signedAmountCents }
 
+    val currentMonthIncomeCents: Long
+        get() = currentMonthTransactions()
+            .filter { it.type == TransactionType.INCOME && !it.isInitialIncome() }
+            .sumOf { it.amountCents }
+
+    val currentMonthExpenseCents: Long
+        get() = currentMonthTransactions()
+            .filter { it.type == TransactionType.EXPENSE }
+            .sumOf { it.amountCents }
+
+    val currentMonthNetSavingsCents: Long
+        get() = currentMonthIncomeCents - currentMonthExpenseCents
+
     val primaryGoal: SavingsGoal?
         get() = goals.firstOrNull { it.isPrimary } ?: goals.firstOrNull()
 
@@ -89,7 +102,7 @@ data class FinanceUiState(
         get() = goals.filterNot { goal -> primaryGoals.any { it.id == goal.id } }
 
     val savingsRate: Int
-        get() = if (incomeCents <= 0L) 0 else (((incomeCents - expenseCents) * 100) / incomeCents).toInt().coerceIn(0, 100)
+        get() = if (currentMonthIncomeCents <= 0L) 0 else (((currentMonthIncomeCents - currentMonthExpenseCents) * 100) / currentMonthIncomeCents).toInt().coerceIn(0, 100)
 
     val recentTransactions: List<FinanceTransaction>
         get() = transactions.sortedByDescending { it.dateMillis }.take(6)
@@ -156,10 +169,19 @@ data class FinanceUiState(
             )
         }
 
-    private fun percentOf(amount: Long, total: Long): Int =
-        if (total > 0L) ((amount * 100L) / total).toInt() else 0
+    private fun percentOf(amount: Long, total: Long): Double =
+        if (total > 0L) (amount.toDouble() * 100.0) / total.toDouble() else 0.0
 
-    private fun lastFiveMonths(): List<Triple<String, Int, Int>> {
+    private fun currentMonthTransactions(): List<FinanceTransaction> {
+        val now = Calendar.getInstance()
+        return transactions.filter {
+            val calendar = Calendar.getInstance().apply { timeInMillis = it.dateMillis }
+            calendar.get(Calendar.MONTH) == now.get(Calendar.MONTH) &&
+                calendar.get(Calendar.YEAR) == now.get(Calendar.YEAR)
+        }
+    }
+
+private fun lastFiveMonths(): List<Triple<String, Int, Int>> {
         val formatter = SimpleDateFormat("MMM", Locale.getDefault())
         val calendar = Calendar.getInstance()
         return (4 downTo 0).map { offset ->
@@ -173,3 +195,6 @@ data class FinanceUiState(
         }
     }
 }
+
+private fun FinanceTransaction.isInitialIncome(): Boolean =
+    type == TransactionType.INCOME && source.equals("Initial Income", ignoreCase = true)

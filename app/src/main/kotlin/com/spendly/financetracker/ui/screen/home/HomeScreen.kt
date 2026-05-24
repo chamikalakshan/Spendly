@@ -45,11 +45,11 @@ import androidx.compose.ui.unit.sp
 import com.spendly.financetracker.ui.components.NoTransactionsState
 import com.spendly.financetracker.ui.components.SpendlyAddActionMenu
 import com.spendly.financetracker.ui.components.TransactionListItem
-import com.spendly.financetracker.ui.theme.SpendlyAmber
 import com.spendly.financetracker.ui.theme.SpendlyGray100
 import com.spendly.financetracker.ui.theme.SpendlyGray300
 import com.spendly.financetracker.ui.theme.SpendlyGray500
 import com.spendly.financetracker.ui.theme.SpendlyGray700
+import com.spendly.financetracker.ui.theme.SpendlyGray900
 import com.spendly.financetracker.ui.theme.SpendlyGreen
 import com.spendly.financetracker.ui.theme.SpendlyGreenLight
 import com.spendly.financetracker.ui.theme.SpendlyRed
@@ -94,8 +94,7 @@ fun HomeScreen(
             DashboardHeader(
                 userName = userName,
                 userInitials = userInitials,
-                incomeCents = state.incomeCents,
-                expenseCents = state.expenseCents,
+                balanceCents = state.balanceCents,
                 onOpenProfile = onOpenProfile
             )
 
@@ -103,6 +102,23 @@ fun HomeScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                item {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        DashboardSummaryCard(
+                            label = "Monthly Income",
+                            amount = formatMoney(state.currentMonthIncomeCents),
+                            amountColor = SpendlyGreen,
+                            modifier = Modifier.weight(1f)
+                        )
+                        DashboardSummaryCard(
+                            label = "Monthly expense",
+                            amount = formatMoney(state.currentMonthExpenseCents),
+                            amountColor = SpendlyRed,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
                 item {
                     NetSavingsCard(state = state)
                 }
@@ -303,8 +319,7 @@ fun HomeScreen(
 private fun DashboardHeader(
     userName: String,
     userInitials: String,
-    incomeCents: Long,
-    expenseCents: Long,
+    balanceCents: Long,
     onOpenProfile: () -> Unit
 ) {
     Box(
@@ -346,48 +361,59 @@ private fun DashboardHeader(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                HeaderAmountCard(
-                    label = "Income",
-                    amount = formatMoney(incomeCents),
-                    modifier = Modifier.weight(1f)
-                )
-                HeaderAmountCard(
-                    label = "Expenses",
-                    amount = formatMoney(expenseCents),
-                    labelColor = SpendlyAmber.copy(alpha = 0.9f),
-                    modifier = Modifier.weight(1f)
-                )
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = Color.White,
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "Total Balance",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = SpendlyGray700,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        formatMoney(balanceCents),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = if (balanceCents >= 0L) SpendlyGreen else SpendlyRed,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun HeaderAmountCard(
+private fun DashboardSummaryCard(
     label: String,
     amount: String,
+    amountColor: Color,
     modifier: Modifier = Modifier,
-    labelColor: Color = Color.White.copy(alpha = 0.8f)
 ) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.15f)),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(0.5.dp, SpendlyGray300),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
                 label,
                 style = MaterialTheme.typography.labelSmall,
-                color = labelColor
+                color = SpendlyGray500
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 amount,
                 style = MaterialTheme.typography.titleLarge,
-                color = Color.White,
+                color = amountColor,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -407,15 +433,21 @@ private fun NetSavingsCard(state: FinanceUiState) {
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                "Net Savings - ${currentMonthLabel()}",
+                "Monthly Net savings",
+                style = MaterialTheme.typography.titleMedium,
+                color = SpendlyGray900,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                currentMonthLabel(),
                 style = MaterialTheme.typography.labelSmall,
                 color = SpendlyGray500
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    formatMoney(state.balanceCents),
+                    formatMoney(state.currentMonthNetSavingsCents),
                     style = MaterialTheme.typography.headlineMedium,
-                    color = if (state.balanceCents >= 0L) SpendlyGreen else SpendlyRed,
+                    color = if (state.currentMonthNetSavingsCents >= 0L) SpendlyGreen else SpendlyRed,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
@@ -433,7 +465,7 @@ private fun NetSavingsCard(state: FinanceUiState) {
                 modifier = Modifier.align(Alignment.End)
             )
             Text(
-                "Yearly total savings: ${formatMoney(state.currentYearSavingsCents)}",
+                "Yearly net savings - ${formatMoney(state.currentYearSavingsCents)}",
                 style = MaterialTheme.typography.labelSmall,
                 color = SpendlyGray500
             )

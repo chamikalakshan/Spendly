@@ -71,6 +71,7 @@ import com.spendly.financetracker.ui.theme.SpendlyGreen
 import com.spendly.financetracker.ui.viewmodel.AddIncomeViewModel
 import com.spendly.financetracker.ui.viewmodel.RateStatus
 import com.spendly.financetracker.ui.viewmodel.cryptoCoins
+import com.spendly.financetracker.ui.util.AmountVisualTransformation
 import com.spendly.financetracker.ui.util.formatMoney
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -86,6 +87,7 @@ fun AddIncomeScreen(
     var showSourceDialog by remember { mutableStateOf(false) }
     var customSource by remember { mutableStateOf("") }
     var currencyMenuExpanded by remember { mutableStateOf(false) }
+    var editSources by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) onBack()
@@ -167,6 +169,7 @@ fun AddIncomeScreen(
                                 textAlign = TextAlign.Center
                             ),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            visualTransformation = AmountVisualTransformation,
                             decorationBox = { inner ->
                                 if (state.amount.isEmpty()) Text("0", fontSize = 48.sp, color = SpendlyGray300, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                                 inner()
@@ -178,7 +181,12 @@ fun AddIncomeScreen(
             }
 
             // Source
-            AddIncomeLabel("Income Source")
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                AddIncomeLabel("Income Source", modifier = Modifier.weight(1f))
+                TextButton(onClick = { editSources = !editSources }) {
+                    Text(if (editSources) "Done" else "Edit")
+                }
+            }
             FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 state.incomeSources.forEach { source ->
                     FilterChip(
@@ -187,7 +195,7 @@ fun AddIncomeScreen(
                         label = {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(source)
-                                if (state.incomeSources.size > 1) {
+                                if (editSources && state.incomeSources.size > 1) {
                                     Icon(
                                         Icons.Default.Close,
                                         contentDescription = "Delete source",
@@ -283,13 +291,16 @@ fun AddIncomeScreen(
             // Date
             AddIncomeLabel("Date")
             var showDatePicker by remember { mutableStateOf(false) }
-            OutlinedTextField(
-                value = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(state.selectedDate)),
-                onValueChange = {},
-                readOnly = true,
-                modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true },
-                trailingIcon = { Icon(Icons.Default.CalendarMonth, null) }
-            )
+            Box {
+                OutlinedTextField(
+                    value = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(state.selectedDate)),
+                    onValueChange = {},
+                    readOnly = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = { Icon(Icons.Default.CalendarMonth, null) }
+                )
+                Box(modifier = Modifier.matchParentSize().clickable { showDatePicker = true })
+            }
             if (showDatePicker) {
                 val dpState = rememberDatePickerState(initialSelectedDateMillis = state.selectedDate)
                 DatePickerDialog(
@@ -344,8 +355,8 @@ fun AddIncomeScreen(
 }
 
 @Composable
-private fun AddIncomeLabel(text: String) {
-    Text(text, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+private fun AddIncomeLabel(text: String, modifier: Modifier = Modifier) {
+    Text(text, modifier = modifier, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
 }
 
 @Composable

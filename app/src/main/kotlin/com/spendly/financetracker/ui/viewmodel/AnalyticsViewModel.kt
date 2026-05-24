@@ -78,8 +78,8 @@ data class AnalyticsUiState(
             .sortedByDescending { it.second }
             .map { (label, amount) -> AnalyticsSlice(label, amount, percentOf(amount, totalIncome)) }
 
-    private fun percentOf(amount: Long, total: Long): Int =
-        if (total > 0L) ((amount * 100L) / total).toInt() else 0
+    private fun percentOf(amount: Long, total: Long): Double =
+        if (total > 0L) (amount.toDouble() * 100.0) / total.toDouble() else 0.0
 
     private companion object {
         val committedCategories = setOf("Rent", "Subscriptions", "Gym")

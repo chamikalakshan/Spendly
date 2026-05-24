@@ -73,6 +73,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.spendly.financetracker.ui.components.NoGoalState
+import com.spendly.financetracker.ui.theme.SpendlyAmber
 import com.spendly.financetracker.ui.theme.SpendlyGray300
 import com.spendly.financetracker.ui.theme.SpendlyGray500
 import com.spendly.financetracker.ui.theme.SpendlyGray700
@@ -80,6 +81,7 @@ import com.spendly.financetracker.ui.theme.SpendlyGray900
 import com.spendly.financetracker.ui.theme.SpendlyGreen
 import com.spendly.financetracker.ui.theme.SpendlyGreenDark
 import com.spendly.financetracker.ui.theme.SpendlyGreenLight
+import com.spendly.financetracker.ui.theme.SpendlyRed
 import com.spendly.financetracker.ui.util.formatMoney
 import com.spendly.financetracker.ui.viewmodel.FinanceUiState
 import com.spendly.financetracker.ui.viewmodel.Goal
@@ -105,8 +107,9 @@ internal fun GoalsScreenContent(
     onAddGoal: OnAddGoal,
     onGoalSelected: OnGoalSelected
 ) {
-    val primaryGoals = state.primaryGoals
-    val otherGoals = state.otherGoals
+    val achievedGoals = state.goals.filter { it.isAchievedGoal() }
+    val primaryGoals = state.primaryGoals.filterNot { it.isAchievedGoal() }
+    val otherGoals = state.otherGoals.filterNot { it.isAchievedGoal() }
 
     Scaffold(
         topBar = {
@@ -169,6 +172,21 @@ internal fun GoalsScreenContent(
                         )
                     }
                 }
+                if (achievedGoals.isNotEmpty()) {
+                    item {
+                        Text(
+                            "Achieved Goals",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    items(achievedGoals, key = { it.id }) { goal ->
+                        OtherGoalRow(
+                            goal = goal,
+                            onClick = { onGoalSelected(goal.id) }
+                        )
+                    }
+                }
             }
         }
     }
@@ -183,7 +201,7 @@ internal fun EditGoalScreenContent(
     onDelete: OnDeleteGoal
 ) {
     var goalName by rememberSaveable { mutableStateOf(goal.title) }
-    var status by rememberSaveable { mutableStateOf(goal.status) }
+    var status by rememberSaveable { mutableStateOf(normalizedGoalStatus(goal.status)) }
     var targetAmount by rememberSaveable { mutableStateOf((goal.targetCents / 100L).toString()) }
     var targetDate by rememberSaveable { mutableStateOf(goal.dueDate) }
     var isPrimary by rememberSaveable { mutableStateOf(goal.isPrimary) }
@@ -376,7 +394,7 @@ internal fun AddGoalScreenContent(
     onSave: OnSaveGoal
 ) {
     var goalName by rememberSaveable { mutableStateOf("") }
-    var status by rememberSaveable { mutableStateOf("On track") }
+    var status by rememberSaveable { mutableStateOf("Tracking") }
     var targetAmount by rememberSaveable { mutableStateOf("") }
     var targetDate by rememberSaveable { mutableStateOf("") }
     var initialSaved by rememberSaveable { mutableStateOf("") }
@@ -528,7 +546,7 @@ private fun GoalStatusSelector(
     selectedStatus: String,
     onStatusSelected: (String) -> Unit
 ) {
-    val statuses = listOf("On track", "Not On track")
+    val statuses = listOf("Tracking", "Stopped", "Done")
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -674,7 +692,7 @@ private fun PrimaryGoalCard(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
-                        Text(goal.status.uppercase(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                        Text(normalizedGoalStatus(goal.status).uppercase(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp)
                     }
                 }
             }
@@ -682,7 +700,7 @@ private fun PrimaryGoalCard(
             Text(
                 "${goal.dueDate} - ${formatMoney(goal.remainingCents)} remaining",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.82f)
+                color = if (goal.isTargetDateExpired()) SpendlyRed else Color.White.copy(alpha = 0.82f)
             )
 
             LinearProgressIndicator(
@@ -691,7 +709,7 @@ private fun PrimaryGoalCard(
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp)),
-                color = Color.White,
+                color = goalProgressColor(goal, Color.White),
                 trackColor = Color.White.copy(alpha = 0.3f)
             )
 
@@ -745,7 +763,7 @@ private fun OtherGoalRow(
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row {
                     Text(goal.title, modifier = Modifier.weight(1f), color = SpendlyGray900, fontWeight = FontWeight.Bold)
-                    Text("${goal.progressPercent}%", color = SpendlyGreen, fontWeight = FontWeight.Bold)
+                    Text("${goal.progressPercent}%", color = goalProgressColor(goal), fontWeight = FontWeight.Bold)
                 }
                 LinearProgressIndicator(
                     progress = { goal.progressPercent / 100f },
@@ -753,7 +771,7 @@ private fun OtherGoalRow(
                         .fillMaxWidth()
                         .height(6.dp)
                         .clip(RoundedCornerShape(3.dp)),
-                    color = SpendlyGreen,
+                    color = goalProgressColor(goal),
                     trackColor = SpendlyGreenLight
                 )
                 Text(
@@ -762,9 +780,9 @@ private fun OtherGoalRow(
                     color = SpendlyGray500
                 )
                 Text(
-                    "${goal.dueDate} • ${goal.status}",
+                    "${goal.dueDate} • ${normalizedGoalStatus(goal.status)}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = SpendlyGray700
+                    color = if (goal.isTargetDateExpired()) SpendlyRed else SpendlyGray700
                 )
             }
             Icon(Icons.Default.ChevronRight, contentDescription = null, tint = SpendlyGray700)
@@ -901,7 +919,7 @@ private fun GoalDetailSummaryCard(
                         Text(
                             "Target: ${goal.dueDate}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.White.copy(alpha = 0.82f)
+                            color = if (goal.isTargetDateExpired()) SpendlyRed else Color.White.copy(alpha = 0.82f)
                         )
                         Text(
                             "Remaining: ${formatMoney(goal.remainingCents)}",
@@ -1142,3 +1160,24 @@ private fun formatCompactChartAmount(cents: Long): String {
         else -> amount.toString()
     }
 }
+
+private fun Goal.isAchievedGoal(): Boolean =
+    targetCents > 0L && (savedCents >= targetCents || normalizedGoalStatus(status) == "Done")
+
+private fun Goal.isTargetDateExpired(): Boolean =
+    dueDateMillis > 0L && dueDateMillis < System.currentTimeMillis() && !isAchievedGoal()
+
+private fun normalizedGoalStatus(status: String): String =
+    when (status.lowercase()) {
+        "on track", "tracking" -> "Tracking"
+        "not on track", "stopped" -> "Stopped"
+        "done" -> "Done"
+        else -> "Tracking"
+    }
+
+private fun goalProgressColor(goal: Goal, defaultColor: Color = SpendlyGreen): Color =
+    when (normalizedGoalStatus(goal.status)) {
+        "Stopped" -> SpendlyAmber
+        "Done" -> SpendlyGreen
+        else -> defaultColor
+    }
