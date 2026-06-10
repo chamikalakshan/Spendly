@@ -2,19 +2,19 @@
 .gradle
 .kotlin
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-/.idea/inspectionProfiles/
-/.idea/codeStyles/
-/.idea/deploymentTargetSelector.xml
-/.idea/deviceManager.xml
-/.idea/appInsightsSettings.xml
-/.idea/studiobot.xml
+
+# Android Studio and local machine configuration
+/.idea/
 .DS_Store
+
+# Archived/generated project artifacts
+/archive/
+/docs/*.docx
+/docs/*.html
+/docs/*.pdf
+/docs/*.pptx
+
+# Build and runtime output
 /build
 **/build/
 /captures
