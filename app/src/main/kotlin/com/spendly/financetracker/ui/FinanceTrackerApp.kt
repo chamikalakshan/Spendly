@@ -53,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -130,6 +131,8 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
                             onEmailChange = viewModel::updateEmail,
                             onPasswordChange = viewModel::updatePassword,
                             onSubmit = viewModel::submitAuth,
+                            onGoogleSignIn = viewModel::signInWithGoogle,
+                            onGoogleSignInError = viewModel::reportAuthError,
                             onForgotPassword = viewModel::sendPasswordReset,
                             onToggleMode = viewModel::toggleAuthMode,
                             onCreateAccount = { authNavController.navigate(Screen.CreateAccount.route) }
@@ -384,17 +387,25 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
                 exit = fadeOut(tween(110)) + scaleOut(targetScale = 0.96f, animationSpec = tween(130, easing = FastOutSlowInEasing)),
                 modifier = Modifier
                     .fillMaxSize()
-                    .navigationBarsPadding()
             ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(bottom = SpendlySpacing.floatingNavContentPadding)
-                            .background(Color.Black.copy(alpha = 0.34f))
+                            .background(
+                                Brush.verticalGradient(
+                                    colorStops = arrayOf(
+                                        0f to Color.Black.copy(alpha = 0.50f),
+                                        0.72f to Color.Black.copy(alpha = 0.46f),
+                                        0.90f to Color.Black.copy(alpha = 0.30f),
+                                        1f to Color.Transparent
+                                    )
+                                )
+                            )
                     )
                     SpendlyFloatingAddMenu(
                         modifier = Modifier
+                            .navigationBarsPadding()
                             .padding(bottom = SpendlySpacing.floatingNavContentPadding)
                             .fillMaxWidth()
                             .padding(horizontal = 28.dp),

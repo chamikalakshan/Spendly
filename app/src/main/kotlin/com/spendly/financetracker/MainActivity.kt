@@ -24,13 +24,18 @@ class MainActivity : ComponentActivity() {
             val viewModel: FinanceViewModel = hiltViewModel()
             val state by viewModel.uiState.collectAsStateWithLifecycle()
             val systemDarkTheme = isSystemInDarkTheme()
-            val darkTheme = when (ThemeMode.fromStorage(state.profile?.themeMode)) {
-                ThemeMode.SYSTEM -> systemDarkTheme
-                ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
+            val darkTheme = if (state.session == null) {
+                systemDarkTheme
+            } else {
+                when (ThemeMode.fromStorage(state.profile?.themeMode)) {
+                    ThemeMode.SYSTEM -> systemDarkTheme
+                    ThemeMode.LIGHT -> false
+                    ThemeMode.DARK -> true
+                }
             }
+            val accentColorKey = state.profile?.accentColorKey.takeIf { state.session != null }
 
-            FinanceTrackerTheme(darkTheme = darkTheme, accentColorKey = state.profile?.accentColorKey) {
+            FinanceTrackerTheme(darkTheme = darkTheme, accentColorKey = accentColorKey) {
                 FinanceTrackerApp(viewModel = viewModel)
             }
         }

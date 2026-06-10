@@ -115,7 +115,14 @@ data class FinanceUiState(
     }
 
     val recentTransactions: List<FinanceTransaction> by lazy {
-        transactions.sortedWith(compareByDescending<FinanceTransaction> { it.dateMillis }.thenByDescending { it.createdAtMillis }).take(6)
+        val now = System.currentTimeMillis()
+        transactions
+            .filter { it.dateMillis <= now }
+            .sortedWith(
+                compareByDescending<FinanceTransaction> { it.dateMillis }
+                    .thenByDescending { it.createdAtMillis }
+            )
+            .take(6)
     }
 
     val primaryGoalMonthlyNeedCents: Long by lazy {

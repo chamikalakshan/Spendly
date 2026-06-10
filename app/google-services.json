@@ -12,7 +12,20 @@
           "package_name": "com.spendly.financetracker"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "464678005758-lv1ftav29neis84a3fcc0i8tm19co1ic.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.spendly.financetracker",
+            "certificate_hash": "edc6d35eb63ed8c20183f8906f4cf3533137f443"
+          }
+        },
+        {
+          "client_id": "464678005758-vfrrdqr7n4lcl5kh2c6ev005706h0d55.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC3GNjXHmEevTpCyUbQ7Y5aCQ-Eb6h2Avo"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "464678005758-vfrrdqr7n4lcl5kh2c6ev005706h0d55.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
