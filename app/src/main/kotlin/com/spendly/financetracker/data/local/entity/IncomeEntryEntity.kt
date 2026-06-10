@@ -11,7 +11,8 @@ import androidx.room.PrimaryKey
         Index("userId"),
         Index("dateMillis"),
         Index(value = ["userId", "dateMillis"]),
-        Index("source")
+        Index("source"),
+        Index(value = ["userId", "recurringRuleId", "recurringPeriodKey"])
     ]
 )
 data class IncomeEntryEntity(
@@ -34,5 +35,7 @@ data class IncomeEntryEntity(
     val cryptoAmount: Double? = null,
     val cryptoRate: Double? = null,
     val cryptoRateSource: String? = null,
-    val cryptoRateFetchedAt: Long? = null
+    val cryptoRateFetchedAt: Long? = null,
+    val recurringRuleId: String? = null,
+    val recurringPeriodKey: String? = null
 )

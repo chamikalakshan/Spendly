@@ -7,6 +7,9 @@ sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Events : Screen("events")
     object Analytics : Screen("analytics")
+    object Budget : Screen("budget")
+    object Recurring : Screen("recurring")
+    object Notifications : Screen("notifications")
     object Goals : Screen("goals")
     object AddGoal : Screen("add_goal")
     object GoalDetails : Screen("goal_detail") {
@@ -40,6 +43,5 @@ val bottomNavRoutes = setOf(
     Screen.Home.route,
     Screen.Events.route,
     Screen.Analytics.route,
-    Screen.Goals.route,
     Screen.Profile.route
 )

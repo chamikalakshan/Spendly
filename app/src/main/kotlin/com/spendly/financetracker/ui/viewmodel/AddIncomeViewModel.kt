@@ -5,9 +5,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.spendly.financetracker.data.model.TransactionDraft
 import com.spendly.financetracker.data.model.TransactionType
+import com.spendly.financetracker.data.model.RecurringFrequency
+import com.spendly.financetracker.data.model.RecurringRuleDraft
 import com.spendly.financetracker.data.model.UserProfile
 import com.spendly.financetracker.data.repository.AuthRepository
 import com.spendly.financetracker.data.repository.IncomeRepository
+import com.spendly.financetracker.data.repository.RecurringTransactionRepository
 import com.spendly.financetracker.data.repository.UserRepository
 import com.spendly.financetracker.data.service.CryptoRateService
 import com.spendly.financetracker.data.service.CurrencyRateService
@@ -20,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 enum class RateStatus {
@@ -42,6 +46,7 @@ data class AddIncomeUiState(
     val exchangeRate: String = "",
     val convertedAmountCents: Long = 0L,
     val isRecurring: Boolean = false,
+    val recurringFrequency: RecurringFrequency = RecurringFrequency.MONTHLY,
     val selectedCoin: String = "BTC",
     val customCryptoCoin: String = "",
     val cryptoAmount: String = "",
@@ -72,6 +77,7 @@ val incomeSources = defaultIncomeSources
 class AddIncomeViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val incomeRepository: IncomeRepository,
+    private val recurringRepository: RecurringTransactionRepository,
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
     private val currencyRateService: CurrencyRateService,
@@ -130,6 +136,7 @@ class AddIncomeViewModel @Inject constructor(
         }
     }
     fun onRecurringChanged(v: Boolean) = _uiState.update { it.copy(isRecurring = v) }
+    fun onRecurringFrequencyChanged(v: RecurringFrequency) = _uiState.update { it.copy(recurringFrequency = v) }
     fun onCoinSelected(v: String) = _uiState.update { it.copy(selectedCoin = v, error = null) }
     fun onCustomCryptoCoinChanged(v: String) = _uiState.update { it.copy(customCryptoCoin = v, error = null) }
     fun onCryptoAmountChanged(v: String) {
@@ -292,6 +299,25 @@ class AddIncomeViewModel @Inject constructor(
             )
             val result = if (s.editId.isNullOrBlank()) incomeRepository.addIncome(uid, draft)
                 else incomeRepository.updateIncome(s.editId, draft)
+            if (result.isSuccess && s.isRecurring && s.editId.isNullOrBlank()) {
+                recurringRepository.saveRule(
+                    uid,
+                    RecurringRuleDraft(
+                        type = TransactionType.INCOME,
+                        name = s.name.trim(),
+                        amountCents = amountCents,
+                        originalAmount = draft.originalAmount,
+                        originalCurrency = draft.originalCurrency,
+                        defaultCurrency = draft.defaultCurrency,
+                        exchangeRate = draft.exchangeRate,
+                        source = s.selectedSource,
+                        note = s.note.trim(),
+                        frequency = s.recurringFrequency,
+                        startDateMillis = s.selectedDate,
+                        nextRunDateMillis = advance(s.selectedDate, s.recurringFrequency)
+                    )
+                )
+            }
             _uiState.update {
                 if (result.isSuccess) it.copy(isLoading = false, isSaved = true)
                 else it.copy(isLoading = false, error = result.exceptionOrNull()?.message ?: "Failed to save")
@@ -357,4 +383,17 @@ class AddIncomeViewModel @Inject constructor(
 
     private fun Double.toPlainInput(): String =
         if (this % 1.0 == 0.0) toLong().toString() else toString()
+
+    private fun advance(timeMillis: Long, frequency: RecurringFrequency): Long {
+        val field = when (frequency) {
+            RecurringFrequency.DAILY -> Calendar.DAY_OF_YEAR
+            RecurringFrequency.WEEKLY -> Calendar.WEEK_OF_YEAR
+            RecurringFrequency.MONTHLY -> Calendar.MONTH
+            RecurringFrequency.YEARLY -> Calendar.YEAR
+        }
+        return Calendar.getInstance().apply {
+            timeInMillis = timeMillis
+            add(field, 1)
+        }.timeInMillis
+    }
 }

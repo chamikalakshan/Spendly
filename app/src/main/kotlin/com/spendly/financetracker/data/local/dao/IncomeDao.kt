@@ -31,9 +31,15 @@ interface IncomeDao {
     @Query("SELECT * FROM income_entries WHERE userId = :userId AND dateMillis BETWEEN :startMillis AND :endMillis ORDER BY dateMillis DESC")
     fun observeByMonth(userId: String, startMillis: Long, endMillis: Long): Flow<List<IncomeEntryEntity>>
 
+    @Query("SELECT COUNT(*) FROM income_entries WHERE userId = :userId AND dateMillis >= :startMillis AND dateMillis < :endMillis")
+    suspend fun countByDateRange(userId: String, startMillis: Long, endMillis: Long): Int
+
     @Query("SELECT * FROM income_entries WHERE isSynced = 0 AND userId = :userId")
     suspend fun getUnsynced(userId: String): List<IncomeEntryEntity>
 
     @Query("UPDATE income_entries SET isSynced = 1 WHERE id = :id")
     suspend fun markAsSynced(id: String)
+
+    @Query("SELECT COUNT(*) FROM income_entries WHERE userId = :userId AND recurringRuleId = :ruleId AND recurringPeriodKey = :periodKey")
+    suspend fun countGenerated(userId: String, ruleId: String, periodKey: String): Int
 }

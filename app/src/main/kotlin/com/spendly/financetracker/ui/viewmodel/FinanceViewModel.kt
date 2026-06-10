@@ -7,9 +7,13 @@ import com.spendly.financetracker.data.model.TransactionDraft
 import com.spendly.financetracker.data.model.TransactionType
 import com.spendly.financetracker.data.model.UserProfile
 import com.spendly.financetracker.data.repository.AuthRepository
+import com.spendly.financetracker.data.repository.BudgetRepository
 import com.spendly.financetracker.data.repository.GoalRepository
+import com.spendly.financetracker.data.repository.RecurringTransactionRepository
 import com.spendly.financetracker.data.repository.TransactionRepository
 import com.spendly.financetracker.data.repository.UserRepository
+import com.spendly.financetracker.data.service.ProfileImageStorageRepository
+import com.spendly.financetracker.data.service.SyncConflictRepository
 import com.spendly.financetracker.util.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -28,6 +32,10 @@ class FinanceViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val goalRepository: GoalRepository,
     private val userRepository: UserRepository,
+    private val budgetRepository: BudgetRepository,
+    private val recurringTransactionRepository: RecurringTransactionRepository,
+    private val profileImageStorageRepository: ProfileImageStorageRepository,
+    private val syncConflictRepository: SyncConflictRepository,
     private val syncManager: SyncManager
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(FinanceUiState())
@@ -78,10 +86,6 @@ class FinanceViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isBusy = true, message = null) }
             val result = authRepository.signIn(email, password)
-            if (result.isSuccess) {
-                authRepository.getCurrentUserId()?.let { syncNow(it) }
-                syncManager.startImmediateSync()
-            }
             _uiState.update {
                 it.copy(
                     isBusy = false,
@@ -103,9 +107,24 @@ class FinanceViewModel @Inject constructor(
 
     fun updateProfile(profile: UserProfile) {
         viewModelScope.launch {
-            userRepository.upsertProfile(profile)
-                .onSuccess { _uiState.update { it.copy(message = "Profile updated.") } }
+            val uploadResult = profile.profileImageUri
+                ?.takeIf { it.isNotBlank() && !it.startsWith("http://") && !it.startsWith("https://") }
+                ?.let { profileImageStorageRepository.upload(profile.uid, it) }
+            val profileToSave = if (uploadResult?.isSuccess == true) {
+                val uploaded = uploadResult.getOrThrow()
+                profile.copy(profileImageUri = uploaded.downloadUrl, profileImageStoragePath = uploaded.storagePath)
+            } else {
+                profile
+            }
+            userRepository.upsertProfile(profileToSave)
+                .onSuccess {
+                    syncManager.scheduleDailyReminders(profileToSave)
+                    _uiState.update { it.copy(message = "Profile updated.") }
+                }
                 .onFailure { error -> _uiState.update { it.copy(message = error.userMessage()) } }
+            uploadResult?.exceptionOrNull()?.let { error ->
+                _uiState.update { it.copy(message = "Profile saved locally. Image upload failed: ${error.userMessage()}") }
+            }
         }
     }
 
@@ -276,9 +295,10 @@ class FinanceViewModel @Inject constructor(
                         )
                     }
                     if (session != null) {
-                        syncNow(session.uid)
-                        syncManager.startImmediateSync()
                         observeUserData(session.uid)
+                        viewModelScope.launch {
+                            syncNow(session.uid)
+                        }
                     }
                 }
         }
@@ -289,26 +309,39 @@ class FinanceViewModel @Inject constructor(
             combine(
                 userRepository.observeProfile(uid),
                 transactionRepository.observeTransactions(uid),
-                goalRepository.observeGoals(uid)
-            ) { profile, transactions, goals ->
-                Triple(profile, transactions, goals)
+                goalRepository.observeGoals(uid),
+                syncConflictRepository.observeOpen(uid)
+            ) { profile, transactions, goals, conflicts ->
+                ObservedFinanceData(profile, transactions, goals, conflicts.size)
             }.catch { error ->
                 _uiState.update { it.copy(message = error.userMessage()) }
-            }.collect { (profile, transactions, goals) ->
+            }.collect { observed ->
+                observed.profile?.let(syncManager::scheduleDailyReminders)
                 _uiState.update {
-                    it.copy(profile = profile, transactions = transactions, goals = goals)
+                    it.copy(
+                        profile = observed.profile,
+                        transactions = observed.transactions,
+                        goals = observed.goals,
+                        openSyncConflictCount = observed.conflictCount
+                    )
                 }
             }
         }
     }
 
     private suspend fun syncNow(uid: String) {
+        _uiState.update { it.copy(isSyncing = true) }
         runCatching {
+            recurringTransactionRepository.generateDueTransactions(uid)
             userRepository.syncWithFirestore(uid)
             transactionRepository.syncWithFirestore(uid)
             goalRepository.syncWithFirestore(uid)
+            budgetRepository.syncWithFirestore(uid)
+            recurringTransactionRepository.syncWithFirestore(uid)
         }.onFailure { error ->
             _uiState.update { it.copy(message = error.userMessage()) }
+        }.also {
+            _uiState.update { it.copy(isSyncing = false) }
         }
     }
 
@@ -324,3 +357,10 @@ class FinanceViewModel @Inject constructor(
     private fun Throwable.userMessage(): String =
         message?.takeIf { it.isNotBlank() } ?: "Something went wrong. Please try again."
 }
+
+private data class ObservedFinanceData(
+    val profile: UserProfile?,
+    val transactions: List<com.spendly.financetracker.data.model.FinanceTransaction>,
+    val goals: List<com.spendly.financetracker.data.model.SavingsGoal>,
+    val conflictCount: Int
+)

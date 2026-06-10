@@ -15,6 +15,8 @@ class SpendlyApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         syncManager.schedulePeriodicSync()
+        syncManager.scheduleBudgetAlerts()
+        syncManager.scheduleDailyReminders()
     }
 
     override val workManagerConfiguration: Configuration

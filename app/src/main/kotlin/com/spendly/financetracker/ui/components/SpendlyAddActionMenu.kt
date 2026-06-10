@@ -6,10 +6,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
@@ -23,8 +26,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.spendly.financetracker.ui.theme.SpendlyGray700
 import com.spendly.financetracker.ui.theme.SpendlyGreen
 import com.spendly.financetracker.ui.theme.SpendlyRed
 
@@ -65,16 +68,11 @@ fun SpendlyAddActionMenu(
             }
         }
 
-        FloatingActionButton(
+        SpendlyFab(
             onClick = { expanded = !expanded },
-            containerColor = SpendlyGreen,
-            contentColor = Color.White
-        ) {
-            Icon(
-                imageVector = if (expanded) Icons.Default.Close else Icons.Default.Add,
-                contentDescription = if (expanded) "Close add menu" else "Add transaction"
-            )
-        }
+            icon = if (expanded) Icons.Default.Close else Icons.Default.Add,
+            contentDescription = if (expanded) "Close add menu" else "Add transaction"
+        )
     }
 }
 
@@ -89,14 +87,14 @@ private fun SpendlyAddActionItem(
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Surface(
-            shape = MaterialTheme.shapes.medium,
-            color = Color.White,
+            shape = RoundedCornerShape(SpendlyRadius.card),
+            color = MaterialTheme.colorScheme.surface,
             shadowElevation = 4.dp
         ) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
-                color = SpendlyGray700,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
             )
         }
@@ -104,9 +102,29 @@ private fun SpendlyAddActionItem(
             onClick = onClick,
             containerColor = color,
             contentColor = Color.White,
-            modifier = Modifier.size(44.dp)
+            modifier = Modifier.size(SpendlySizing.miniFabSize)
         ) {
-            Icon(Icons.Default.Add, contentDescription = label)
+            Icon(Icons.Default.Add, contentDescription = label, modifier = Modifier.size(SpendlySizing.iconMedium))
         }
+    }
+}
+
+@Composable
+fun SpendlyFab(
+    onClick: () -> Unit,
+    icon: ImageVector = Icons.Default.Add,
+    contentDescription: String? = null,
+    modifier: Modifier = Modifier,
+    containerColor: Color = SpendlyGreen
+) {
+    FloatingActionButton(
+        onClick = onClick,
+        containerColor = containerColor,
+        contentColor = Color.White,
+        shape = CircleShape,
+        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
+        modifier = modifier.size(SpendlySizing.fabSize)
+    ) {
+        Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(SpendlySizing.fabIcon))
     }
 }

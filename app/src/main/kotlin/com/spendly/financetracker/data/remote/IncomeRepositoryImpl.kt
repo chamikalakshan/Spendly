@@ -6,6 +6,7 @@ import com.spendly.financetracker.data.local.entity.IncomeEntryEntity
 import com.spendly.financetracker.data.model.FinanceTransaction
 import com.spendly.financetracker.data.model.TransactionDraft
 import com.spendly.financetracker.data.repository.IncomeRepository
+import com.spendly.financetracker.data.service.SyncMetadataStore
 import com.spendly.financetracker.util.toTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -17,7 +18,8 @@ import javax.inject.Singleton
 @Singleton
 class IncomeRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val incomeDao: IncomeDao
+    private val incomeDao: IncomeDao,
+    private val syncMetadataStore: SyncMetadataStore
 ) : IncomeRepository {
     override fun observeIncome(userId: String): Flow<List<FinanceTransaction>> =
         incomeDao.observeByUser(userId).map { rows -> rows.map { it.toTransaction() } }
@@ -65,38 +67,55 @@ class IncomeRepositoryImpl @Inject constructor(
     }
 
     override suspend fun syncWithFirestore(userId: String) {
-        incomeDao.getUnsynced(userId).forEach { syncOne(it) }
-        val snapshot = firestore.collection("users").document(userId).collection("income").get().await()
-        val remoteRows = snapshot.documents.mapNotNull { doc ->
-            val data = doc.data ?: return@mapNotNull null
-            IncomeEntryEntity(
-                id = doc.id,
-                userId = userId,
-                name = data["name"] as? String ?: return@mapNotNull null,
-                amountCents = (data["amountCents"] as? Number)?.toLong() ?: return@mapNotNull null,
-                source = data["source"] as? String ?: "Salary",
-                dateMillis = (data["dateMillis"] as? Number)?.toLong() ?: 0L,
-                note = data["note"] as? String ?: "",
-                isSynced = true,
-                createdAtMillis = (data["createdAtMillis"] as? Number)?.toLong() ?: 0L,
-                updatedAtMillis = (data["updatedAtMillis"] as? Number)?.toLong() ?: 0L,
-                originalAmount = (data["originalAmount"] as? Number)?.toDouble()
-                    ?: ((data["amountCents"] as? Number)?.toLong() ?: 0L) / 100.0,
-                originalCurrency = data["originalCurrency"] as? String ?: data["defaultCurrency"] as? String ?: "LKR",
-                defaultCurrency = data["defaultCurrency"] as? String ?: "LKR",
-                exchangeRate = (data["exchangeRate"] as? Number)?.toDouble(),
-                isRecurring = data["isRecurring"] as? Boolean ?: false,
-                cryptoCoin = data["cryptoCoin"] as? String,
-                cryptoAmount = (data["cryptoAmount"] as? Number)?.toDouble(),
-                cryptoRate = (data["cryptoRate"] as? Number)?.toDouble(),
-                cryptoRateSource = data["cryptoRateSource"] as? String,
-                cryptoRateFetchedAt = (data["cryptoRateFetchedAt"] as? Number)?.toLong()
-            )
-        }.filter { remote ->
-            val local = incomeDao.getById(remote.id)
-            local == null || remote.updatedAtMillis >= local.updatedAtMillis
+        val collection = "income"
+        syncMetadataStore.markSyncing(userId, collection)
+        try {
+            incomeDao.getUnsynced(userId).forEach { syncOne(it) }
+            val lastPull = syncMetadataStore.lastPullMillis(userId, collection)
+            val remoteRef = firestore.collection("users").document(userId).collection(collection)
+            val snapshot = if (lastPull > 0L) {
+                remoteRef.whereGreaterThan("updatedAtMillis", lastPull).get().await()
+            } else {
+                remoteRef.get().await()
+            }
+            var maxRemoteUpdatedAt = lastPull
+            val remoteRows = snapshot.documents.mapNotNull { doc ->
+                val data = doc.data ?: return@mapNotNull null
+                IncomeEntryEntity(
+                    id = doc.id,
+                    userId = userId,
+                    name = data["name"] as? String ?: return@mapNotNull null,
+                    amountCents = (data["amountCents"] as? Number)?.toLong() ?: return@mapNotNull null,
+                    source = data["source"] as? String ?: "Salary",
+                    dateMillis = (data["dateMillis"] as? Number)?.toLong() ?: 0L,
+                    note = data["note"] as? String ?: "",
+                    isSynced = true,
+                    createdAtMillis = (data["createdAtMillis"] as? Number)?.toLong() ?: 0L,
+                    updatedAtMillis = (data["updatedAtMillis"] as? Number)?.toLong() ?: 0L,
+                    originalAmount = (data["originalAmount"] as? Number)?.toDouble()
+                        ?: ((data["amountCents"] as? Number)?.toLong() ?: 0L) / 100.0,
+                    originalCurrency = data["originalCurrency"] as? String ?: data["defaultCurrency"] as? String ?: "LKR",
+                    defaultCurrency = data["defaultCurrency"] as? String ?: "LKR",
+                    exchangeRate = (data["exchangeRate"] as? Number)?.toDouble(),
+                    isRecurring = data["isRecurring"] as? Boolean ?: false,
+                    cryptoCoin = data["cryptoCoin"] as? String,
+                    cryptoAmount = (data["cryptoAmount"] as? Number)?.toDouble(),
+                    cryptoRate = (data["cryptoRate"] as? Number)?.toDouble(),
+                    cryptoRateSource = data["cryptoRateSource"] as? String,
+                    cryptoRateFetchedAt = (data["cryptoRateFetchedAt"] as? Number)?.toLong(),
+                    recurringRuleId = data["recurringRuleId"] as? String,
+                    recurringPeriodKey = data["recurringPeriodKey"] as? String
+                ).also { maxRemoteUpdatedAt = maxOf(maxRemoteUpdatedAt, it.updatedAtMillis) }
+            }.filter { remote ->
+                val local = incomeDao.getById(remote.id)
+                local == null || remote.updatedAtMillis >= local.updatedAtMillis
+            }
+            incomeDao.insertAll(remoteRows)
+            syncMetadataStore.markSuccess(userId, collection, maxRemoteUpdatedAt)
+        } catch (error: Exception) {
+            syncMetadataStore.markFailure(userId, collection, error)
+            throw error
         }
-        incomeDao.insertAll(remoteRows)
     }
 
     private suspend fun syncOne(entity: IncomeEntryEntity) {
@@ -132,7 +151,9 @@ class IncomeRepositoryImpl @Inject constructor(
         cryptoAmount = cryptoAmount,
         cryptoRate = cryptoRate,
         cryptoRateSource = cryptoRateSource,
-        cryptoRateFetchedAt = cryptoRateFetchedAt
+        cryptoRateFetchedAt = cryptoRateFetchedAt,
+        recurringRuleId = recurringRuleId,
+        recurringPeriodKey = recurringPeriodKey
     )
 
     private fun IncomeEntryEntity.toFirestoreMap(): Map<String, Any?> = mapOf(
@@ -154,6 +175,8 @@ class IncomeRepositoryImpl @Inject constructor(
         "cryptoAmount" to cryptoAmount,
         "cryptoRate" to cryptoRate,
         "cryptoRateSource" to cryptoRateSource,
-        "cryptoRateFetchedAt" to cryptoRateFetchedAt
+        "cryptoRateFetchedAt" to cryptoRateFetchedAt,
+        "recurringRuleId" to recurringRuleId,
+        "recurringPeriodKey" to recurringPeriodKey
     )
 }

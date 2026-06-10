@@ -27,5 +27,7 @@ data class SavingsGoalEntity(
     val updatedAtMillis: Long,
     @ColumnInfo(defaultValue = "0") val initialSavedCents: Long = 0L,
     @ColumnInfo(defaultValue = "'LKR'") val defaultCurrency: String = "LKR",
-    @ColumnInfo(defaultValue = "'goal'") val iconKey: String = "goal"
+    @ColumnInfo(defaultValue = "'goal'") val iconKey: String = "goal",
+    @ColumnInfo(defaultValue = "'GREEN'") val iconAccentColorKey: String = "GREEN",
+    val goalImageUri: String? = null
 )

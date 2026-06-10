@@ -2,47 +2,61 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() {
-      return request.auth != null;
+    function owns(userId) {
+      return request.auth != null && request.auth.uid == userId;
     }
 
-    function ownsUserDocument(userId) {
-      return signedIn() && request.auth.uid == userId;
+    function validTimestampedUserDocument(userId) {
+      return request.resource.data.userId == userId
+        && request.resource.data.updatedAtMillis is int
+        && request.resource.data.createdAtMillis is int;
     }
 
-    function validTransactionKeys() {
-      return request.resource.data.keys().hasOnly([
-        'title',
-        'amountCents',
-        'type',
-        'note',
-        'ownerId',
-        'createdAt',
-        'updatedAt'
-      ]);
-    }
-
-    function validTransaction(userId) {
-      return validTransactionKeys()
-        && request.resource.data.ownerId == userId
-        && request.resource.data.title is string
-        && request.resource.data.title.size() > 0
+    function validMoneyDocument(userId) {
+      return validTimestampedUserDocument(userId)
         && request.resource.data.amountCents is int
-        && request.resource.data.amountCents > 0
-        && request.resource.data.type in ['INCOME', 'EXPENSE']
-        && request.resource.data.note is string
-        && request.resource.data.createdAt is timestamp
-        && request.resource.data.updatedAt is timestamp;
+        && request.resource.data.amountCents >= 0;
     }
 
-    match /users/{userId} {
-      allow read, write: if ownsUserDocument(userId);
+    match /users/{userId}/profile/main {
+      allow read, delete: if owns(userId);
+      allow create, update: if owns(userId)
+        && request.resource.data.uid == userId
+        && request.resource.data.updatedAtMillis is int
+        && request.resource.data.createdAtMillis is int;
+    }
 
-      match /transactions/{transactionId} {
-        allow read: if ownsUserDocument(userId);
-        allow create, update: if ownsUserDocument(userId) && validTransaction(userId);
-        allow delete: if ownsUserDocument(userId);
-      }
+    match /users/{userId}/income/{documentId} {
+      allow read, delete: if owns(userId);
+      allow create, update: if owns(userId) && validMoneyDocument(userId);
+    }
+
+    match /users/{userId}/expenses/{documentId} {
+      allow read, delete: if owns(userId);
+      allow create, update: if owns(userId) && validMoneyDocument(userId);
+    }
+
+    match /users/{userId}/goals/{documentId} {
+      allow read, delete: if owns(userId);
+      allow create, update: if owns(userId)
+        && validTimestampedUserDocument(userId)
+        && request.resource.data.targetCents is int
+        && request.resource.data.savedCents is int
+        && request.resource.data.targetCents >= 0
+        && request.resource.data.savedCents >= 0;
+    }
+
+    match /users/{userId}/budgets/{documentId} {
+      allow read, delete: if owns(userId);
+      allow create, update: if owns(userId)
+        && validTimestampedUserDocument(userId)
+        && request.resource.data.limitCents is int
+        && request.resource.data.limitCents > 0;
+    }
+
+    match /users/{userId}/recurringRules/{documentId} {
+      allow read, delete: if owns(userId);
+      allow create, update: if owns(userId) && validMoneyDocument(userId);
     }
   }
 }

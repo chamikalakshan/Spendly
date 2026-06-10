@@ -7,6 +7,7 @@ import com.spendly.financetracker.data.local.entity.ExpenseEntryEntity
 import com.spendly.financetracker.data.local.entity.SavingsGoalEntity
 import com.spendly.financetracker.data.model.SavingsGoal
 import com.spendly.financetracker.data.repository.GoalRepository
+import com.spendly.financetracker.data.service.SyncMetadataStore
 import com.spendly.financetracker.util.toEntity
 import com.spendly.financetracker.util.toModel
 import kotlinx.coroutines.flow.Flow
@@ -20,7 +21,8 @@ import javax.inject.Singleton
 class GoalRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val goalDao: GoalDao,
-    private val expenseDao: ExpenseDao
+    private val expenseDao: ExpenseDao,
+    private val syncMetadataStore: SyncMetadataStore
 ) : GoalRepository {
     override fun observeGoals(userId: String): Flow<List<SavingsGoal>> =
         goalDao.observeByUser(userId).map { rows -> rows.map { it.toModel() } }
@@ -72,32 +74,49 @@ class GoalRepositoryImpl @Inject constructor(
     }
 
     override suspend fun syncWithFirestore(userId: String) {
-        goalDao.getUnsynced(userId).forEach { syncOne(it) }
-        val snapshot = firestore.collection("users").document(userId).collection("goals").get().await()
-        snapshot.documents.mapNotNull { doc ->
-            val data = doc.data ?: return@mapNotNull null
-            SavingsGoalEntity(
-                id = doc.id,
-                userId = userId,
-                title = data["title"] as? String ?: return@mapNotNull null,
-                status = data["status"] as? String ?: "On track",
-                targetCents = (data["targetCents"] as? Number)?.toLong() ?: 0L,
-                savedCents = (data["savedCents"] as? Number)?.toLong() ?: 0L,
-                dueDateMillis = (data["dueDateMillis"] as? Number)?.toLong() ?: 0L,
-                category = data["category"] as? String ?: "Custom",
-                isPrimary = data["isPrimary"] as? Boolean ?: false,
-                isSynced = true,
-                createdAtMillis = (data["createdAtMillis"] as? Number)?.toLong() ?: 0L,
-                updatedAtMillis = (data["updatedAtMillis"] as? Number)?.toLong() ?: 0L,
-                initialSavedCents = (data["initialSavedCents"] as? Number)?.toLong() ?: 0L,
-                defaultCurrency = data["defaultCurrency"] as? String ?: "LKR",
-                iconKey = data["iconKey"] as? String ?: "goal"
-            )
-        }.forEach { remote ->
-            val local = goalDao.getById(remote.id)
-            if (local == null || remote.updatedAtMillis >= local.updatedAtMillis) {
-                goalDao.insert(remote)
+        val collection = "goals"
+        syncMetadataStore.markSyncing(userId, collection)
+        try {
+            goalDao.getUnsynced(userId).forEach { syncOne(it) }
+            val lastPull = syncMetadataStore.lastPullMillis(userId, collection)
+            val remoteRef = firestore.collection("users").document(userId).collection(collection)
+            val snapshot = if (lastPull > 0L) {
+                remoteRef.whereGreaterThan("updatedAtMillis", lastPull).get().await()
+            } else {
+                remoteRef.get().await()
             }
+            var maxRemoteUpdatedAt = lastPull
+            snapshot.documents.mapNotNull { doc ->
+                val data = doc.data ?: return@mapNotNull null
+                SavingsGoalEntity(
+                    id = doc.id,
+                    userId = userId,
+                    title = data["title"] as? String ?: return@mapNotNull null,
+                    status = data["status"] as? String ?: "On track",
+                    targetCents = (data["targetCents"] as? Number)?.toLong() ?: 0L,
+                    savedCents = (data["savedCents"] as? Number)?.toLong() ?: 0L,
+                    dueDateMillis = (data["dueDateMillis"] as? Number)?.toLong() ?: 0L,
+                    category = data["category"] as? String ?: "Custom",
+                    isPrimary = data["isPrimary"] as? Boolean ?: false,
+                    isSynced = true,
+                    createdAtMillis = (data["createdAtMillis"] as? Number)?.toLong() ?: 0L,
+                    updatedAtMillis = (data["updatedAtMillis"] as? Number)?.toLong() ?: 0L,
+                    initialSavedCents = (data["initialSavedCents"] as? Number)?.toLong() ?: 0L,
+                    defaultCurrency = data["defaultCurrency"] as? String ?: "LKR",
+                    iconKey = data["iconKey"] as? String ?: "goal",
+                    iconAccentColorKey = data["iconAccentColorKey"] as? String ?: "GREEN",
+                    goalImageUri = data["goalImageUri"] as? String
+                ).also { maxRemoteUpdatedAt = maxOf(maxRemoteUpdatedAt, it.updatedAtMillis) }
+            }.forEach { remote ->
+                val local = goalDao.getById(remote.id)
+                if (local == null || remote.updatedAtMillis >= local.updatedAtMillis) {
+                    goalDao.insert(remote)
+                }
+            }
+            syncMetadataStore.markSuccess(userId, collection, maxRemoteUpdatedAt)
+        } catch (error: Exception) {
+            syncMetadataStore.markFailure(userId, collection, error)
+            throw error
         }
     }
 
@@ -154,7 +173,7 @@ class GoalRepositoryImpl @Inject constructor(
         expenseDao.markAsSynced(expense.id)
     }
 
-    private fun SavingsGoalEntity.toFirestoreMap(): Map<String, Any> = mapOf(
+    private fun SavingsGoalEntity.toFirestoreMap(): Map<String, Any?> = mapOf(
         "id" to id,
         "userId" to userId,
         "title" to title,
@@ -168,6 +187,8 @@ class GoalRepositoryImpl @Inject constructor(
         "updatedAtMillis" to updatedAtMillis,
         "initialSavedCents" to initialSavedCents,
         "defaultCurrency" to defaultCurrency,
-        "iconKey" to iconKey
+        "iconKey" to iconKey,
+        "iconAccentColorKey" to iconAccentColorKey,
+        "goalImageUri" to goalImageUri
     )
 }

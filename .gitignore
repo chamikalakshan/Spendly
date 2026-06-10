@@ -9,6 +9,11 @@
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 /.idea/inspectionProfiles/
+/.idea/codeStyles/
+/.idea/deploymentTargetSelector.xml
+/.idea/deviceManager.xml
+/.idea/appInsightsSettings.xml
+/.idea/studiobot.xml
 .DS_Store
 /build
 **/build/

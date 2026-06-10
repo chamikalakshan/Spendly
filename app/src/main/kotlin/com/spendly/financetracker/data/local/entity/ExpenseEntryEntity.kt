@@ -11,7 +11,8 @@ import androidx.room.PrimaryKey
         Index("userId"),
         Index("dateMillis"),
         Index(value = ["userId", "dateMillis"]),
-        Index("category")
+        Index("category"),
+        Index(value = ["userId", "recurringRuleId", "recurringPeriodKey"])
     ]
 )
 data class ExpenseEntryEntity(
@@ -31,5 +32,7 @@ data class ExpenseEntryEntity(
     val exchangeRate: Double? = null,
     val paymentMethod: String? = null,
     val expenseType: String? = null,
-    val goalId: String? = null
+    val goalId: String? = null,
+    val recurringRuleId: String? = null,
+    val recurringPeriodKey: String? = null
 )

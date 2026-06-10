@@ -35,7 +35,9 @@ data class FinanceTransaction(
     val cryptoAmount: Double? = null,
     val cryptoRate: Double? = null,
     val cryptoRateSource: String? = null,
-    val cryptoRateFetchedAt: Long? = null
+    val cryptoRateFetchedAt: Long? = null,
+    val recurringRuleId: String? = null,
+    val recurringPeriodKey: String? = null
 ) {
     val signedAmountCents: Long
         get() = if (type == TransactionType.INCOME) amountCents else -amountCents
@@ -61,5 +63,7 @@ data class TransactionDraft(
     val cryptoAmount: Double? = null,
     val cryptoRate: Double? = null,
     val cryptoRateSource: String? = null,
-    val cryptoRateFetchedAt: Long? = null
+    val cryptoRateFetchedAt: Long? = null,
+    val recurringRuleId: String? = null,
+    val recurringPeriodKey: String? = null
 )

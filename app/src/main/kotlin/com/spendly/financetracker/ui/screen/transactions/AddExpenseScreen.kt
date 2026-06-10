@@ -52,13 +52,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,10 +75,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.spendly.financetracker.ui.theme.SpendlyGray300
-import com.spendly.financetracker.ui.theme.SpendlyGray500
+import com.spendly.financetracker.ui.components.SpendlyRadius
+import com.spendly.financetracker.ui.components.SpendlySectionLabel
+import com.spendly.financetracker.ui.components.SpendlySizing
+import com.spendly.financetracker.ui.components.SpendlySpacing
 import com.spendly.financetracker.ui.theme.SpendlyRed
 import com.spendly.financetracker.data.model.ExpenseType
+import com.spendly.financetracker.data.model.RecurringFrequency
 import com.spendly.financetracker.ui.util.AmountVisualTransformation
 import com.spendly.financetracker.ui.util.formatMoney
 import com.spendly.financetracker.ui.viewmodel.AddExpenseViewModel
@@ -91,7 +95,7 @@ fun AddExpenseScreen(
     onBack: () -> Unit
 ) {
     val viewModel: AddExpenseViewModel = hiltViewModel()
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showCategoryDialog by remember { mutableStateOf(false) }
     var customCategory by remember { mutableStateOf("") }
     var currencyMenuExpanded by remember { mutableStateOf(false) }
@@ -104,7 +108,6 @@ fun AddExpenseScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                windowInsets = WindowInsets(0.dp),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.Close, contentDescription = "Close")
@@ -116,8 +119,8 @@ fun AddExpenseScreen(
                         onClick = viewModel::save,
                         enabled = !state.isLoading,
                         colors = ButtonDefaults.buttonColors(containerColor = SpendlyRed, contentColor = Color.White),
-                        shape = RoundedCornerShape(20.dp),
-                        modifier = Modifier.padding(end = 8.dp).height(36.dp),
+                        shape = RoundedCornerShape(SpendlyRadius.pill),
+                        modifier = Modifier.padding(end = 8.dp).height(SpendlySizing.compactButtonHeight),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
                     ) { Text("Save", style = MaterialTheme.typography.labelMedium) }
                 }
@@ -128,9 +131,10 @@ fun AddExpenseScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(horizontal = SpendlySpacing.screenHorizontal)
+                .padding(top = SpendlySpacing.screenTop, bottom = SpendlySpacing.sectionGap)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(SpendlySpacing.formGap)
         ) {
             if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = SpendlyRed)
             if (state.error != null) {
@@ -139,12 +143,12 @@ fun AddExpenseScreen(
 
             // Amount
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                AddExpenseLabel("Amount")
+                SpendlySectionLabel("Amount")
                 Surface(
                     modifier = Modifier.fillMaxWidth().height(58.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color.White,
-                    border = androidx.compose.foundation.BorderStroke(0.8.dp, SpendlyGray300)
+                    shape = RoundedCornerShape(SpendlyRadius.input),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = androidx.compose.foundation.BorderStroke(0.8.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.55f))
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box {
@@ -157,7 +161,7 @@ fun AddExpenseScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(state.selectedCurrency, style = MaterialTheme.typography.titleSmall, color = SpendlyRed, fontWeight = FontWeight.Bold)
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Select currency", tint = SpendlyGray500, modifier = Modifier.size(18.dp))
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Select currency", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                             }
                             DropdownMenu(expanded = currencyMenuExpanded, onDismissRequest = { currencyMenuExpanded = false }) {
                                 state.visibleCurrencies.forEach { currency ->
@@ -171,7 +175,7 @@ fun AddExpenseScreen(
                                 }
                             }
                         }
-                        Box(modifier = Modifier.width(1.dp).height(58.dp).background(SpendlyGray300))
+                        Box(modifier = Modifier.width(1.dp).height(58.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)))
                         BasicTextField(
                             value = state.amount,
                             onValueChange = viewModel::onAmountChanged,
@@ -185,7 +189,7 @@ fun AddExpenseScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             visualTransformation = AmountVisualTransformation,
                             decorationBox = { inner ->
-                                if (state.amount.isEmpty()) Text("Enter Amount", fontSize = 16.sp, color = SpendlyGray500)
+                                if (state.amount.isEmpty()) Text("Enter Amount", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 inner()
                             }
                         )
@@ -245,11 +249,11 @@ fun AddExpenseScreen(
                 Text(
                     "Converted: ${formatMoney(state.convertedAmountCents, state.defaultCurrency)}",
                     style = MaterialTheme.typography.labelMedium,
-                    color = SpendlyGray500
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            AddExpenseLabel("Expense Type")
+            SpendlySectionLabel("Expense Type")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ExpenseType.values().forEach { type ->
                     FilterChip(
@@ -264,7 +268,7 @@ fun AddExpenseScreen(
                 }
             }
 
-            AddExpenseLabel("Payment Method")
+            SpendlySectionLabel("Payment Method")
             FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 state.paymentMethods.forEach { method ->
                     FilterChip(
@@ -279,8 +283,34 @@ fun AddExpenseScreen(
                 }
             }
 
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Text("Recurring", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                Switch(checked = state.isRecurring, onCheckedChange = viewModel::onRecurringChanged)
+            }
+            if (state.isRecurring) {
+                SpendlySectionLabel("Repeat")
+                FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    RecurringFrequency.values().forEach { frequency ->
+                        FilterChip(
+                            selected = state.recurringFrequency == frequency,
+                            onClick = { viewModel.onRecurringFrequencyChanged(frequency) },
+                            label = { Text(frequency.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = SpendlyRed,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                    }
+                }
+                Text(
+                    "This saves the current expense now and repeats from the next period.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
             // Name
-            AddExpenseLabel("Name")
+            SpendlySectionLabel("Name")
             OutlinedTextField(
                 value = state.name,
                 onValueChange = viewModel::onNameChanged,
@@ -290,7 +320,7 @@ fun AddExpenseScreen(
             )
 
             // Date
-            AddExpenseLabel("Date")
+            SpendlySectionLabel("Date")
             var showDatePicker by remember { mutableStateOf(false) }
             Box {
                 OutlinedTextField(
@@ -312,7 +342,7 @@ fun AddExpenseScreen(
             }
 
             // Note
-            AddExpenseLabel("Note (optional)")
+            SpendlySectionLabel("Note (optional)")
             OutlinedTextField(
                 value = state.note,
                 onValueChange = viewModel::onNoteChanged,
@@ -353,11 +383,6 @@ fun AddExpenseScreen(
             dismissButton = { TextButton(onClick = { showCategoryDialog = false }) { Text("Cancel") } }
         )
     }
-}
-
-@Composable
-private fun AddExpenseLabel(text: String) {
-    Text(text, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
 }
 
 private fun expenseCategoryIcon(category: String): ImageVector = when (category) {

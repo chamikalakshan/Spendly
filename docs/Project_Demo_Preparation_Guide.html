@@ -1,0 +1,6106 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Spendly / Financial Tracker Mobile App — Detailed Technical Demo Preparation Guide</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Spendly / Financial Tracker Mobile App — Detailed
+Technical Demo Preparation Guide</h1>
+</header>
+<h1
+id="spendly-financial-tracker-mobile-app-detailed-technical-demo-preparation-guide">Spendly
+/ Financial Tracker Mobile App — Detailed Technical Demo Preparation
+Guide</h1>
+<p>Prepared for a 15-minute live demo and engineering viva.</p>
+<p>Repository inspected:
+<code>/Users/chamikalakshan/Documents/Codex/Financial-Tracker-Mobile-Kotlin</code></p>
+<p>Generated date: 2026-06-05</p>
+<hr />
+<h2 id="project-overview">1. Project Overview</h2>
+<h3 id="what-the-application-does">1.1 What The Application Does</h3>
+<p>Spendly is a Kotlin Android mobile application for personal finance
+tracking. It helps a user create an account, sign in, record income,
+record expenses, track savings goals, review recent transaction history,
+view monthly analytics, and manage profile preferences such as default
+currency and app appearance.</p>
+<p>The app is built around a local-first data flow. User-facing screens
+read data from local Room database streams through ViewModels, while
+repositories synchronize local records with Firebase Firestore. This
+means the app can continue to show local cached information and can keep
+unsynced records until a network sync succeeds.</p>
+<h3 id="main-problem-solved">1.2 Main Problem Solved</h3>
+<p>The core problem is that personal finance data is often scattered or
+manually calculated. Spendly centralizes the user’s financial records
+and converts them into useful summaries:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Spendly Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Users forget where money goes</td>
+<td>Expenses are categorized and listed by month</td>
+</tr>
+<tr>
+<td>Users cannot quickly see savings progress</td>
+<td>Dashboard shows net savings and goal progress</td>
+</tr>
+<tr>
+<td>Users need account-based persistence</td>
+<td>Firebase Authentication identifies each user</td>
+</tr>
+<tr>
+<td>Users may use multiple devices</td>
+<td>Firestore stores user-owned cloud data</td>
+</tr>
+<tr>
+<td>Users may be temporarily offline</td>
+<td>Room caches records locally and sync runs later</td>
+</tr>
+<tr>
+<td>Users need quick insights</td>
+<td>Analytics aggregates income, expenses, categories, and monthly
+trends</td>
+</tr>
+</tbody>
+</table>
+<h3 id="target-users">1.3 Target Users</h3>
+<p>The target users are individuals who want a lightweight mobile
+finance tracker. The application is especially suitable for students,
+freelancers, and young professionals who want to track income sources,
+expenses, and savings goals without using a complex accounting
+system.</p>
+<h3 id="core-features">1.4 Core Features</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>What It Allows The User To Do</th>
+<th>Main Files</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Authentication</td>
+<td>Sign in, create account, reset password, change password</td>
+<td><code>AuthScreen.kt</code>, <code>CreateAccountScreen.kt</code>,
+<code>FirebaseAuthRepository.kt</code></td>
+</tr>
+<tr>
+<td>Dashboard</td>
+<td>View balance, income, expense, net savings, goals, recent
+transactions</td>
+<td><code>HomeScreen.kt</code>, <code>FinanceViewModel.kt</code></td>
+</tr>
+<tr>
+<td>Transactions / History</td>
+<td>Add, edit, delete, filter, and group income/expense records</td>
+<td><code>TransactionsScreen.kt</code>, <code>AddIncomeScreen.kt</code>,
+<code>AddExpenseScreen.kt</code></td>
+</tr>
+<tr>
+<td>Goals</td>
+<td>Create goals, edit goals, add savings, track progress</td>
+<td><code>GoalsScreen.kt</code>, <code>GoalsViewModel.kt</code>,
+<code>GoalRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Analytics</td>
+<td>View monthly totals, category breakdown, spending split, 5-month
+overview</td>
+<td><code>AnalyticsScreen.kt</code>,
+<code>AnalyticsViewModel.kt</code></td>
+</tr>
+<tr>
+<td>Profile</td>
+<td>Edit name/photo, currency, appearance, exchange rate, password,
+logout</td>
+<td><code>ProfileScreen.kt</code>, <code>FinanceViewModel.kt</code>,
+<code>UserRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Sync</td>
+<td>Upload/download profile, income, expenses, and goals</td>
+<td><code>SpendlySyncWorker.kt</code>, <code>SyncManager.kt</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="why-the-project-is-useful">1.5 Why The Project Is Useful</h3>
+<p>Spendly demonstrates a real mobile application architecture rather
+than only static UI screens. It includes authentication, local database
+caching, remote cloud persistence, dependency injection, background
+work, navigation, theme management, and screen-level state
+management.</p>
+<p>For a coursework viva, this is useful because the project can be
+explained at both user-flow level and engineering level:</p>
+<ul>
+<li>User-flow level: “A user signs in, adds income, records expenses,
+tracks a savings goal, and views analytics.”</li>
+<li>Engineering level: “A Compose screen calls a ViewModel. The
+ViewModel calls a repository. The repository writes to Room first and
+then syncs to Firestore. WorkManager later retries unsynced
+records.”</li>
+</ul>
+<h3 id="coursework-requirement-alignment">1.6 Coursework Requirement
+Alignment</h3>
+<p>The implementation aligns with common mobile development coursework
+requirements:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Requirement Area</th>
+<th>Codebase Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Native Android development</td>
+<td>Kotlin Android app with Jetpack Compose</td>
+</tr>
+<tr>
+<td>Modern UI framework</td>
+<td>Compose Material 3 components</td>
+</tr>
+<tr>
+<td>MVVM architecture</td>
+<td><code>ui/viewmodel</code>, repositories, model classes</td>
+</tr>
+<tr>
+<td>Local database</td>
+<td>Room entities, DAOs, and <code>SpendlyDatabase.kt</code></td>
+</tr>
+<tr>
+<td>Cloud backend</td>
+<td>Firebase Auth and Firestore repository implementations</td>
+</tr>
+<tr>
+<td>Dependency injection</td>
+<td>Hilt modules and injected ViewModels</td>
+</tr>
+<tr>
+<td>Background processing</td>
+<td>WorkManager sync worker</td>
+</tr>
+<tr>
+<td>Navigation</td>
+<td>Navigation Compose in <code>FinanceTrackerApp.kt</code> and
+<code>ui/navigation</code></td>
+</tr>
+<tr>
+<td>Team domain separation</td>
+<td>Dashboard/Profile, Transactions/Register, Goals/Login,
+Analytics/DB/Sync</td>
+</tr>
+</tbody>
+</table>
+<h3 id="short-demo-opening-script">1.7 Short Demo Opening Script</h3>
+<p>“Spendly is a personal finance tracker built with Kotlin, Jetpack
+Compose, MVVM, Room, Firebase Firestore, Hilt, and WorkManager. The app
+lets a user create an account, record income and expenses, track savings
+goals, and view monthly analytics. Technically, the app follows a
+local-first architecture: records are saved to Room first, then synced
+to Firestore. ViewModels expose StateFlow to Compose screens, and Hilt
+manages dependencies across repositories, DAOs, Firebase, and
+WorkManager.”</p>
+<hr />
+<h2 id="technology-stack">2. Technology Stack</h2>
+<h3 id="kotlin">2.1 Kotlin</h3>
+<p>Kotlin is the main programming language of the app.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Why Used</th>
+<th>Where Used</th>
+<th>Viva Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Modern Android language with null safety and coroutine support</td>
+<td>All <code>.kt</code> source files under
+<code>app/src/main/kotlin/com/spendly/financetracker</code></td>
+<td>“Kotlin gives concise syntax, null safety, data classes, sealed
+classes, coroutines, and works naturally with Compose and Room.”</td>
+</tr>
+</tbody>
+</table>
+<p>Important examples:</p>
+<ul>
+<li><code>data/model/FinanceTransaction.kt</code> uses Kotlin data
+classes and enums for transaction models.</li>
+<li><code>ui/viewmodel/FinanceViewModel.kt</code> uses coroutines and
+StateFlow.</li>
+<li><code>data/remote/*RepositoryImpl.kt</code> uses suspend functions
+and coroutine <code>await()</code> calls for Firebase tasks.</li>
+</ul>
+<h3 id="jetpack-compose">2.2 Jetpack Compose</h3>
+<p>Jetpack Compose is used for UI.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Why Used</th>
+<th>Where Used</th>
+<th>Viva Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Declarative UI, state-driven rendering, Material 3 integration</td>
+<td><code>ui/screen</code>, <code>ui/components</code>,
+<code>ui/theme</code></td>
+<td>“Compose screens observe ViewModel state and redraw automatically
+when StateFlow changes.”</td>
+</tr>
+</tbody>
+</table>
+<p>Important files:</p>
+<ul>
+<li><code>ui/FinanceTrackerApp.kt</code></li>
+<li><code>ui/screen/home/HomeScreen.kt</code></li>
+<li><code>ui/screen/transactions/TransactionsScreen.kt</code></li>
+<li><code>ui/screen/analytics/AnalyticsScreen.kt</code></li>
+<li><code>ui/screen/goals/GoalsScreen.kt</code></li>
+<li><code>ui/screen/profile/ProfileScreen.kt</code></li>
+</ul>
+<h3 id="mvvm-architecture">2.3 MVVM Architecture</h3>
+<p>The app follows Model-View-ViewModel.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>MVVM Part</th>
+<th>Codebase Location</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model</td>
+<td><code>data/model</code>, <code>data/local/entity</code></td>
+<td>Defines transaction, goal, user, and session data</td>
+</tr>
+<tr>
+<td>View</td>
+<td><code>ui/screen</code>, <code>ui/components</code></td>
+<td>Displays UI and sends user events</td>
+</tr>
+<tr>
+<td>ViewModel</td>
+<td><code>ui/viewmodel</code></td>
+<td>Holds screen state, validates inputs, calls repositories</td>
+</tr>
+<tr>
+<td>Repository</td>
+<td><code>data/repository</code>, <code>data/remote</code></td>
+<td>Abstracts Room and Firestore access</td>
+</tr>
+</tbody>
+</table>
+<p>Viva explanation:</p>
+<p>“The Compose UI does not directly call Room or Firestore. It sends
+events to a ViewModel. The ViewModel updates state and calls repository
+interfaces. Repository implementations decide whether to read/write
+Room, Firestore, or both.”</p>
+<h3 id="firebase-authentication">2.4 Firebase Authentication</h3>
+<p>Firebase Authentication handles user accounts.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Why Used</th>
+<th>Where Used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Provides secure account creation, login, logout, reset password,
+update password</td>
+<td><code>FirebaseAuthRepository.kt</code>, <code>AppModule.kt</code>,
+<code>FinanceViewModel.kt</code>,
+<code>CreateAccountViewModel.kt</code></td>
+</tr>
+</tbody>
+</table>
+<p>Important operations:</p>
+<ul>
+<li><code>createAccount(name, email, password, defaultCurrency)</code></li>
+<li><code>signIn(email, password)</code></li>
+<li><code>signOut()</code></li>
+<li><code>sendPasswordResetEmail(email)</code></li>
+<li><code>updatePassword(currentPassword, newPassword)</code></li>
+<li><code>observeSession()</code></li>
+</ul>
+<h3 id="firebase-firestore">2.5 Firebase Firestore</h3>
+<p>Firestore is the remote cloud database.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Why Used</th>
+<th>Where Used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stores profile, income, expenses, and goals per Firebase user</td>
+<td><code>data/remote</code>, <code>FirebaseAuthRepository.kt</code>,
+<code>AppModule.kt</code></td>
+</tr>
+</tbody>
+</table>
+<p>Collections used in code:</p>
+<pre class="text"><code>users/{uid}/profile/main
+users/{uid}/income/{incomeId}
+users/{uid}/expenses/{expenseId}
+users/{uid}/goals/{goalId}</code></pre>
+<p>Viva explanation:</p>
+<p>“The Firebase UID is the owner key. Each user’s data is stored under
+<code>users/{uid}</code>. That prevents mixing data between users and
+supports cross-device sync.”</p>
+<h3 id="room-database">2.6 Room Database</h3>
+<p>Room provides local persistence.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Why Used</th>
+<th>Where Used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Offline cache, local query streams, fast UI updates</td>
+<td><code>data/local/entity</code>, <code>data/local/dao</code>,
+<code>SpendlyDatabase.kt</code></td>
+</tr>
+</tbody>
+</table>
+<p>Important entities:</p>
+<ul>
+<li><code>IncomeEntryEntity</code></li>
+<li><code>ExpenseEntryEntity</code></li>
+<li><code>SavingsGoalEntity</code></li>
+<li><code>UserProfileEntity</code></li>
+</ul>
+<p>Important DAOs:</p>
+<ul>
+<li><code>IncomeDao</code></li>
+<li><code>ExpenseDao</code></li>
+<li><code>GoalDao</code></li>
+<li><code>UserProfileDao</code></li>
+</ul>
+<h3 id="hilt-dependency-injection">2.7 Hilt Dependency Injection</h3>
+<p>Hilt creates and injects dependencies.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Why Used</th>
+<th>Where Used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Avoids manual object creation and supports testable
+architecture</td>
+<td><code>SpendlyApplication.kt</code>, <code>MainActivity.kt</code>,
+<code>di/AppModule.kt</code>, <code>di/RepositoryModule.kt</code>,
+ViewModels, worker</td>
+</tr>
+</tbody>
+</table>
+<p>Important annotations:</p>
+<ul>
+<li><code>@HiltAndroidApp</code> in
+<code>SpendlyApplication.kt</code></li>
+<li><code>@AndroidEntryPoint</code> in <code>MainActivity.kt</code></li>
+<li><code>@Module</code>, <code>@InstallIn</code>,
+<code>@Provides</code>, <code>@Binds</code></li>
+<li><code>@HiltViewModel</code></li>
+<li><code>@HiltWorker</code></li>
+</ul>
+<h3 id="workmanager">2.8 WorkManager</h3>
+<p>WorkManager handles background sync.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Why Used</th>
+<th>Where Used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Runs reliable sync work with network constraints</td>
+<td><code>worker/SpendlySyncWorker.kt</code>,
+<code>util/SyncManager.kt</code>,
+<code>SpendlyApplication.kt</code></td>
+</tr>
+</tbody>
+</table>
+<p>Viva explanation:</p>
+<p>“When writes fail or records remain unsynced, WorkManager can retry
+later when the device has a network connection.”</p>
+<h3 id="coroutines-flow-and-stateflow">2.9 Coroutines, Flow, And
+StateFlow</h3>
+<p>The code uses coroutines and flows for asynchronous work and
+observable UI state.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>API</th>
+<th>Example Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>viewModelScope.launch</code></td>
+<td>ViewModels run repository calls without blocking UI</td>
+</tr>
+<tr>
+<td><code>Flow</code></td>
+<td>DAOs expose observable database streams</td>
+</tr>
+<tr>
+<td><code>StateFlow</code></td>
+<td>ViewModels expose immutable UI state to Compose</td>
+</tr>
+<tr>
+<td><code>combine</code></td>
+<td><code>FinanceViewModel</code> combines profile, transactions, and
+goals</td>
+</tr>
+</tbody>
+</table>
+<h3 id="navigation-compose">2.10 Navigation Compose</h3>
+<p>Navigation Compose controls screen routing.</p>
+<p>Important files:</p>
+<ul>
+<li><code>ui/FinanceTrackerApp.kt</code></li>
+<li><code>ui/navigation/Screen.kt</code></li>
+<li><code>ui/navigation/BottomNavItem.kt</code></li>
+<li><code>ui/navigation/SpendlyNavGraph.kt</code></li>
+<li><code>ui/navigation/SpendlyBottomNavBar.kt</code></li>
+</ul>
+<p>The active implementation is mainly inside
+<code>FinanceTrackerApp.kt</code>, which builds the scaffold, bottom
+navigation, NavHost, routes, transitions, and shared floating action
+button.</p>
+<h3 id="material-design-3">2.11 Material Design 3</h3>
+<p>Material 3 is used for modern Compose UI components.</p>
+<p>Examples:</p>
+<ul>
+<li><code>Scaffold</code></li>
+<li><code>NavigationBar</code></li>
+<li><code>NavigationBarItem</code></li>
+<li><code>TopAppBar</code></li>
+<li><code>Card</code></li>
+<li><code>Button</code></li>
+<li><code>OutlinedTextField</code></li>
+<li><code>AlertDialog</code></li>
+<li><code>FloatingActionButton</code></li>
+<li><code>FilterChip</code></li>
+<li><code>ModalBottomSheet</code></li>
+</ul>
+<h3 id="exchange-rate-and-crypto-api-services">2.12 Exchange Rate And
+Crypto API Services</h3>
+<p>The codebase includes simple service classes:</p>
+<ul>
+<li><code>data/service/CurrencyRateService.kt</code></li>
+<li><code>data/service/CryptoRateService.kt</code></li>
+</ul>
+<p>Currency conversion is optional. If live rates are unavailable, the
+UI supports manual rate entry. This is important for demo explanation
+because saving income/expense does not depend completely on external API
+availability.</p>
+<h3 id="gradle-dependencies">2.13 Gradle Dependencies</h3>
+<p>The main dependency file is:</p>
+<p><code>app/build.gradle.kts</code></p>
+<p>Important configured items:</p>
+<table>
+<thead>
+<tr>
+<th>Dependency / Plugin</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Android application plugin</td>
+<td>Build Android app</td>
+</tr>
+<tr>
+<td>Kotlin Android plugin</td>
+<td>Kotlin support</td>
+</tr>
+<tr>
+<td>Google services plugin</td>
+<td>Firebase integration</td>
+</tr>
+<tr>
+<td>Hilt plugin</td>
+<td>Dependency injection</td>
+</tr>
+<tr>
+<td>KSP plugin</td>
+<td>Room/Hilt annotation processing</td>
+</tr>
+<tr>
+<td>Compose BOM and Material 3</td>
+<td>UI</td>
+</tr>
+<tr>
+<td>Navigation Compose</td>
+<td>Routing</td>
+</tr>
+<tr>
+<td>Room runtime/ktx/compiler</td>
+<td>Local database</td>
+</tr>
+<tr>
+<td>Firebase BOM, Auth, Firestore</td>
+<td>Backend</td>
+</tr>
+<tr>
+<td>WorkManager and Hilt Work</td>
+<td>Sync</td>
+</tr>
+<tr>
+<td>Coroutines Play Services</td>
+<td>Firebase <code>await()</code> support</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="full-folder-and-file-structure-explanation">3. Full Folder And
+File Structure Explanation</h2>
+<h3 id="high-level-project-tree">3.1 High-Level Project Tree</h3>
+<pre class="text"><code>Financial-Tracker-Mobile-Kotlin/
+├── MainActivity.kt
+├── SpendlyApplication.kt
+├── app/
+│   ├── build.gradle.kts
+│   ├── google-services.json
+│   └── src/
+│       ├── main/
+│       │   ├── AndroidManifest.xml
+│       │   ├── kotlin/com/spendly/financetracker/
+│       │   │   ├── data/
+│       │   │   │   ├── firebase/
+│       │   │   │   ├── local/
+│       │   │   │   │   ├── dao/
+│       │   │   │   │   ├── db/
+│       │   │   │   │   └── entity/
+│       │   │   │   ├── model/
+│       │   │   │   ├── remote/
+│       │   │   │   ├── repository/
+│       │   │   │   └── service/
+│       │   │   ├── di/
+│       │   │   ├── ui/
+│       │   │   │   ├── components/
+│       │   │   │   ├── navigation/
+│       │   │   │   ├── screen/
+│       │   │   │   │   ├── analytics/
+│       │   │   │   │   ├── goals/
+│       │   │   │   │   ├── home/
+│       │   │   │   │   ├── profile/
+│       │   │   │   │   └── transactions/
+│       │   │   │   ├── theme/
+│       │   │   │   ├── util/
+│       │   │   │   └── viewmodel/
+│       │   │   ├── util/
+│       │   │   └── worker/
+│       │   └── res/
+├── docs/
+├── firestore.indexes.json
+├── firestore.rules
+├── build.gradle.kts
+├── settings.gradle.kts
+└── gradle/libs.versions.toml</code></pre>
+<h3 id="folder-responsibilities">3.2 Folder Responsibilities</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Folder</th>
+<th>Layer</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>data/model</code></td>
+<td>Domain model</td>
+<td>App-level data classes used by UI and ViewModels</td>
+</tr>
+<tr>
+<td><code>data/local/entity</code></td>
+<td>Room schema</td>
+<td>Database table definitions</td>
+</tr>
+<tr>
+<td><code>data/local/dao</code></td>
+<td>Room access</td>
+<td>SQL queries and observable flows</td>
+</tr>
+<tr>
+<td><code>data/local/db</code></td>
+<td>Room database</td>
+<td>Database class and migrations</td>
+</tr>
+<tr>
+<td><code>data/repository</code></td>
+<td>Repository contracts</td>
+<td>Interfaces for clean architecture</td>
+</tr>
+<tr>
+<td><code>data/remote</code></td>
+<td>Repository implementations</td>
+<td>Room + Firestore integration</td>
+</tr>
+<tr>
+<td><code>data/service</code></td>
+<td>External services</td>
+<td>Currency and crypto rate helpers</td>
+</tr>
+<tr>
+<td><code>data/firebase</code></td>
+<td>Firebase setup helpers</td>
+<td>Firebase bootstrap checks</td>
+</tr>
+<tr>
+<td><code>di</code></td>
+<td>Dependency injection</td>
+<td>Hilt modules</td>
+</tr>
+<tr>
+<td><code>ui/screen</code></td>
+<td>UI screens</td>
+<td>Compose page-level screens</td>
+</tr>
+<tr>
+<td><code>ui/components</code></td>
+<td>Shared UI</td>
+<td>Reusable cards, nav, rows, controls</td>
+</tr>
+<tr>
+<td><code>ui/navigation</code></td>
+<td>Navigation definitions</td>
+<td>Route names and bottom nav data</td>
+</tr>
+<tr>
+<td><code>ui/theme</code></td>
+<td>Theme system</td>
+<td>Colors, typography, light/dark modes</td>
+</tr>
+<tr>
+<td><code>ui/util</code></td>
+<td>UI helpers</td>
+<td>Money formatting, month options, category settings</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel</code></td>
+<td>ViewModel layer</td>
+<td>State and business logic for screens</td>
+</tr>
+<tr>
+<td><code>util</code></td>
+<td>App utilities</td>
+<td>Mapping and sync orchestration</td>
+</tr>
+<tr>
+<td><code>worker</code></td>
+<td>Background work</td>
+<td>WorkManager sync worker</td>
+</tr>
+</tbody>
+</table>
+<h3 id="important-file-table">3.3 Important File Table</h3>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>File Path</th>
+<th>Layer</th>
+<th>Main Responsibility</th>
+<th>Important Classes/Functions</th>
+<th>Related Feature</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MainActivity.kt</code></td>
+<td>App entry</td>
+<td>Starts Compose and applies theme</td>
+<td><code>MainActivity</code>, <code>setContent</code></td>
+<td>App startup</td>
+</tr>
+<tr>
+<td><code>SpendlyApplication.kt</code></td>
+<td>App entry / DI</td>
+<td>Enables Hilt and schedules sync</td>
+<td><code>SpendlyApplication</code></td>
+<td>Hilt, WorkManager</td>
+</tr>
+<tr>
+<td><code>ui/FinanceTrackerApp.kt</code></td>
+<td>UI shell</td>
+<td>App routing, scaffold, bottom nav, FAB</td>
+<td><code>FinanceTrackerApp</code>, route transitions</td>
+<td>Navigation</td>
+</tr>
+<tr>
+<td><code>ui/navigation/Screen.kt</code></td>
+<td>Navigation</td>
+<td>Route constants</td>
+<td><code>Screen</code> sealed class</td>
+<td>Navigation</td>
+</tr>
+<tr>
+<td><code>ui/navigation/BottomNavItem.kt</code></td>
+<td>Navigation</td>
+<td>Bottom tab model</td>
+<td><code>BottomNavItem</code>, <code>AppTab</code></td>
+<td>Bottom nav</td>
+</tr>
+<tr>
+<td><code>ui/components/SpendlyAddActionMenu.kt</code></td>
+<td>UI component</td>
+<td>Shared plus FAB menu</td>
+<td><code>SpendlyAddActionMenu</code>, <code>SpendlyFab</code></td>
+<td>Home, History, Goals</td>
+</tr>
+<tr>
+<td><code>ui/components/SpendlyMonthPicker.kt</code></td>
+<td>UI component</td>
+<td>Shared month picker</td>
+<td><code>SpendlyMonthPicker</code></td>
+<td>History, Analytics</td>
+</tr>
+<tr>
+<td><code>ui/components/TransactionListItem.kt</code></td>
+<td>UI component</td>
+<td>Transaction row UI</td>
+<td><code>TransactionListItem</code></td>
+<td>Dashboard, History</td>
+</tr>
+<tr>
+<td><code>ui/screen/home/HomeScreen.kt</code></td>
+<td>UI screen</td>
+<td>Dashboard layout and summary</td>
+<td><code>HomeScreen</code></td>
+<td>Dashboard</td>
+</tr>
+<tr>
+<td><code>ui/screen/profile/ProfileScreen.kt</code></td>
+<td>UI screen</td>
+<td>Profile/settings UI</td>
+<td><code>ProfileScreen</code></td>
+<td>Profile</td>
+</tr>
+<tr>
+<td><code>ui/screen/transactions/TransactionsScreen.kt</code></td>
+<td>UI screen</td>
+<td>History list/filter/edit/delete</td>
+<td><code>TransactionsScreen</code></td>
+<td>Transactions</td>
+</tr>
+<tr>
+<td><code>ui/screen/transactions/AddIncomeScreen.kt</code></td>
+<td>UI screen</td>
+<td>Add/edit income form</td>
+<td><code>AddIncomeScreen</code></td>
+<td>Income</td>
+</tr>
+<tr>
+<td><code>ui/screen/transactions/AddExpenseScreen.kt</code></td>
+<td>UI screen</td>
+<td>Add/edit expense form</td>
+<td><code>AddExpenseScreen</code></td>
+<td>Expenses</td>
+</tr>
+<tr>
+<td><code>ui/screen/analytics/AnalyticsScreen.kt</code></td>
+<td>UI screen</td>
+<td>Analytics charts and cards</td>
+<td><code>AnalyticsScreen</code>, <code>DonutChart</code></td>
+<td>Analytics</td>
+</tr>
+<tr>
+<td><code>ui/screen/goals/GoalsScreen.kt</code></td>
+<td>UI screen</td>
+<td>Goal list/details/forms</td>
+<td><code>GoalsScreenContent</code>, <code>GoalFormContent</code></td>
+<td>Goals</td>
+</tr>
+<tr>
+<td><code>ui/screen/AuthScreen.kt</code></td>
+<td>UI screen</td>
+<td>Login UI</td>
+<td><code>AuthScreen</code></td>
+<td>Login</td>
+</tr>
+<tr>
+<td><code>ui/screen/CreateAccountScreen.kt</code></td>
+<td>UI screen</td>
+<td>Registration UI</td>
+<td><code>CreateAccountScreen</code></td>
+<td>Register</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/FinanceViewModel.kt</code></td>
+<td>ViewModel</td>
+<td>Global session and app state</td>
+<td><code>FinanceViewModel</code>, <code>observeUserData</code></td>
+<td>App-wide</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/TransactionsViewModel.kt</code></td>
+<td>ViewModel</td>
+<td>History filtering and delete</td>
+<td><code>TransactionsViewModel</code></td>
+<td>Transactions</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/AddIncomeViewModel.kt</code></td>
+<td>ViewModel</td>
+<td>Income form validation/save</td>
+<td><code>AddIncomeViewModel</code></td>
+<td>Income</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/AddExpenseViewModel.kt</code></td>
+<td>ViewModel</td>
+<td>Expense form validation/save</td>
+<td><code>AddExpenseViewModel</code></td>
+<td>Expense</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/AnalyticsViewModel.kt</code></td>
+<td>ViewModel</td>
+<td>Analytics aggregation</td>
+<td><code>AnalyticsViewModel</code>, <code>AnalyticsUiState</code></td>
+<td>Analytics</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/GoalsViewModel.kt</code></td>
+<td>ViewModel</td>
+<td>Goal form/details/savings</td>
+<td><code>GoalsViewModel</code></td>
+<td>Goals</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/CreateAccountViewModel.kt</code></td>
+<td>ViewModel</td>
+<td>Registration validation</td>
+<td><code>CreateAccountViewModel</code></td>
+<td>Register</td>
+</tr>
+<tr>
+<td><code>data/local/db/SpendlyDatabase.kt</code></td>
+<td>Room</td>
+<td>Database and migrations</td>
+<td><code>SpendlyDatabase</code>, migrations 1-5</td>
+<td>Local DB</td>
+</tr>
+<tr>
+<td><code>data/local/dao/IncomeDao.kt</code></td>
+<td>DAO</td>
+<td>Income SQL operations</td>
+<td><code>observeByUser</code>, <code>getUnsynced</code></td>
+<td>Income</td>
+</tr>
+<tr>
+<td><code>data/local/dao/ExpenseDao.kt</code></td>
+<td>DAO</td>
+<td>Expense SQL operations</td>
+<td><code>observeByUser</code>, <code>getUnsynced</code></td>
+<td>Expense</td>
+</tr>
+<tr>
+<td><code>data/local/dao/GoalDao.kt</code></td>
+<td>DAO</td>
+<td>Goal SQL operations</td>
+<td><code>observeByUser</code>, <code>markAsSynced</code></td>
+<td>Goals</td>
+</tr>
+<tr>
+<td><code>data/local/dao/UserProfileDao.kt</code></td>
+<td>DAO</td>
+<td>Profile SQL operations</td>
+<td><code>observeById</code>, <code>upsert</code></td>
+<td>Profile</td>
+</tr>
+<tr>
+<td><code>data/remote/IncomeRepositoryImpl.kt</code></td>
+<td>Repository impl</td>
+<td>Room + Firestore income sync</td>
+<td><code>addIncome</code>, <code>syncWithFirestore</code></td>
+<td>Income</td>
+</tr>
+<tr>
+<td><code>data/remote/ExpenseRepositoryImpl.kt</code></td>
+<td>Repository impl</td>
+<td>Room + Firestore expense sync</td>
+<td><code>addExpense</code>, <code>deleteExpense</code></td>
+<td>Expense</td>
+</tr>
+<tr>
+<td><code>data/remote/GoalRepositoryImpl.kt</code></td>
+<td>Repository impl</td>
+<td>Goal persistence and savings expenses</td>
+<td><code>saveGoal</code>, <code>addSavings</code></td>
+<td>Goals</td>
+</tr>
+<tr>
+<td><code>data/remote/UserRepositoryImpl.kt</code></td>
+<td>Repository impl</td>
+<td>Profile persistence and sync</td>
+<td><code>upsertProfile</code>, <code>syncWithFirestore</code></td>
+<td>Profile</td>
+</tr>
+<tr>
+<td><code>data/repository/FirebaseAuthRepository.kt</code></td>
+<td>Repository impl</td>
+<td>Firebase Auth integration</td>
+<td><code>signIn</code>, <code>createAccount</code>,
+<code>updatePassword</code></td>
+<td>Auth</td>
+</tr>
+<tr>
+<td><code>data/repository/FirebaseTransactionRepository.kt</code></td>
+<td>Repository impl</td>
+<td>Combines income and expenses</td>
+<td><code>observeTransactions</code></td>
+<td>Transactions</td>
+</tr>
+<tr>
+<td><code>di/AppModule.kt</code></td>
+<td>DI</td>
+<td>Provides Firebase, Room, DAOs, WorkManager</td>
+<td><code>provideFirestore</code>, <code>provideDatabase</code></td>
+<td>App setup</td>
+</tr>
+<tr>
+<td><code>di/RepositoryModule.kt</code></td>
+<td>DI</td>
+<td>Binds repository interfaces</td>
+<td><code>bindIncomeRepository</code> etc.</td>
+<td>Clean architecture</td>
+</tr>
+<tr>
+<td><code>worker/SpendlySyncWorker.kt</code></td>
+<td>WorkManager</td>
+<td>Background sync worker</td>
+<td><code>doWork</code>, <code>buildPeriodicRequest</code></td>
+<td>Sync</td>
+</tr>
+<tr>
+<td><code>util/SyncManager.kt</code></td>
+<td>Utility</td>
+<td>Schedules sync jobs</td>
+<td><code>schedulePeriodicSync</code>,
+<code>startImmediateSync</code></td>
+<td>Sync</td>
+</tr>
+<tr>
+<td><code>util/Mappers.kt</code></td>
+<td>Mapping</td>
+<td>Converts entities/models/Firestore maps</td>
+<td><code>toModel</code>, <code>toEntity</code>, map helpers</td>
+<td>Data conversion</td>
+</tr>
+<tr>
+<td><code>ui/theme/Theme.kt</code></td>
+<td>Theme</td>
+<td>Material light/dark theme</td>
+<td><code>FinanceTrackerTheme</code></td>
+<td>UI consistency</td>
+</tr>
+<tr>
+<td><code>ui/theme/ThemeMode.kt</code></td>
+<td>Theme</td>
+<td>Theme mode enum</td>
+<td><code>ThemeMode</code></td>
+<td>Profile appearance</td>
+</tr>
+<tr>
+<td><code>ui/util/UiUtils.kt</code></td>
+<td>UI utility</td>
+<td>Amount/date formatting</td>
+<td><code>formatMoney</code>, date helpers</td>
+<td>UI display</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="architecture-explanation">4. Architecture Explanation</h2>
+<h3 id="architecture-style">4.1 Architecture Style</h3>
+<p>The app uses a layered MVVM architecture:</p>
+<pre class="text"><code>[Compose UI Screen]
+        ↓ user events
+[ViewModel]
+        ↓ repository calls
+[Repository Interface]
+        ↓ implementation
+[Room DAO]  +  [Firebase Firestore]
+        ↓
+[Flow / suspend result]
+        ↓
+[ViewModel StateFlow]
+        ↓
+[Compose recomposition]</code></pre>
+<h3 id="main-data-flow">4.2 Main Data Flow</h3>
+<p>Example: user adds income.</p>
+<pre class="text"><code>User taps Save on AddIncomeScreen
+        ↓
+AddIncomeViewModel validates amount, source, date, currency
+        ↓
+IncomeRepository.addIncome(draft)
+        ↓
+IncomeRepositoryImpl inserts IncomeEntryEntity into Room with isSynced=false
+        ↓
+IncomeRepositoryImpl tries to write users/{uid}/income/{id} in Firestore
+        ↓
+If success, DAO marks local row as synced
+        ↓
+Room Flow emits updated income list
+        ↓
+FinanceViewModel / TransactionsViewModel receive new state
+        ↓
+Home and History screens update automatically</code></pre>
+<h3 id="ui-layer">4.3 UI Layer</h3>
+<p>The UI layer is Compose-based. It should mainly:</p>
+<ul>
+<li>Display state.</li>
+<li>Collect state from ViewModels.</li>
+<li>Call callbacks when users interact.</li>
+<li>Avoid direct repository or Firebase access.</li>
+</ul>
+<p>Main UI folders:</p>
+<ul>
+<li><code>ui/screen</code></li>
+<li><code>ui/components</code></li>
+<li><code>ui/theme</code></li>
+<li><code>ui/util</code></li>
+</ul>
+<h3 id="viewmodel-layer">4.4 ViewModel Layer</h3>
+<p>ViewModels hold UI state and business rules. Examples:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>ViewModel</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FinanceViewModel</code></td>
+<td>Global session, profile, dashboard state, sync trigger</td>
+</tr>
+<tr>
+<td><code>TransactionsViewModel</code></td>
+<td>Month filtering, transaction grouping, delete actions</td>
+</tr>
+<tr>
+<td><code>AddIncomeViewModel</code></td>
+<td>Income validation, currency conversion, source settings</td>
+</tr>
+<tr>
+<td><code>AddExpenseViewModel</code></td>
+<td>Expense validation, category/payment/type handling</td>
+</tr>
+<tr>
+<td><code>AnalyticsViewModel</code></td>
+<td>Monthly totals, category percentages, spending split</td>
+</tr>
+<tr>
+<td><code>GoalsViewModel</code></td>
+<td>Goal form state, progress, saving validation</td>
+</tr>
+<tr>
+<td><code>CreateAccountViewModel</code></td>
+<td>Register validation and account creation</td>
+</tr>
+</tbody>
+</table>
+<h3 id="repository-layer">4.5 Repository Layer</h3>
+<p>Repository interfaces live in <code>data/repository</code>.
+Implementations live in <code>data/remote</code>.</p>
+<p>This split is important because ViewModels depend on interfaces
+instead of concrete Firebase/Room code. That improves testability and
+keeps UI code clean.</p>
+<h3 id="local-database-layer">4.6 Local Database Layer</h3>
+<p>Room is used for:</p>
+<ul>
+<li>Local caching.</li>
+<li>Fast list rendering.</li>
+<li>Offline-created records.</li>
+<li>Observable <code>Flow</code> streams.</li>
+</ul>
+<p>Each entity has an <code>isSynced</code> field. Repositories set
+<code>isSynced=false</code> when data is written locally. After
+Firestore upload succeeds, the corresponding DAO method marks the row as
+synced.</p>
+<h3 id="remote-firestore-layer">4.7 Remote Firestore Layer</h3>
+<p>Firestore stores cloud copies under the Firebase UID. The repository
+implementations read and write Firestore documents. The remote documents
+are mapped through <code>util/Mappers.kt</code>.</p>
+<h3 id="dependency-injection-layer">4.8 Dependency Injection Layer</h3>
+<p>Hilt provides:</p>
+<ul>
+<li>Firebase Auth.</li>
+<li>Firebase Firestore.</li>
+<li>Room database.</li>
+<li>DAOs.</li>
+<li>Repository implementations.</li>
+<li>WorkManager.</li>
+<li>Worker factory.</li>
+</ul>
+<p>This avoids manually creating these dependencies inside UI
+screens.</p>
+<h3 id="background-sync-layer">4.9 Background Sync Layer</h3>
+<p><code>SpendlySyncWorker</code> syncs profile, income, expenses, and
+goals. <code>SyncManager</code> schedules periodic work and immediate
+sync. <code>SpendlyApplication</code> schedules periodic sync when the
+app starts.</p>
+<h3 id="navigation-layer">4.10 Navigation Layer</h3>
+<p>The main navigation shell is in <code>FinanceTrackerApp.kt</code>. It
+has:</p>
+<ul>
+<li>Splash route.</li>
+<li>Auth routes.</li>
+<li>Main app routes.</li>
+<li>Bottom navigation visibility rules.</li>
+<li>Shared FAB overlay.</li>
+<li>Slide/fade transitions.</li>
+</ul>
+<h3 id="why-this-architecture-is-suitable">4.11 Why This Architecture Is
+Suitable</h3>
+<p>This architecture is suitable because the app has real data, multiple
+screens, offline caching, background sync, and user accounts. A simple
+screen-only app would become difficult to maintain. MVVM separates
+responsibilities:</p>
+<ul>
+<li>UI remains focused on rendering.</li>
+<li>ViewModel handles state and validation.</li>
+<li>Repository handles data source decisions.</li>
+<li>Room handles local database.</li>
+<li>Firestore handles cloud persistence.</li>
+<li>WorkManager handles delayed sync.</li>
+</ul>
+<hr />
+<h2 id="domain-breakdown-by-team-member">5. Domain Breakdown By Team
+Member</h2>
+<h3 id="domain-allocation-summary">5.1 Domain Allocation Summary</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Member</th>
+<th>Domain</th>
+<th>Main Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chamika</td>
+<td>Dashboard and Profile</td>
+<td>Dashboard UI/state, profile UI/settings, related profile/backend
+integration</td>
+</tr>
+<tr>
+<td>Yesen</td>
+<td>Transactions and Create Account</td>
+<td>Add/list/edit/delete income/expense, registration flow, transaction
+backend integration</td>
+</tr>
+<tr>
+<td>Nikini</td>
+<td>Goals and Login</td>
+<td>Goal tracking, goal savings, login flow, related backend
+integration</td>
+</tr>
+<tr>
+<td>Mahima</td>
+<td>Analytics and DB/Sync foundation</td>
+<td>Analytics, Room/Firestore setup, entities, caching, sync,
+WorkManager</td>
+</tr>
+</tbody>
+</table>
+<h3 id="shared-common-files">5.2 Shared / Common Files</h3>
+<p>Some files are shared across all domains and should be explained as
+common architecture:</p>
+<table>
+<thead>
+<tr>
+<th>Shared File</th>
+<th>Why Shared</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MainActivity.kt</code></td>
+<td>Entry point and theme setup</td>
+</tr>
+<tr>
+<td><code>SpendlyApplication.kt</code></td>
+<td>Hilt app and WorkManager setup</td>
+</tr>
+<tr>
+<td><code>ui/FinanceTrackerApp.kt</code></td>
+<td>Main navigation and scaffold</td>
+</tr>
+<tr>
+<td><code>di/AppModule.kt</code></td>
+<td>Shared dependency providers</td>
+</tr>
+<tr>
+<td><code>di/RepositoryModule.kt</code></td>
+<td>Repository binding</td>
+</tr>
+<tr>
+<td><code>data/local/db/SpendlyDatabase.kt</code></td>
+<td>Shared local DB</td>
+</tr>
+<tr>
+<td><code>util/Mappers.kt</code></td>
+<td>Shared mapping logic</td>
+</tr>
+<tr>
+<td><code>util/SyncManager.kt</code></td>
+<td>Shared sync orchestration</td>
+</tr>
+<tr>
+<td><code>ui/util/UiUtils.kt</code></td>
+<td>Shared formatting</td>
+</tr>
+<tr>
+<td><code>ui/theme/*</code></td>
+<td>Shared visual system</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="chamika-domain-profile-page-and-dashboard-page">6. Chamika
+Domain — Profile Page And Dashboard Page</h2>
+<h3 id="feature-overview">6.1 Feature Overview</h3>
+<p>Chamika’s domain covers:</p>
+<ul>
+<li>Dashboard page.</li>
+<li>Profile page.</li>
+<li>Dashboard/profile UI components.</li>
+<li>Dashboard summary calculations through app state.</li>
+<li>Profile update and settings flow.</li>
+<li>Profile data communication with Room and Firestore.</li>
+</ul>
+<h3 id="user-flow-dashboard">6.2 User Flow: Dashboard</h3>
+<pre class="text"><code>User signs in
+    ↓
+FinanceViewModel observes session
+    ↓
+FinanceViewModel observes profile, transactions, and goals
+    ↓
+HomeScreen receives FinanceUiState
+    ↓
+Dashboard shows total balance, monthly income, monthly expense, savings rate, yearly savings, goal card, recent transactions</code></pre>
+<h3 id="user-flow-profile">6.3 User Flow: Profile</h3>
+<pre class="text"><code>User opens Profile tab
+    ↓
+ProfileScreen displays UserProfile from FinanceUiState
+    ↓
+User edits name/photo/currency/theme/password
+    ↓
+ProfileScreen calls callback
+    ↓
+FinanceViewModel calls UserRepository or AuthRepository
+    ↓
+Repository updates Room and Firestore
+    ↓
+Profile state updates through Flow</code></pre>
+<h3 id="related-files">6.4 Related Files</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ui/screen/home/HomeScreen.kt</code></td>
+<td>Dashboard UI</td>
+</tr>
+<tr>
+<td><code>ui/screen/profile/ProfileScreen.kt</code></td>
+<td>Profile/settings UI</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/FinanceViewModel.kt</code></td>
+<td>Global state and dashboard calculations</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/FinanceUiState.kt</code></td>
+<td>Dashboard/profile state model</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/HomeViewModel.kt</code></td>
+<td>Dashboard-specific ViewModel file, currently less central than
+<code>FinanceViewModel</code></td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/ProfileViewModel.kt</code></td>
+<td>Profile-specific ViewModel file, currently less central than
+<code>FinanceViewModel</code></td>
+</tr>
+<tr>
+<td><code>data/model/UserProfile.kt</code></td>
+<td>Profile domain model</td>
+</tr>
+<tr>
+<td><code>data/local/entity/UserProfileEntity.kt</code></td>
+<td>Room profile entity</td>
+</tr>
+<tr>
+<td><code>data/local/dao/UserProfileDao.kt</code></td>
+<td>Room profile DAO</td>
+</tr>
+<tr>
+<td><code>data/repository/UserRepository.kt</code></td>
+<td>Profile repository contract</td>
+</tr>
+<tr>
+<td><code>data/remote/UserRepositoryImpl.kt</code></td>
+<td>Room + Firestore profile implementation</td>
+</tr>
+<tr>
+<td><code>ui/components/ProfileStat.kt</code></td>
+<td>Profile stat component</td>
+</tr>
+<tr>
+<td><code>ui/components/SummaryCard.kt</code></td>
+<td>Dashboard summary card</td>
+</tr>
+<tr>
+<td><code>ui/components/SummaryPanel.kt</code></td>
+<td>Dashboard panel component</td>
+</tr>
+<tr>
+<td><code>ui/components/HeaderSection.kt</code></td>
+<td>Header component</td>
+</tr>
+<tr>
+<td><code>ui/components/GoalCard.kt</code></td>
+<td>Goal summary card</td>
+</tr>
+<tr>
+<td><code>ui/components/TransactionListItem.kt</code></td>
+<td>Recent transaction rows</td>
+</tr>
+</tbody>
+</table>
+<h3 id="dashboard-ui-file-explanation">6.5 Dashboard UI File
+Explanation</h3>
+<h4 id="file-path">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/ui/screen/home/HomeScreen.kt</code></p>
+<h4 id="purpose">Purpose</h4>
+<p>This file builds the Dashboard screen. It displays:</p>
+<ul>
+<li>Green header.</li>
+<li>Greeting and profile avatar.</li>
+<li>Total balance.</li>
+<li>Monthly income card.</li>
+<li>Monthly expense card.</li>
+<li>Monthly net savings section.</li>
+<li>Yearly net savings text.</li>
+<li>Primary goal card.</li>
+<li>Recent transaction section.</li>
+</ul>
+<h4 id="important-composable">Important Composable</h4>
+<p><code>HomeScreen(...)</code></p>
+<h4 id="step-by-step-logic">Step-By-Step Logic</h4>
+<ol type="1">
+<li>The screen receives <code>FinanceUiState</code>.</li>
+<li>It reads user name/profile image/default currency from state.</li>
+<li>It uses amount formatting helpers to display money with comma
+separators.</li>
+<li>It displays current-month income and expense values.</li>
+<li>It displays net savings and savings rate.</li>
+<li>It displays yearly net savings.</li>
+<li>It displays a primary goal if available.</li>
+<li>It displays recent transactions if available.</li>
+<li>Profile avatar click navigates to Profile.</li>
+<li>Add actions are handled by the shared FAB in
+<code>FinanceTrackerApp.kt</code>, not directly inside this screen.</li>
+</ol>
+<h4 id="how-it-connects-to-backend">How It Connects To Backend</h4>
+<p><code>HomeScreen</code> itself does not call the database. Data comes
+through <code>FinanceUiState</code>, which is built by
+<code>FinanceViewModel</code>. <code>FinanceViewModel</code>
+observes:</p>
+<ul>
+<li><code>UserRepository.observeProfile(uid)</code></li>
+<li><code>TransactionRepository.observeTransactions(uid)</code></li>
+<li><code>GoalRepository.observeGoals(uid)</code></li>
+</ul>
+<h4 id="viva-questions">Viva Questions</h4>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Does Dashboard directly query Firestore?</td>
+<td>No. Dashboard reads <code>FinanceUiState</code>; repository/database
+access is handled by ViewModel and repositories.</td>
+</tr>
+<tr>
+<td>Where is monthly income calculated?</td>
+<td>In the state preparation logic, mainly
+<code>FinanceViewModel</code>, using transactions filtered by
+month/date.</td>
+</tr>
+<tr>
+<td>Why use <code>dateMillis</code>?</td>
+<td>It represents the user-selected transaction date and is used for
+monthly grouping/display.</td>
+</tr>
+<tr>
+<td>Why not use <code>createdAtMillis</code> for dashboard?</td>
+<td>Created date is audit metadata. Financial reports should use the
+event date selected by the user.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="profile-ui-file-explanation">6.6 Profile UI File
+Explanation</h3>
+<h4 id="file-path-1">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/ui/screen/profile/ProfileScreen.kt</code></p>
+<h4 id="purpose-1">Purpose</h4>
+<p>This file builds the Profile page and settings UI.</p>
+<h4 id="important-ui-features">Important UI Features</h4>
+<ul>
+<li>Avatar or profile image display.</li>
+<li>Edit icon overlay near avatar.</li>
+<li>Name and email display.</li>
+<li>Edit profile dialog.</li>
+<li>Default currency dialog.</li>
+<li>Appearance selector: System, Light, Dark.</li>
+<li>Exchange rate settings dialog.</li>
+<li>Change password dialog.</li>
+<li>Logout confirmation.</li>
+<li>Delete account confirmation.</li>
+</ul>
+<h4 id="step-by-step-logic-1">Step-By-Step Logic</h4>
+<ol type="1">
+<li>The screen receives current profile/session state.</li>
+<li>If a profile image URI exists, the screen attempts to load it.</li>
+<li>If the image is missing or fails, initials are displayed.</li>
+<li>User taps edit icon to change profile information.</li>
+<li>User taps Default Currency to open currency selection.</li>
+<li>User taps Appearance to change theme mode.</li>
+<li>User taps Change Password to open password fields.</li>
+<li>User taps Logout and confirms.</li>
+<li>UI callbacks are sent upward to <code>FinanceTrackerApp.kt</code>,
+then to <code>FinanceViewModel</code>.</li>
+</ol>
+<h4 id="profile-image-logic">Profile Image Logic</h4>
+<p>The code uses a local URI approach. Profile image upload to Firebase
+Storage is not implemented.</p>
+<p>Status:</p>
+<p><code>Firebase Storage profile image upload: Not found in current codebase.</code></p>
+<h4 id="profile-backend-flow">Profile Backend Flow</h4>
+<pre class="text"><code>ProfileScreen user event
+    ↓
+FinanceTrackerApp callback
+    ↓
+FinanceViewModel.updateProfile(...)
+    ↓
+UserRepository.upsertProfile(...)
+    ↓
+UserRepositoryImpl writes UserProfileEntity to Room
+    ↓
+UserRepositoryImpl writes users/{uid}/profile/main to Firestore
+    ↓
+UserProfileDao.observeById emits updated profile</code></pre>
+<h3 id="profile-repository-file-explanation">6.7 Profile Repository File
+Explanation</h3>
+<h4 id="file-path-2">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/data/remote/UserRepositoryImpl.kt</code></p>
+<h4 id="purpose-2">Purpose</h4>
+<p>Handles profile read/write/sync between Room and Firestore.</p>
+<h4 id="important-functions">Important Functions</h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>observeProfile(uid)</code></td>
+<td>Emits local profile from Room</td>
+</tr>
+<tr>
+<td><code>getProfile(uid)</code></td>
+<td>Reads profile once</td>
+</tr>
+<tr>
+<td><code>upsertProfile(profile)</code></td>
+<td>Saves profile locally and remotely</td>
+</tr>
+<tr>
+<td><code>syncWithFirestore(uid)</code></td>
+<td>Merges local unsynced and remote profile</td>
+</tr>
+</tbody>
+</table>
+<h4 id="step-by-step-profile-save">Step-By-Step Profile Save</h4>
+<ol type="1">
+<li>Convert <code>UserProfile</code> to
+<code>UserProfileEntity</code>.</li>
+<li>Save entity to Room with <code>isSynced=false</code>.</li>
+<li>Write expanded profile map to Firestore path
+<code>users/{uid}/profile/main</code>.</li>
+<li>If Firestore write succeeds, mark profile as synced in Room.</li>
+<li>If Firestore write fails, keep local data unsynced for later
+sync.</li>
+</ol>
+<h3 id="dashboard-calculation-logic">6.8 Dashboard Calculation
+Logic</h3>
+<p>Dashboard values are not hardcoded. They come from transaction and
+goal data:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Dashboard Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Total balance</td>
+<td>Income minus expenses</td>
+</tr>
+<tr>
+<td>Current-month income</td>
+<td>Income transactions where <code>dateMillis</code> falls inside
+selected/current month</td>
+</tr>
+<tr>
+<td>Current-month expense</td>
+<td>Expense transactions where <code>dateMillis</code> falls inside
+selected/current month</td>
+</tr>
+<tr>
+<td>Net savings</td>
+<td>Current-month income minus current-month expenses</td>
+</tr>
+<tr>
+<td>Savings rate</td>
+<td>Net savings divided by income</td>
+</tr>
+<tr>
+<td>Yearly net savings</td>
+<td>Current calendar-year income minus expenses</td>
+</tr>
+<tr>
+<td>Recent transactions</td>
+<td>Latest transactions sorted by <code>dateMillis</code></td>
+</tr>
+<tr>
+<td>Primary goal</td>
+<td>Goal marked as primary</td>
+</tr>
+</tbody>
+</table>
+<h3 id="validation-and-error-handling">6.9 Validation And Error
+Handling</h3>
+<p>Profile-related error handling exists through ViewModel state and
+dialog feedback. Change password may return Firebase reauthentication
+errors. The app supports success/error messages in state.</p>
+<p>Dashboard mostly displays empty states when data is missing. Since
+Dashboard is read-only, validation is less relevant there.</p>
+<h3 id="chamika-viva-questions-and-answers">6.10 Chamika Viva Questions
+And Answers</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>How is the dashboard updated after adding a transaction?</td>
+<td>The transaction is saved to Room. Room Flow emits a new list.
+<code>FinanceViewModel</code> recomputes state and Compose redraws
+Dashboard.</td>
+</tr>
+<tr>
+<td>Does Profile update Firestore directly from the UI?</td>
+<td>No. UI calls ViewModel callback. The repository writes Room and
+Firestore.</td>
+</tr>
+<tr>
+<td>Where is the theme mode stored?</td>
+<td>In <code>UserProfile.themeMode</code> and
+<code>UserProfileEntity.themeMode</code>; it syncs through Firestore
+profile document.</td>
+</tr>
+<tr>
+<td>What happens if Firestore profile update fails?</td>
+<td>Local Room data remains with <code>isSynced=false</code>, and
+WorkManager can retry later.</td>
+</tr>
+<tr>
+<td>Is profile image cloud-synced?</td>
+<td>No. Current implementation stores local URI/path only. Firebase
+Storage is not included.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="demo-script-for-chamika-domain">6.11 Demo Script For Chamika
+Domain</h3>
+<ol type="1">
+<li>Open Dashboard.</li>
+<li>Say: “This screen is data-driven from Room through
+<code>FinanceViewModel</code>.”</li>
+<li>Point to income, expenses, net savings, and recent
+transactions.</li>
+<li>Add a transaction and return to Dashboard.</li>
+<li>Show updated values.</li>
+<li>Open Profile.</li>
+<li>Change theme or currency.</li>
+<li>Explain profile is stored in Room first and synced to Firestore
+profile document.</li>
+</ol>
+<hr />
+<h2 id="yesen-domain-transactions-page-and-create-account-page">7. Yesen
+Domain — Transactions Page And Create Account Page</h2>
+<h3 id="feature-overview-1">7.1 Feature Overview</h3>
+<p>Yesen’s domain covers:</p>
+<ul>
+<li>Create account flow.</li>
+<li>Add income.</li>
+<li>Add expense.</li>
+<li>History / transactions page.</li>
+<li>Transaction filtering and grouping.</li>
+<li>Transaction edit/delete.</li>
+<li>Income/expense repository and DAO communication.</li>
+</ul>
+<h3 id="user-flow-create-account">7.2 User Flow: Create Account</h3>
+<pre class="text"><code>User opens Create Account
+    ↓
+User enters name, email, password, confirm password, currency
+    ↓
+CreateAccountViewModel validates fields
+    ↓
+FirebaseAuthRepository.createAccount creates Firebase user
+    ↓
+Profile document and Room profile are created
+    ↓
+Immediate sync starts
+    ↓
+User navigates to main app</code></pre>
+<h3 id="user-flow-add-income">7.3 User Flow: Add Income</h3>
+<pre class="text"><code>User taps + → Add Income
+    ↓
+Select source, name, amount, currency, date, note
+    ↓
+AddIncomeViewModel validates and converts amount
+    ↓
+IncomeRepository.addIncome
+    ↓
+Room insert
+    ↓
+Firestore write users/{uid}/income/{incomeId}</code></pre>
+<h3 id="user-flow-add-expense">7.4 User Flow: Add Expense</h3>
+<pre class="text"><code>User taps + → Add Expense
+    ↓
+Select category, amount, currency, payment method, type, date, note
+    ↓
+AddExpenseViewModel validates amount and balance
+    ↓
+ExpenseRepository.addExpense
+    ↓
+Room insert
+    ↓
+Firestore write users/{uid}/expenses/{expenseId}</code></pre>
+<h3 id="related-files-1">7.5 Related Files</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ui/screen/CreateAccountScreen.kt</code></td>
+<td>Register UI</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/CreateAccountViewModel.kt</code></td>
+<td>Register validation/state</td>
+</tr>
+<tr>
+<td><code>ui/screen/transactions/TransactionsScreen.kt</code></td>
+<td>History list and filtering</td>
+</tr>
+<tr>
+<td><code>ui/screen/transactions/AddIncomeScreen.kt</code></td>
+<td>Add/edit income UI</td>
+</tr>
+<tr>
+<td><code>ui/screen/transactions/AddExpenseScreen.kt</code></td>
+<td>Add/edit expense UI</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/TransactionsViewModel.kt</code></td>
+<td>Transaction filter/group/delete state</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/AddIncomeViewModel.kt</code></td>
+<td>Income form state and save logic</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/AddExpenseViewModel.kt</code></td>
+<td>Expense form state and save logic</td>
+</tr>
+<tr>
+<td><code>data/repository/TransactionRepository.kt</code></td>
+<td>Combined transaction repository contract</td>
+</tr>
+<tr>
+<td><code>data/repository/FirebaseTransactionRepository.kt</code></td>
+<td>Combines income and expense flows</td>
+</tr>
+<tr>
+<td><code>data/repository/IncomeRepository.kt</code></td>
+<td>Income repository contract</td>
+</tr>
+<tr>
+<td><code>data/repository/ExpenseRepository.kt</code></td>
+<td>Expense repository contract</td>
+</tr>
+<tr>
+<td><code>data/remote/IncomeRepositoryImpl.kt</code></td>
+<td>Income Room/Firestore implementation</td>
+</tr>
+<tr>
+<td><code>data/remote/ExpenseRepositoryImpl.kt</code></td>
+<td>Expense Room/Firestore implementation</td>
+</tr>
+<tr>
+<td><code>data/local/dao/IncomeDao.kt</code></td>
+<td>Income SQL queries</td>
+</tr>
+<tr>
+<td><code>data/local/dao/ExpenseDao.kt</code></td>
+<td>Expense SQL queries</td>
+</tr>
+<tr>
+<td><code>data/local/entity/IncomeEntryEntity.kt</code></td>
+<td>Income Room schema</td>
+</tr>
+<tr>
+<td><code>data/local/entity/ExpenseEntryEntity.kt</code></td>
+<td>Expense Room schema</td>
+</tr>
+<tr>
+<td><code>data/service/CurrencyRateService.kt</code></td>
+<td>Fiat rate service</td>
+</tr>
+<tr>
+<td><code>data/service/CryptoRateService.kt</code></td>
+<td>Crypto rate service</td>
+</tr>
+</tbody>
+</table>
+<h3 id="create-account-file-explanation">7.6 Create Account File
+Explanation</h3>
+<h4 id="file-path-3">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/ui/screen/CreateAccountScreen.kt</code></p>
+<h4 id="purpose-3">Purpose</h4>
+<p>Displays the registration form.</p>
+<h4 id="important-inputs">Important Inputs</h4>
+<ul>
+<li>Full name.</li>
+<li>Email address.</li>
+<li>Password.</li>
+<li>Confirm password.</li>
+<li>Default currency dropdown.</li>
+</ul>
+<h4 id="logic">Logic</h4>
+<ol type="1">
+<li>User enters form values.</li>
+<li>Screen sends changes to <code>CreateAccountViewModel</code>.</li>
+<li>User taps Create Account.</li>
+<li>ViewModel validates:
+<ul>
+<li>Name is not blank.</li>
+<li>Email is not blank.</li>
+<li>Password meets minimum requirements.</li>
+<li>Confirm password matches.</li>
+<li>Currency is selected.</li>
+</ul></li>
+<li>ViewModel calls <code>AuthRepository.createAccount</code>.</li>
+<li>On success, app session updates and user enters main app.</li>
+</ol>
+<h3 id="create-account-backend-explanation">7.7 Create Account Backend
+Explanation</h3>
+<h4 id="file-path-4">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/data/repository/FirebaseAuthRepository.kt</code></p>
+<h4 id="important-function">Important Function</h4>
+<p><code>createAccount(name, email, password, defaultCurrency)</code></p>
+<h4 id="step-by-step-logic-2">Step-By-Step Logic</h4>
+<ol type="1">
+<li>Firebase Auth creates user with email and password.</li>
+<li>UID is read from Firebase user.</li>
+<li>A <code>UserProfileEntity</code> is created with:
+<ul>
+<li><code>uid</code></li>
+<li><code>name</code></li>
+<li><code>email</code></li>
+<li><code>defaultCurrency</code></li>
+<li>timestamps</li>
+<li>default theme mode</li>
+</ul></li>
+<li>Profile is saved locally through <code>UserProfileDao</code>.</li>
+<li>Profile is written to Firestore at
+<code>users/{uid}/profile/main</code>.</li>
+<li>Local profile is marked as synced if Firestore succeeds.</li>
+</ol>
+<h3 id="transactions-screen-explanation">7.8 Transactions Screen
+Explanation</h3>
+<h4 id="file-path-5">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/ui/screen/transactions/TransactionsScreen.kt</code></p>
+<h4 id="purpose-4">Purpose</h4>
+<p>Displays the History page with transaction filtering.</p>
+<h4 id="important-features">Important Features</h4>
+<ul>
+<li>Month picker.</li>
+<li>Filter chips: All, Expenses, Incomes.</li>
+<li>Grouped transaction list.</li>
+<li>Expandable transaction rows.</li>
+<li>Edit and delete actions.</li>
+<li>Delete confirmation dialog.</li>
+</ul>
+<h4 id="step-by-step-logic-3">Step-By-Step Logic</h4>
+<ol type="1">
+<li>Screen obtains <code>TransactionsViewModel</code> using Hilt.</li>
+<li>It collects <code>TransactionsUiState</code>.</li>
+<li>It displays selected month using shared
+<code>SpendlyMonthPicker</code>.</li>
+<li>It displays filter chips.</li>
+<li>It displays grouped transactions by date.</li>
+<li>On edit, it routes to Add Income or Add Expense based on transaction
+type.</li>
+<li>On delete, it opens confirmation dialog.</li>
+<li>On confirmation, it calls
+<code>viewModel.delete(transaction)</code>.</li>
+</ol>
+<h3 id="transactions-viewmodel-explanation">7.9 Transactions ViewModel
+Explanation</h3>
+<h4 id="file-path-6">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/ui/viewmodel/TransactionsViewModel.kt</code></p>
+<h4 id="purpose-5">Purpose</h4>
+<p>Keeps History screen logic out of the Composable.</p>
+<h4 id="important-logic">Important Logic</h4>
+<ul>
+<li>Observes current Firebase UID.</li>
+<li>Collects transaction Flow from
+<code>TransactionRepository</code>.</li>
+<li>Applies selected month filter.</li>
+<li>Applies selected type filter.</li>
+<li>Sorts by <code>dateMillis</code>.</li>
+<li>Groups transactions by display date.</li>
+<li>Deletes selected transaction through repository.</li>
+</ul>
+<h4 id="why-this-is-mvvm-correct">Why This Is MVVM-Correct</h4>
+<p>The Composable does not calculate the grouped list manually. It
+receives prepared state from the ViewModel.</p>
+<h3 id="add-income-ui-explanation">7.10 Add Income UI Explanation</h3>
+<h4 id="file-path-7">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/ui/screen/transactions/AddIncomeScreen.kt</code></p>
+<h4 id="important-features-1">Important Features</h4>
+<ul>
+<li>Income source selector.</li>
+<li>Add custom income source.</li>
+<li>Hide/delete source settings.</li>
+<li>Combined currency dropdown and amount input.</li>
+<li>Date field using read-only clickable input style.</li>
+<li>Note field.</li>
+<li>Optional recurring toggle.</li>
+<li>Optional crypto-specific fields.</li>
+<li>Exchange rate status.</li>
+</ul>
+<h4 id="currency-handling">Currency Handling</h4>
+<p>The income form supports:</p>
+<ul>
+<li>Default currency.</li>
+<li>USD.</li>
+<li>If default currency is USD, also LKR.</li>
+<li>Manual exchange rate entry if selected currency differs from default
+currency.</li>
+<li>Crypto manual rate flow for unsupported coin/rate updates.</li>
+</ul>
+<h3 id="add-income-viewmodel-explanation">7.11 Add Income ViewModel
+Explanation</h3>
+<h4 id="file-path-8">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/ui/viewmodel/AddIncomeViewModel.kt</code></p>
+<h4 id="main-responsibilities">Main Responsibilities</h4>
+<ul>
+<li>Load existing transaction when editing.</li>
+<li>Validate amount/name/source/date.</li>
+<li>Calculate converted default-currency amount.</li>
+<li>Handle source settings.</li>
+<li>Call <code>IncomeRepository.addIncome</code> or
+<code>IncomeRepository.updateIncome</code>.</li>
+</ul>
+<h4 id="validation-examples">Validation Examples</h4>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Validation</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amount must be greater than zero</td>
+<td>Prevents invalid finance records</td>
+</tr>
+<tr>
+<td>Exchange rate required when currency differs</td>
+<td>Needed to convert to default currency</td>
+</tr>
+<tr>
+<td>Source required</td>
+<td>Needed for analytics and filtering</td>
+</tr>
+<tr>
+<td>Date must be selected</td>
+<td>Needed for correct monthly grouping</td>
+</tr>
+</tbody>
+</table>
+<h3 id="add-expense-ui-explanation">7.12 Add Expense UI Explanation</h3>
+<h4 id="file-path-9">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/ui/screen/transactions/AddExpenseScreen.kt</code></p>
+<h4 id="important-features-2">Important Features</h4>
+<ul>
+<li>Category selector with icons.</li>
+<li>Custom category creation.</li>
+<li>Built-in category hide behavior.</li>
+<li>Fixed payment methods: Card, Cash, Auto-debit.</li>
+<li>Expense type selector: Committed or Discretionary.</li>
+<li>Combined currency dropdown and amount field.</li>
+<li>Date and note fields.</li>
+</ul>
+<h3 id="add-expense-viewmodel-explanation">7.13 Add Expense ViewModel
+Explanation</h3>
+<h4 id="file-path-10">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/ui/viewmodel/AddExpenseViewModel.kt</code></p>
+<h4 id="main-responsibilities-1">Main Responsibilities</h4>
+<ul>
+<li>Validate expense amount.</li>
+<li>Validate exchange rate if needed.</li>
+<li>Validate available balance.</li>
+<li>Build <code>TransactionDraft</code>.</li>
+<li>Save expense through repository.</li>
+<li>Update category settings through profile repository.</li>
+</ul>
+<h3 id="income-repository-explanation">7.14 Income Repository
+Explanation</h3>
+<h4 id="file-path-11">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/data/remote/IncomeRepositoryImpl.kt</code></p>
+<h4 id="important-functions-1">Important Functions</h4>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Function</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>observeIncome(uid)</code></td>
+<td>Observes local income rows</td>
+</tr>
+<tr>
+<td><code>getIncome(uid)</code></td>
+<td>Reads local income list</td>
+</tr>
+<tr>
+<td><code>addIncome(uid, draft)</code></td>
+<td>Creates income locally and remotely</td>
+</tr>
+<tr>
+<td><code>updateIncome(uid, transaction)</code></td>
+<td>Updates existing income</td>
+</tr>
+<tr>
+<td><code>deleteIncome(uid, id)</code></td>
+<td>Deletes income locally and remotely</td>
+</tr>
+<tr>
+<td><code>syncWithFirestore(uid)</code></td>
+<td>Pushes unsynced income and pulls remote income</td>
+</tr>
+</tbody>
+</table>
+<h4 id="firestore-path">Firestore Path</h4>
+<pre class="text"><code>users/{uid}/income/{incomeId}</code></pre>
+<h3 id="expense-repository-explanation">7.15 Expense Repository
+Explanation</h3>
+<h4 id="file-path-12">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/data/remote/ExpenseRepositoryImpl.kt</code></p>
+<h4 id="important-functions-2">Important Functions</h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>observeExpenses(uid)</code></td>
+<td>Observes local expenses</td>
+</tr>
+<tr>
+<td><code>addExpense(uid, draft)</code></td>
+<td>Creates expense locally/remotely</td>
+</tr>
+<tr>
+<td><code>updateExpense(uid, transaction)</code></td>
+<td>Updates expense</td>
+</tr>
+<tr>
+<td><code>deleteExpense(uid, id)</code></td>
+<td>Deletes expense</td>
+</tr>
+<tr>
+<td><code>syncWithFirestore(uid)</code></td>
+<td>Pushes unsynced and pulls remote expenses</td>
+</tr>
+</tbody>
+</table>
+<h4 id="goal-expense-special-logic">Goal Expense Special Logic</h4>
+<p>If an expense is linked to a goal by <code>goalId</code>, deleting
+that transaction subtracts the amount from the goal. This is important
+because goal savings are stored as expense transactions with category
+<code>Goal</code>.</p>
+<h3 id="yesen-viva-questions-and-answers">7.16 Yesen Viva Questions And
+Answers</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Why are income and expenses separate entities?</td>
+<td>They have different fields and different Firestore subcollections,
+but they are combined for display through
+<code>TransactionRepository</code>.</td>
+</tr>
+<tr>
+<td>How does History show both income and expenses?</td>
+<td><code>FirebaseTransactionRepository</code> combines income and
+expense flows into <code>FinanceTransaction</code> rows.</td>
+</tr>
+<tr>
+<td>Where is transaction filtering done?</td>
+<td>In <code>TransactionsViewModel</code>, not directly in the UI.</td>
+</tr>
+<tr>
+<td>What happens if Firestore save fails?</td>
+<td>Room still contains the record with <code>isSynced=false</code>, and
+sync can retry later.</td>
+</tr>
+<tr>
+<td>Why store <code>amountCents</code> as Long?</td>
+<td>It avoids floating-point precision issues for money.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="demo-script-for-yesen-domain">7.17 Demo Script For Yesen
+Domain</h3>
+<ol type="1">
+<li>Open Create Account screen and explain field validation.</li>
+<li>Sign in or create a test account.</li>
+<li>Go to History.</li>
+<li>Add an income record.</li>
+<li>Add an expense record.</li>
+<li>Show the list grouped by date.</li>
+<li>Edit and delete a transaction.</li>
+<li>Explain Room first, Firestore second, <code>isSynced</code> field,
+and WorkManager retry.</li>
+</ol>
+<hr />
+<h2 id="nikini-domain-goal-page-and-login-page">8. Nikini Domain — Goal
+Page And Login Page</h2>
+<h3 id="feature-overview-2">8.1 Feature Overview</h3>
+<p>Nikini’s domain covers:</p>
+<ul>
+<li>Login page.</li>
+<li>Goal tracker.</li>
+<li>Add goal.</li>
+<li>Edit goal.</li>
+<li>Goal details.</li>
+<li>Add savings.</li>
+<li>Goal icon suggestion and manual icon picker.</li>
+<li>Goal repository/backend logic.</li>
+</ul>
+<h3 id="login-user-flow">8.2 Login User Flow</h3>
+<pre class="text"><code>User opens Login
+    ↓
+User enters email and password
+    ↓
+AuthScreen sends event to FinanceViewModel
+    ↓
+FinanceViewModel validates basic fields
+    ↓
+AuthRepository.signIn calls Firebase Auth
+    ↓
+Session Flow emits Firebase UID
+    ↓
+FinanceViewModel loads user data and starts sync
+    ↓
+App navigates to Dashboard</code></pre>
+<h3 id="goal-user-flow">8.3 Goal User Flow</h3>
+<pre class="text"><code>User opens Goal Tracker
+    ↓
+User taps + to add goal
+    ↓
+AddGoalScreen collects title, target, date, initial saved, icon, primary flag
+    ↓
+GoalsViewModel validates draft
+    ↓
+GoalRepository.saveGoal saves goal locally/remotely
+    ↓
+If initial saved &gt; 0, linked Goal expense is created
+    ↓
+Goal list updates through Room Flow</code></pre>
+<h3 id="related-files-2">8.4 Related Files</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ui/screen/AuthScreen.kt</code></td>
+<td>Login UI</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/FinanceViewModel.kt</code></td>
+<td>Login state/session handling</td>
+</tr>
+<tr>
+<td><code>data/repository/AuthRepository.kt</code></td>
+<td>Auth contract</td>
+</tr>
+<tr>
+<td><code>data/repository/FirebaseAuthRepository.kt</code></td>
+<td>Firebase Auth implementation</td>
+</tr>
+<tr>
+<td><code>data/model/UserSession.kt</code></td>
+<td>Session model</td>
+</tr>
+<tr>
+<td><code>ui/screen/goals/GoalsScreen.kt</code></td>
+<td>Main goal UI content</td>
+</tr>
+<tr>
+<td><code>ui/screen/goals/GoalScreen.kt</code></td>
+<td>Goal screen wrapper</td>
+</tr>
+<tr>
+<td><code>ui/screen/goals/AddGoalScreen.kt</code></td>
+<td>Add goal route wrapper</td>
+</tr>
+<tr>
+<td><code>ui/screen/goals/EditGoalScreen.kt</code></td>
+<td>Edit goal route wrapper</td>
+</tr>
+<tr>
+<td><code>ui/screen/goals/GoalDetailsScreen.kt</code></td>
+<td>Goal details route wrapper</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/GoalsViewModel.kt</code></td>
+<td>Goal state and business logic</td>
+</tr>
+<tr>
+<td><code>data/model/SavingsGoal.kt</code></td>
+<td>Goal domain model</td>
+</tr>
+<tr>
+<td><code>data/local/entity/SavingsGoalEntity.kt</code></td>
+<td>Room goal table</td>
+</tr>
+<tr>
+<td><code>data/local/dao/GoalDao.kt</code></td>
+<td>Goal SQL queries</td>
+</tr>
+<tr>
+<td><code>data/repository/GoalRepository.kt</code></td>
+<td>Goal repository contract</td>
+</tr>
+<tr>
+<td><code>data/remote/GoalRepositoryImpl.kt</code></td>
+<td>Goal Room/Firestore implementation</td>
+</tr>
+<tr>
+<td><code>ui/util/GoalIconUtils.kt</code></td>
+<td>Goal icon suggestion and mapping</td>
+</tr>
+</tbody>
+</table>
+<h3 id="login-ui-explanation">8.5 Login UI Explanation</h3>
+<h4 id="file-path-13">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/ui/screen/AuthScreen.kt</code></p>
+<h4 id="purpose-6">Purpose</h4>
+<p>Displays login form.</p>
+<h4 id="important-ui-features-1">Important UI Features</h4>
+<ul>
+<li>Email field.</li>
+<li>Password field.</li>
+<li>Password visibility toggle.</li>
+<li>Forgot password action.</li>
+<li>Sign in button.</li>
+<li>Create account navigation.</li>
+</ul>
+<h4 id="backend-connection">Backend Connection</h4>
+<p>The login screen does not call Firebase directly. It calls ViewModel
+callbacks. <code>FinanceViewModel</code> calls
+<code>AuthRepository.signIn</code>, and
+<code>FirebaseAuthRepository</code> performs the Firebase operation.</p>
+<h3 id="firebase-auth-repository-explanation">8.6 Firebase Auth
+Repository Explanation</h3>
+<h4 id="file-path-14">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/data/repository/FirebaseAuthRepository.kt</code></p>
+<h4 id="login-function">Login Function</h4>
+<p><code>signIn(email, password)</code></p>
+<h4 id="step-by-step-logic-4">Step-By-Step Logic</h4>
+<ol type="1">
+<li>Calls Firebase Auth sign-in with email and password.</li>
+<li>Receives Firebase user.</li>
+<li>Creates <code>UserSession</code> using UID and email.</li>
+<li>Returns session result to ViewModel.</li>
+<li><code>observeSession()</code> also emits auth state changes.</li>
+</ol>
+<h4 id="forgot-password">Forgot Password</h4>
+<p><code>sendPasswordResetEmail(email)</code> exists and calls Firebase
+password reset.</p>
+<h4 id="change-password">Change Password</h4>
+<p><code>updatePassword(currentPassword, newPassword)</code> exists and
+supports Firebase reauthentication flow.</p>
+<h3 id="goals-ui-explanation">8.7 Goals UI Explanation</h3>
+<h4 id="file-path-15">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/ui/screen/goals/GoalsScreen.kt</code></p>
+<h4 id="purpose-7">Purpose</h4>
+<p>This is the main goal UI file. It includes goal list, goal details,
+add/edit form content, add savings dialog, icon picker, and chart-like
+goal progress UI.</p>
+<h4 id="important-ui-sections">Important UI Sections</h4>
+<ul>
+<li>Primary Goals section.</li>
+<li>Other Goals section.</li>
+<li>Achieved goals handling.</li>
+<li>Goal detail screen.</li>
+<li>Add goal form.</li>
+<li>Edit goal form.</li>
+<li>Add savings dialog.</li>
+<li>Monthly savings chart.</li>
+</ul>
+<h3 id="goal-icon-logic">8.8 Goal Icon Logic</h3>
+<h4 id="file-path-16">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/ui/util/GoalIconUtils.kt</code></p>
+<h4 id="purpose-8">Purpose</h4>
+<p>Suggests goal icons from goal title keywords and maps icon keys to
+Compose icons.</p>
+<p>Example mappings:</p>
+<table>
+<thead>
+<tr>
+<th>Goal Name Keyword</th>
+<th>Suggested Icon</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Car, Vehicle, Bike</td>
+<td>Transport</td>
+</tr>
+<tr>
+<td>House, Home, Rent</td>
+<td>Home</td>
+</tr>
+<tr>
+<td>Travel, Trip, Vacation</td>
+<td>Travel</td>
+</tr>
+<tr>
+<td>Education, Course, University</td>
+<td>School</td>
+</tr>
+<tr>
+<td>Laptop, Computer, PC</td>
+<td>Laptop</td>
+</tr>
+<tr>
+<td>Phone, Mobile</td>
+<td>Phone</td>
+</tr>
+<tr>
+<td>Wedding, Gift</td>
+<td>Heart/Gift</td>
+</tr>
+<tr>
+<td>Emergency, Medical, Health</td>
+<td>Health/Security</td>
+</tr>
+<tr>
+<td>Savings, Money, Fund</td>
+<td>Money</td>
+</tr>
+<tr>
+<td>Shopping</td>
+<td>Shopping</td>
+</tr>
+<tr>
+<td>Business, Startup</td>
+<td>Business</td>
+</tr>
+<tr>
+<td>Other</td>
+<td>Default goal/flag</td>
+</tr>
+</tbody>
+</table>
+<h3 id="goals-viewmodel-explanation">8.9 Goals ViewModel
+Explanation</h3>
+<h4 id="file-path-17">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/ui/viewmodel/GoalsViewModel.kt</code></p>
+<h4 id="responsibilities">Responsibilities</h4>
+<ul>
+<li>Holds goal form state.</li>
+<li>Loads existing goal for edit/details.</li>
+<li>Validates title, amount, date, initial saved amount.</li>
+<li>Suggests icon when title changes.</li>
+<li>Allows manual icon override.</li>
+<li>Saves new/edited goals.</li>
+<li>Adds savings to goals.</li>
+<li>Prevents invalid over-saving.</li>
+<li>Deletes goals.</li>
+</ul>
+<h3 id="goal-repository-explanation">8.10 Goal Repository
+Explanation</h3>
+<h4 id="file-path-18">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/data/remote/GoalRepositoryImpl.kt</code></p>
+<h4 id="important-functions-3">Important Functions</h4>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Function</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>observeGoals(uid)</code></td>
+<td>Emits local goals from Room</td>
+</tr>
+<tr>
+<td><code>getGoal(uid, id)</code></td>
+<td>Reads one goal</td>
+</tr>
+<tr>
+<td><code>saveGoal(uid, goal, balanceCents)</code></td>
+<td>Saves new or edited goal</td>
+</tr>
+<tr>
+<td><code>addSavings(uid, goalId, amountCents, dateMillis)</code></td>
+<td>Adds money to goal</td>
+</tr>
+<tr>
+<td><code>deleteGoal(uid, goalId)</code></td>
+<td>Deletes goal locally/remotely</td>
+</tr>
+<tr>
+<td><code>syncWithFirestore(uid)</code></td>
+<td>Pushes unsynced goals and pulls remote goals</td>
+</tr>
+</tbody>
+</table>
+<h3 id="goal-savings-as-expense">8.11 Goal Savings As Expense</h3>
+<p>The app records goal savings as expense transactions:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>category</code></td>
+<td><code>Goal</code></td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>Goal title</td>
+</tr>
+<tr>
+<td><code>expenseType</code></td>
+<td><code>DISCRETIONARY</code></td>
+</tr>
+<tr>
+<td><code>goalId</code></td>
+<td>Linked goal ID</td>
+</tr>
+<tr>
+<td><code>amountCents</code></td>
+<td>Saved amount</td>
+</tr>
+<tr>
+<td><code>dateMillis</code></td>
+<td>Savings date</td>
+</tr>
+</tbody>
+</table>
+<p>Why this matters:</p>
+<ul>
+<li>Dashboard net savings and balance reflect money moved into a
+goal.</li>
+<li>History can show goal savings as a transaction.</li>
+<li>If a linked expense is deleted, the goal saved amount is
+adjusted.</li>
+</ul>
+<h3 id="goal-validation">8.12 Goal Validation</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Validation</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Goal title cannot be blank</td>
+<td>Need meaningful goal name</td>
+</tr>
+<tr>
+<td>Target amount must be positive</td>
+<td>Goal cannot target zero</td>
+</tr>
+<tr>
+<td>Initial saved cannot exceed target</td>
+<td>Prevents impossible progress</td>
+</tr>
+<tr>
+<td>Added savings cannot exceed remaining amount</td>
+<td>Prevents <code>savedCents &gt; targetCents</code></td>
+</tr>
+<tr>
+<td>Savings cannot exceed available balance</td>
+<td>Prevents invalid finance state</td>
+</tr>
+</tbody>
+</table>
+<p>If savings exceeds the target, UI should show:</p>
+<p><code>Amount exceed target value</code></p>
+<h3 id="nikini-viva-questions-and-answers">8.13 Nikini Viva Questions
+And Answers</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>How are goals stored?</td>
+<td>In Room <code>SavingsGoalEntity</code> and Firestore
+<code>users/{uid}/goals/{goalId}</code>.</td>
+</tr>
+<tr>
+<td>How is progress calculated?</td>
+<td><code>savedCents / targetCents</code>, usually displayed as a
+percentage and progress bar.</td>
+</tr>
+<tr>
+<td>Why create an expense when adding goal savings?</td>
+<td>It keeps financial balance consistent because saved money is treated
+as money allocated out of available funds.</td>
+</tr>
+<tr>
+<td>Can multiple primary goals exist?</td>
+<td>The updated logic supports multiple primary goals by using the
+<code>isPrimary</code> flag.</td>
+</tr>
+<tr>
+<td>Does Login screen call Firebase directly?</td>
+<td>No. It calls ViewModel, which calls
+<code>AuthRepository</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="demo-script-for-nikini-domain">8.14 Demo Script For Nikini
+Domain</h3>
+<ol type="1">
+<li>Show login screen.</li>
+<li>Explain Firebase Auth sign-in and session Flow.</li>
+<li>Navigate to Goals.</li>
+<li>Create a goal and show automatic icon suggestion.</li>
+<li>Manually change icon.</li>
+<li>Add initial saved amount.</li>
+<li>Open goal details and add savings.</li>
+<li>Try adding too much and explain validation.</li>
+<li>Show linked goal expense in History.</li>
+</ol>
+<hr />
+<h2 id="mahima-domain-analytics-page-room-db-firestore-sync">9. Mahima
+Domain — Analytics Page, Room DB, Firestore, Sync</h2>
+<h3 id="feature-overview-3">9.1 Feature Overview</h3>
+<p>Mahima’s domain covers:</p>
+<ul>
+<li>Analytics page.</li>
+<li>Room database setup.</li>
+<li>Entities and DAOs.</li>
+<li>Firestore initialization/access setup.</li>
+<li>Caching strategy.</li>
+<li>Sync logic.</li>
+<li>WorkManager.</li>
+</ul>
+<h3 id="analytics-user-flow">9.2 Analytics User Flow</h3>
+<pre class="text"><code>User opens Analytics
+    ↓
+AnalyticsViewModel gets current UID
+    ↓
+TransactionRepository observes income + expenses from Room
+    ↓
+AnalyticsViewModel filters selected month
+    ↓
+AnalyticsViewModel calculates totals, category percentages, split, overview
+    ↓
+AnalyticsScreen displays cards and charts</code></pre>
+<h3 id="related-files-3">9.3 Related Files</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ui/screen/analytics/AnalyticsScreen.kt</code></td>
+<td>Analytics UI</td>
+</tr>
+<tr>
+<td><code>ui/viewmodel/AnalyticsViewModel.kt</code></td>
+<td>Analytics calculations</td>
+</tr>
+<tr>
+<td><code>ui/components/SpendlyMonthPicker.kt</code></td>
+<td>Shared month selector</td>
+</tr>
+<tr>
+<td><code>ui/util/MonthOptions.kt</code></td>
+<td>Calendar-backed month option model</td>
+</tr>
+<tr>
+<td><code>ui/util/UiUtils.kt</code></td>
+<td>Money/date formatting</td>
+</tr>
+<tr>
+<td><code>data/local/db/SpendlyDatabase.kt</code></td>
+<td>Room database and migrations</td>
+</tr>
+<tr>
+<td><code>data/local/entity/*.kt</code></td>
+<td>Room table schemas</td>
+</tr>
+<tr>
+<td><code>data/local/dao/*.kt</code></td>
+<td>Room queries</td>
+</tr>
+<tr>
+<td><code>di/AppModule.kt</code></td>
+<td>Database/Firebase providers</td>
+</tr>
+<tr>
+<td><code>data/firebase/FirebaseBootstrap.kt</code></td>
+<td>Firebase setup status helper</td>
+</tr>
+<tr>
+<td><code>worker/SpendlySyncWorker.kt</code></td>
+<td>Background sync worker</td>
+</tr>
+<tr>
+<td><code>util/SyncManager.kt</code></td>
+<td>Sync scheduling</td>
+</tr>
+<tr>
+<td><code>firestore.rules</code></td>
+<td>Firestore rules file</td>
+</tr>
+<tr>
+<td><code>firestore.indexes.json</code></td>
+<td>Firestore indexes file</td>
+</tr>
+</tbody>
+</table>
+<h3 id="analytics-ui-explanation">9.4 Analytics UI Explanation</h3>
+<h4 id="file-path-19">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/ui/screen/analytics/AnalyticsScreen.kt</code></p>
+<h4 id="purpose-9">Purpose</h4>
+<p>Displays analytics in a visual dashboard style.</p>
+<h4 id="ui-sections">UI Sections</h4>
+<ul>
+<li>Title row with month picker.</li>
+<li>Total Income tile.</li>
+<li>Total Expenses tile.</li>
+<li>Spending by Category card.</li>
+<li>Donut chart.</li>
+<li>Category legend with percentages.</li>
+<li>Committed vs Discretionary card.</li>
+<li>Monthly Overview card.</li>
+<li>Income Sources card.</li>
+</ul>
+<h4 id="important-composables">Important Composables</h4>
+<table>
+<thead>
+<tr>
+<th>Composable</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AnalyticsScreen</code></td>
+<td>Main analytics page</td>
+</tr>
+<tr>
+<td><code>SummaryTiles</code></td>
+<td>Income/expense summary</td>
+</tr>
+<tr>
+<td><code>SpendingByCategoryCard</code></td>
+<td>Category breakdown</td>
+</tr>
+<tr>
+<td><code>DonutChart</code></td>
+<td>Canvas donut chart</td>
+</tr>
+<tr>
+<td><code>SpendingSplitCard</code></td>
+<td>Committed/discretionary comparison</td>
+</tr>
+<tr>
+<td><code>MonthlyOverviewCard</code></td>
+<td>5-month income/expense bars</td>
+</tr>
+<tr>
+<td><code>IncomeSourcesCard</code></td>
+<td>Income source breakdown</td>
+</tr>
+</tbody>
+</table>
+<h3 id="analytics-viewmodel-explanation">9.5 Analytics ViewModel
+Explanation</h3>
+<h4 id="file-path-20">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/ui/viewmodel/AnalyticsViewModel.kt</code></p>
+<h4 id="purpose-10">Purpose</h4>
+<p>Moves analytics calculations out of the Composable.</p>
+<h4 id="important-calculations">Important Calculations</h4>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Calculation</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Selected month income</td>
+<td>Sum income transactions where <code>dateMillis</code> is in selected
+month</td>
+</tr>
+<tr>
+<td>Selected month expenses</td>
+<td>Sum expense transactions where <code>dateMillis</code> is in
+selected month</td>
+</tr>
+<tr>
+<td>Category breakdown</td>
+<td>Group expenses by category and calculate percentages</td>
+</tr>
+<tr>
+<td>Spending split</td>
+<td>Separate committed and discretionary expenses</td>
+</tr>
+<tr>
+<td>Monthly overview</td>
+<td>Last 5 months relative to selected month</td>
+</tr>
+<tr>
+<td>Income sources</td>
+<td>Group income transactions by source</td>
+</tr>
+</tbody>
+</table>
+<h3 id="room-db-setup-explanation">9.6 Room DB Setup Explanation</h3>
+<h4 id="file-path-21">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/data/local/db/SpendlyDatabase.kt</code></p>
+<h4 id="purpose-11">Purpose</h4>
+<p>Defines the Room database, entities, DAOs, and migrations.</p>
+<h4 id="current-version">Current Version</h4>
+<p>Room database version: <code>5</code></p>
+<h4 id="entities-included">Entities Included</h4>
+<ul>
+<li><code>IncomeEntryEntity</code></li>
+<li><code>ExpenseEntryEntity</code></li>
+<li><code>SavingsGoalEntity</code></li>
+<li><code>UserProfileEntity</code></li>
+</ul>
+<h4 id="migrations">Migrations</h4>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Migration</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>1 -&gt; 2</code></td>
+<td>Adds currency, crypto, profile image/settings, and initial goal
+fields</td>
+</tr>
+<tr>
+<td><code>2 -&gt; 3</code></td>
+<td>Adds <code>categorySettingsJson</code></td>
+</tr>
+<tr>
+<td><code>3 -&gt; 4</code></td>
+<td>Adds goal <code>iconKey</code></td>
+</tr>
+<tr>
+<td><code>4 -&gt; 5</code></td>
+<td>Adds profile <code>themeMode</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="firestore-setup-explanation">9.7 Firestore Setup
+Explanation</h3>
+<p>Firestore is provided through Hilt in
+<code>di/AppModule.kt</code>.</p>
+<p>Configured Firestore behavior:</p>
+<ul>
+<li>Local persistent cache is enabled.</li>
+<li>Cache size is set to unlimited in the Firestore settings.</li>
+</ul>
+<p>Important note:</p>
+<p><code>firestore.rules</code> exists, but it appears to reference an
+older transaction schema using
+<code>users/{userId}/transactions/{transactionId}</code>. Current code
+uses <code>income</code>, <code>expenses</code>, <code>goals</code>, and
+<code>profile</code> subcollections. Therefore:</p>
+<p><code>Firestore security rules matching the current implemented schema: Not found in current codebase.</code></p>
+<h3 id="sync-logic-explanation">9.8 Sync Logic Explanation</h3>
+<h4 id="files">Files</h4>
+<ul>
+<li><code>app/src/main/kotlin/com/spendly/financetracker/worker/SpendlySyncWorker.kt</code></li>
+<li><code>app/src/main/kotlin/com/spendly/financetracker/util/SyncManager.kt</code></li>
+<li><code>app/src/main/kotlin/com/spendly/financetracker/SpendlyApplication.kt</code></li>
+</ul>
+<h4 id="sync-process">Sync Process</h4>
+<pre class="text"><code>WorkManager starts SpendlySyncWorker
+    ↓
+Worker reads current UID from AuthRepository
+    ↓
+If no UID, worker returns success
+    ↓
+Worker launches sync for:
+    - User profile
+    - Income
+    - Expenses
+    - Goals
+    ↓
+Each repository pushes local unsynced rows
+    ↓
+Each repository pulls remote Firestore docs
+    ↓
+Newest updatedAtMillis wins where merge exists</code></pre>
+<h3 id="caching-strategy">9.9 Caching Strategy</h3>
+<p>The app uses two caching levels:</p>
+<ol type="1">
+<li>Firestore local persistence cache.</li>
+<li>Room database cache.</li>
+</ol>
+<p>Room is the main app-facing cache. Compose screens observe
+Room-backed flows through repositories and ViewModels. Firestore is the
+remote sync target.</p>
+<h3 id="mahima-viva-questions-and-answers">9.10 Mahima Viva Questions
+And Answers</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Why use Room if Firestore has offline cache?</td>
+<td>Room gives structured SQL queries, observable local state,
+migrations, and an app-owned cache.</td>
+</tr>
+<tr>
+<td>What does WorkManager sync?</td>
+<td>Profile, income, expenses, and goals for the current Firebase
+UID.</td>
+</tr>
+<tr>
+<td>How does Analytics get data?</td>
+<td>It observes combined transactions from the repository and aggregates
+them in <code>AnalyticsViewModel</code>.</td>
+</tr>
+<tr>
+<td>Are Firestore indexes configured?</td>
+<td><code>firestore.indexes.json</code> exists but contains no custom
+indexes.</td>
+</tr>
+<tr>
+<td>Are current Firestore rules complete?</td>
+<td>No. The rules file appears to match an older transaction schema, not
+the current subcollections.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="demo-script-for-mahima-domain">9.11 Demo Script For Mahima
+Domain</h3>
+<ol type="1">
+<li>Open Analytics.</li>
+<li>Change month using month picker.</li>
+<li>Show totals and donut chart.</li>
+<li>Explain calculations are in <code>AnalyticsViewModel</code>.</li>
+<li>Explain Room entities and DAOs.</li>
+<li>Explain Firestore structure under <code>users/{uid}</code>.</li>
+<li>Explain WorkManager periodic sync and offline-first behavior.</li>
+</ol>
+<hr />
+<h2 id="database-and-schema-explanation">10. Database And Schema
+Explanation</h2>
+<h3 id="room-entity-summary">10.1 Room Entity Summary</h3>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Entity</th>
+<th>Table</th>
+<th>Primary Key</th>
+<th>Purpose</th>
+<th>Related Files</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IncomeEntryEntity</code></td>
+<td><code>income_entries</code></td>
+<td><code>id</code></td>
+<td>Stores income records</td>
+<td><code>IncomeEntryEntity.kt</code>, <code>IncomeDao.kt</code></td>
+</tr>
+<tr>
+<td><code>ExpenseEntryEntity</code></td>
+<td><code>expense_entries</code></td>
+<td><code>id</code></td>
+<td>Stores expense records</td>
+<td><code>ExpenseEntryEntity.kt</code>, <code>ExpenseDao.kt</code></td>
+</tr>
+<tr>
+<td><code>SavingsGoalEntity</code></td>
+<td><code>savings_goals</code></td>
+<td><code>id</code></td>
+<td>Stores savings goals</td>
+<td><code>SavingsGoalEntity.kt</code>, <code>GoalDao.kt</code></td>
+</tr>
+<tr>
+<td><code>UserProfileEntity</code></td>
+<td><code>user_profiles</code></td>
+<td><code>uid</code></td>
+<td>Stores profile/settings</td>
+<td><code>UserProfileEntity.kt</code>,
+<code>UserProfileDao.kt</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="income-schema">10.2 Income Schema</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>String</td>
+<td>Income ID</td>
+</tr>
+<tr>
+<td><code>userId</code></td>
+<td>String</td>
+<td>Firebase UID owner</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>String</td>
+<td>Income display name</td>
+</tr>
+<tr>
+<td><code>amountCents</code></td>
+<td>Long</td>
+<td>Converted/default-currency amount in cents</td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td>String</td>
+<td>Salary, freelance, crypto, etc.</td>
+</tr>
+<tr>
+<td><code>dateMillis</code></td>
+<td>Long</td>
+<td>User-selected income date</td>
+</tr>
+<tr>
+<td><code>note</code></td>
+<td>String</td>
+<td>Optional note</td>
+</tr>
+<tr>
+<td><code>isSynced</code></td>
+<td>Boolean</td>
+<td>Whether Firestore upload succeeded</td>
+</tr>
+<tr>
+<td><code>createdAtMillis</code></td>
+<td>Long</td>
+<td>Creation audit timestamp</td>
+</tr>
+<tr>
+<td><code>updatedAtMillis</code></td>
+<td>Long</td>
+<td>Last update timestamp</td>
+</tr>
+<tr>
+<td><code>originalAmount</code></td>
+<td>Double?</td>
+<td>Original user-entered amount</td>
+</tr>
+<tr>
+<td><code>originalCurrency</code></td>
+<td>String?</td>
+<td>Currency selected by user</td>
+</tr>
+<tr>
+<td><code>defaultCurrency</code></td>
+<td>String?</td>
+<td>User default currency at save time</td>
+</tr>
+<tr>
+<td><code>exchangeRate</code></td>
+<td>Double?</td>
+<td>Rate used for conversion</td>
+</tr>
+<tr>
+<td><code>isRecurring</code></td>
+<td>Boolean</td>
+<td>Recurring income toggle</td>
+</tr>
+<tr>
+<td><code>cryptoCoin</code></td>
+<td>String?</td>
+<td>Crypto coin name/symbol</td>
+</tr>
+<tr>
+<td><code>cryptoAmount</code></td>
+<td>Double?</td>
+<td>Crypto quantity</td>
+</tr>
+<tr>
+<td><code>cryptoRate</code></td>
+<td>Double?</td>
+<td>Crypto rate used</td>
+</tr>
+<tr>
+<td><code>cryptoRateSource</code></td>
+<td>String?</td>
+<td>Rate source</td>
+</tr>
+<tr>
+<td><code>cryptoRateFetchedAt</code></td>
+<td>Long?</td>
+<td>Rate fetch timestamp</td>
+</tr>
+</tbody>
+</table>
+<h3 id="expense-schema">10.3 Expense Schema</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>String</td>
+<td>Expense ID</td>
+</tr>
+<tr>
+<td><code>userId</code></td>
+<td>String</td>
+<td>Firebase UID owner</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>String</td>
+<td>Expense display name</td>
+</tr>
+<tr>
+<td><code>amountCents</code></td>
+<td>Long</td>
+<td>Converted/default-currency expense amount</td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td>String</td>
+<td>Expense category</td>
+</tr>
+<tr>
+<td><code>dateMillis</code></td>
+<td>Long</td>
+<td>User-selected expense date</td>
+</tr>
+<tr>
+<td><code>note</code></td>
+<td>String</td>
+<td>Optional note</td>
+</tr>
+<tr>
+<td><code>isSynced</code></td>
+<td>Boolean</td>
+<td>Whether Firestore upload succeeded</td>
+</tr>
+<tr>
+<td><code>createdAtMillis</code></td>
+<td>Long</td>
+<td>Creation audit timestamp</td>
+</tr>
+<tr>
+<td><code>updatedAtMillis</code></td>
+<td>Long</td>
+<td>Last update timestamp</td>
+</tr>
+<tr>
+<td><code>originalAmount</code></td>
+<td>Double?</td>
+<td>Original entered amount</td>
+</tr>
+<tr>
+<td><code>originalCurrency</code></td>
+<td>String?</td>
+<td>Selected currency</td>
+</tr>
+<tr>
+<td><code>defaultCurrency</code></td>
+<td>String?</td>
+<td>User default currency</td>
+</tr>
+<tr>
+<td><code>exchangeRate</code></td>
+<td>Double?</td>
+<td>Rate used for conversion</td>
+</tr>
+<tr>
+<td><code>paymentMethod</code></td>
+<td>String?</td>
+<td>Card, Cash, Auto-debit</td>
+</tr>
+<tr>
+<td><code>expenseType</code></td>
+<td>String?</td>
+<td>Committed or Discretionary</td>
+</tr>
+<tr>
+<td><code>goalId</code></td>
+<td>String?</td>
+<td>Linked goal if category is Goal</td>
+</tr>
+</tbody>
+</table>
+<h3 id="goal-schema">10.4 Goal Schema</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>String</td>
+<td>Goal ID</td>
+</tr>
+<tr>
+<td><code>userId</code></td>
+<td>String</td>
+<td>Firebase UID owner</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td>String</td>
+<td>Goal name</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>String</td>
+<td>Tracking, achieved, etc.</td>
+</tr>
+<tr>
+<td><code>targetCents</code></td>
+<td>Long</td>
+<td>Target amount</td>
+</tr>
+<tr>
+<td><code>savedCents</code></td>
+<td>Long</td>
+<td>Saved amount</td>
+</tr>
+<tr>
+<td><code>dueDateMillis</code></td>
+<td>Long</td>
+<td>Target date</td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td>String</td>
+<td>Goal category</td>
+</tr>
+<tr>
+<td><code>isPrimary</code></td>
+<td>Boolean</td>
+<td>Whether shown as primary goal</td>
+</tr>
+<tr>
+<td><code>isSynced</code></td>
+<td>Boolean</td>
+<td>Whether Firestore upload succeeded</td>
+</tr>
+<tr>
+<td><code>createdAtMillis</code></td>
+<td>Long</td>
+<td>Creation timestamp</td>
+</tr>
+<tr>
+<td><code>updatedAtMillis</code></td>
+<td>Long</td>
+<td>Last update timestamp</td>
+</tr>
+<tr>
+<td><code>initialSavedCents</code></td>
+<td>Long</td>
+<td>Initial saved amount</td>
+</tr>
+<tr>
+<td><code>defaultCurrency</code></td>
+<td>String?</td>
+<td>Currency</td>
+</tr>
+<tr>
+<td><code>iconKey</code></td>
+<td>String</td>
+<td>Goal icon key</td>
+</tr>
+</tbody>
+</table>
+<h3 id="user-profile-schema">10.5 User Profile Schema</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>uid</code></td>
+<td>String</td>
+<td>Firebase UID</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>String</td>
+<td>User name</td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td>String</td>
+<td>User email</td>
+</tr>
+<tr>
+<td><code>defaultCurrency</code></td>
+<td>String</td>
+<td>Main currency</td>
+</tr>
+<tr>
+<td><code>createdAtMillis</code></td>
+<td>Long</td>
+<td>Creation timestamp</td>
+</tr>
+<tr>
+<td><code>updatedAtMillis</code></td>
+<td>Long</td>
+<td>Last update timestamp</td>
+</tr>
+<tr>
+<td><code>isSynced</code></td>
+<td>Boolean</td>
+<td>Sync state</td>
+</tr>
+<tr>
+<td><code>profileImageUri</code></td>
+<td>String?</td>
+<td>Local image URI</td>
+</tr>
+<tr>
+<td><code>exchangeRateSettings</code></td>
+<td>String?</td>
+<td>Stored settings</td>
+</tr>
+<tr>
+<td><code>notificationFrequency</code></td>
+<td>String?</td>
+<td>Notification setting if used</td>
+</tr>
+<tr>
+<td><code>reminderTime</code></td>
+<td>String?</td>
+<td>Reminder time if used</td>
+</tr>
+<tr>
+<td><code>categorySettingsJson</code></td>
+<td>String?</td>
+<td>Custom/hidden categories and sources</td>
+</tr>
+<tr>
+<td><code>themeMode</code></td>
+<td>String</td>
+<td>SYSTEM, LIGHT, DARK</td>
+</tr>
+</tbody>
+</table>
+<h3 id="firestore-collection-summary">10.6 Firestore Collection
+Summary</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Collection / Document</th>
+<th>Purpose</th>
+<th>Related Repository</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>users/{uid}/profile/main</code></td>
+<td>User profile and settings</td>
+<td><code>UserRepositoryImpl</code>,
+<code>FirebaseAuthRepository</code></td>
+</tr>
+<tr>
+<td><code>users/{uid}/income/{incomeId}</code></td>
+<td>Income records</td>
+<td><code>IncomeRepositoryImpl</code></td>
+</tr>
+<tr>
+<td><code>users/{uid}/expenses/{expenseId}</code></td>
+<td>Expense records</td>
+<td><code>ExpenseRepositoryImpl</code></td>
+</tr>
+<tr>
+<td><code>users/{uid}/goals/{goalId}</code></td>
+<td>Savings goals</td>
+<td><code>GoalRepositoryImpl</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="relationships">10.7 Relationships</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Relationship</th>
+<th>How Implemented</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User to income</td>
+<td><code>IncomeEntryEntity.userId</code> and Firestore path
+<code>users/{uid}/income</code></td>
+</tr>
+<tr>
+<td>User to expense</td>
+<td><code>ExpenseEntryEntity.userId</code> and Firestore path
+<code>users/{uid}/expenses</code></td>
+</tr>
+<tr>
+<td>User to goal</td>
+<td><code>SavingsGoalEntity.userId</code> and Firestore path
+<code>users/{uid}/goals</code></td>
+</tr>
+<tr>
+<td>Goal to goal-saving expense</td>
+<td><code>ExpenseEntryEntity.goalId</code> references
+<code>SavingsGoalEntity.id</code></td>
+</tr>
+<tr>
+<td>Profile to category settings</td>
+<td><code>UserProfileEntity.categorySettingsJson</code> stores
+custom/hidden settings</td>
+</tr>
+<tr>
+<td>Profile to theme</td>
+<td><code>UserProfileEntity.themeMode</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="why-amounts-are-stored-as-cents">10.8 Why Amounts Are Stored As
+Cents</h3>
+<p>Money is stored as <code>Long</code> cents (<code>amountCents</code>,
+<code>targetCents</code>, <code>savedCents</code>) to avoid
+floating-point rounding problems. For example, storing
+<code>10.10</code> as a <code>Double</code> can cause precision issues,
+but storing <code>1010</code> cents as a <code>Long</code> is exact.</p>
+<hr />
+<h2 id="firestore-queries-and-backend-logic">11. Firestore Queries And
+Backend Logic</h2>
+<h3 id="profile-createsave">11.1 Profile Create/Save</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File</td>
+<td><code>data/repository/FirebaseAuthRepository.kt</code>,
+<code>data/remote/UserRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Function</td>
+<td><code>createAccount</code>, <code>upsertProfile</code>,
+<code>syncOne</code></td>
+</tr>
+<tr>
+<td>Firestore path</td>
+<td><code>users/{uid}/profile/main</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Create or update user profile</td>
+</tr>
+<tr>
+<td>Error handling</td>
+<td>If write fails after local save, profile remains unsynced</td>
+</tr>
+</tbody>
+</table>
+<h3 id="profile-fetch-sync">11.2 Profile Fetch / Sync</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File</td>
+<td><code>data/remote/UserRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Function</td>
+<td><code>syncWithFirestore(uid)</code></td>
+</tr>
+<tr>
+<td>Firestore path</td>
+<td><code>users/{uid}/profile/main</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Merge remote profile with local profile</td>
+</tr>
+<tr>
+<td>Conflict handling</td>
+<td>Prefer newest <code>updatedAtMillis</code> between local and
+remote</td>
+</tr>
+</tbody>
+</table>
+<h3 id="add-income">11.3 Add Income</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File</td>
+<td><code>data/remote/IncomeRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Function</td>
+<td><code>addIncome(uid, draft)</code></td>
+</tr>
+<tr>
+<td>Firestore path</td>
+<td><code>users/{uid}/income/{incomeId}</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Save income locally and remotely</td>
+</tr>
+<tr>
+<td>Error handling</td>
+<td>Local row remains <code>isSynced=false</code> if Firestore
+fails</td>
+</tr>
+</tbody>
+</table>
+<h3 id="update-income">11.4 Update Income</h3>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File</td>
+<td><code>data/remote/IncomeRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Function</td>
+<td><code>updateIncome(uid, transaction)</code></td>
+</tr>
+<tr>
+<td>Firestore path</td>
+<td><code>users/{uid}/income/{incomeId}</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Update existing income</td>
+</tr>
+<tr>
+<td>Error handling</td>
+<td>Local update still exists for later sync</td>
+</tr>
+</tbody>
+</table>
+<h3 id="delete-income">11.5 Delete Income</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File</td>
+<td><code>data/remote/IncomeRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Function</td>
+<td><code>deleteIncome(uid, id)</code></td>
+</tr>
+<tr>
+<td>Firestore path</td>
+<td><code>users/{uid}/income/{incomeId}</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Remove income</td>
+</tr>
+<tr>
+<td>Limitation</td>
+<td>Offline-safe delete tombstones are not found in current
+codebase</td>
+</tr>
+</tbody>
+</table>
+<h3 id="income-sync">11.6 Income Sync</h3>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File</td>
+<td><code>data/remote/IncomeRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Function</td>
+<td><code>syncWithFirestore(uid)</code></td>
+</tr>
+<tr>
+<td>Query</td>
+<td>Reads all documents under <code>users/{uid}/income</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Push unsynced local income and pull remote income</td>
+</tr>
+<tr>
+<td>Conflict handling</td>
+<td>Newer <code>updatedAtMillis</code> wins</td>
+</tr>
+</tbody>
+</table>
+<h3 id="add-expense">11.7 Add Expense</h3>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File</td>
+<td><code>data/remote/ExpenseRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Function</td>
+<td><code>addExpense(uid, draft)</code></td>
+</tr>
+<tr>
+<td>Firestore path</td>
+<td><code>users/{uid}/expenses/{expenseId}</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Save expense locally and remotely</td>
+</tr>
+<tr>
+<td>Error handling</td>
+<td>Local row remains unsynced if remote save fails</td>
+</tr>
+</tbody>
+</table>
+<h3 id="update-expense">11.8 Update Expense</h3>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File</td>
+<td><code>data/remote/ExpenseRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Function</td>
+<td><code>updateExpense(uid, transaction)</code></td>
+</tr>
+<tr>
+<td>Firestore path</td>
+<td><code>users/{uid}/expenses/{expenseId}</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Update expense</td>
+</tr>
+<tr>
+<td>Error handling</td>
+<td>Unsynced local update can be retried</td>
+</tr>
+</tbody>
+</table>
+<h3 id="delete-expense">11.9 Delete Expense</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File</td>
+<td><code>data/remote/ExpenseRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Function</td>
+<td><code>deleteExpense(uid, id)</code></td>
+</tr>
+<tr>
+<td>Firestore path</td>
+<td><code>users/{uid}/expenses/{expenseId}</code></td>
+</tr>
+<tr>
+<td>Special logic</td>
+<td>If linked to goal, subtract amount from goal saved total</td>
+</tr>
+<tr>
+<td>Limitation</td>
+<td>Tombstone-based remote delete sync is not found in current
+codebase</td>
+</tr>
+</tbody>
+</table>
+<h3 id="expense-sync">11.10 Expense Sync</h3>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File</td>
+<td><code>data/remote/ExpenseRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Function</td>
+<td><code>syncWithFirestore(uid)</code></td>
+</tr>
+<tr>
+<td>Query</td>
+<td>Reads all documents under <code>users/{uid}/expenses</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Push local unsynced expenses and pull remote expenses</td>
+</tr>
+</tbody>
+</table>
+<h3 id="save-goal">11.11 Save Goal</h3>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File</td>
+<td><code>data/remote/GoalRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Function</td>
+<td><code>saveGoal(uid, goal, balanceCents)</code></td>
+</tr>
+<tr>
+<td>Firestore path</td>
+<td><code>users/{uid}/goals/{goalId}</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Create or update savings goal</td>
+</tr>
+<tr>
+<td>Special logic</td>
+<td>Initial saved amount creates a linked goal expense</td>
+</tr>
+</tbody>
+</table>
+<h3 id="add-goal-savings">11.12 Add Goal Savings</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File</td>
+<td><code>data/remote/GoalRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Function</td>
+<td><code>addSavings(uid, goalId, amountCents, dateMillis)</code></td>
+</tr>
+<tr>
+<td>Firestore path</td>
+<td>Updates <code>users/{uid}/goals/{goalId}</code> and creates
+expense</td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Increase goal saved amount and record money movement</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td>Prevents exceeding target</td>
+</tr>
+</tbody>
+</table>
+<h3 id="delete-goal">11.13 Delete Goal</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File</td>
+<td><code>data/remote/GoalRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Function</td>
+<td><code>deleteGoal(uid, goalId)</code></td>
+</tr>
+<tr>
+<td>Firestore path</td>
+<td><code>users/{uid}/goals/{goalId}</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Remove goal</td>
+</tr>
+<tr>
+<td>Limitation</td>
+<td>Cascading remote cleanup of linked goal expenses is not clearly
+implemented</td>
+</tr>
+</tbody>
+</table>
+<h3 id="goal-sync">11.14 Goal Sync</h3>
+<table>
+<thead>
+<tr>
+<th>Detail</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File</td>
+<td><code>data/remote/GoalRepositoryImpl.kt</code></td>
+</tr>
+<tr>
+<td>Function</td>
+<td><code>syncWithFirestore(uid)</code></td>
+</tr>
+<tr>
+<td>Query</td>
+<td>Reads all documents under <code>users/{uid}/goals</code></td>
+</tr>
+<tr>
+<td>Purpose</td>
+<td>Push local unsynced goals and pull remote goals</td>
+</tr>
+</tbody>
+</table>
+<h3 id="firestore-security-rules-status">11.15 Firestore Security Rules
+Status</h3>
+<p><code>firestore.rules</code> exists, but the current rule content
+appears to reference an older path:</p>
+<pre class="text"><code>users/{userId}/transactions/{transactionId}</code></pre>
+<p>Current app code uses:</p>
+<pre class="text"><code>users/{uid}/income
+users/{uid}/expenses
+users/{uid}/goals
+users/{uid}/profile/main</code></pre>
+<p>Therefore:</p>
+<p><code>Firestore security rules for the current implemented schema: Not found in current codebase.</code></p>
+<p>This is a risk area lecturers may ask about.</p>
+<hr />
+<h2 id="room-database-logic">12. Room Database Logic</h2>
+<h3 id="room-file-table">12.1 Room File Table</h3>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Room File</th>
+<th>Type</th>
+<th>Purpose</th>
+<th>Important Methods</th>
+<th>Used By</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SpendlyDatabase.kt</code></td>
+<td>Database</td>
+<td>Defines entities, DAOs, migrations</td>
+<td><code>incomeDao</code>, <code>expenseDao</code>,
+<code>goalDao</code>, <code>userProfileDao</code></td>
+<td>Hilt <code>AppModule</code></td>
+</tr>
+<tr>
+<td><code>IncomeEntryEntity.kt</code></td>
+<td>Entity</td>
+<td>Income table</td>
+<td>Fields and indices</td>
+<td><code>IncomeDao</code>, <code>IncomeRepositoryImpl</code></td>
+</tr>
+<tr>
+<td><code>ExpenseEntryEntity.kt</code></td>
+<td>Entity</td>
+<td>Expense table</td>
+<td>Fields and indices</td>
+<td><code>ExpenseDao</code>, <code>ExpenseRepositoryImpl</code></td>
+</tr>
+<tr>
+<td><code>SavingsGoalEntity.kt</code></td>
+<td>Entity</td>
+<td>Goal table</td>
+<td>Fields and indices</td>
+<td><code>GoalDao</code>, <code>GoalRepositoryImpl</code></td>
+</tr>
+<tr>
+<td><code>UserProfileEntity.kt</code></td>
+<td>Entity</td>
+<td>Profile table</td>
+<td>Fields and sync settings</td>
+<td><code>UserProfileDao</code>, <code>UserRepositoryImpl</code></td>
+</tr>
+<tr>
+<td><code>IncomeDao.kt</code></td>
+<td>DAO</td>
+<td>Income SQL</td>
+<td><code>observeByUser</code>, <code>getUnsynced</code>,
+<code>markAsSynced</code></td>
+<td>Income repository</td>
+</tr>
+<tr>
+<td><code>ExpenseDao.kt</code></td>
+<td>DAO</td>
+<td>Expense SQL</td>
+<td><code>observeByUser</code>, <code>getUnsynced</code>,
+<code>markAsSynced</code></td>
+<td>Expense repository</td>
+</tr>
+<tr>
+<td><code>GoalDao.kt</code></td>
+<td>DAO</td>
+<td>Goal SQL</td>
+<td><code>observeByUser</code>, <code>getById</code>,
+<code>markAsSynced</code></td>
+<td>Goal repository</td>
+</tr>
+<tr>
+<td><code>UserProfileDao.kt</code></td>
+<td>DAO</td>
+<td>Profile SQL</td>
+<td><code>upsert</code>, <code>observeById</code>,
+<code>getUnsynced</code></td>
+<td>User repository</td>
+</tr>
+</tbody>
+</table>
+<h3 id="room-database-class">12.2 Room Database Class</h3>
+<h4 id="file-path-22">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/data/local/db/SpendlyDatabase.kt</code></p>
+<h4 id="important-points">Important Points</h4>
+<ul>
+<li>Annotated with <code>@Database</code>.</li>
+<li>Uses version <code>5</code>.</li>
+<li>Contains four entities.</li>
+<li>Exposes four abstract DAO functions.</li>
+<li>Includes non-destructive migrations.</li>
+</ul>
+<h3 id="dao-pattern">12.3 DAO Pattern</h3>
+<p>Each DAO follows a similar structure:</p>
+<ul>
+<li>Observe all records by user ID using <code>Flow</code>.</li>
+<li>Get one record by ID.</li>
+<li>Insert or update records.</li>
+<li>Delete records by ID.</li>
+<li>Find unsynced records.</li>
+<li>Mark records as synced after Firestore success.</li>
+</ul>
+<h3 id="local-cache-behavior">12.4 Local Cache Behavior</h3>
+<p>The app usually writes to Room first:</p>
+<ol type="1">
+<li>Generate or receive model data.</li>
+<li>Convert model to Room entity.</li>
+<li>Save entity with <code>isSynced=false</code>.</li>
+<li>Try remote Firestore write.</li>
+<li>If successful, mark as synced.</li>
+<li>If failed, keep record local for retry.</li>
+</ol>
+<h3 id="type-converters">12.5 Type Converters</h3>
+<p><code>Room TypeConverter files: Not found in current codebase.</code></p>
+<p>This is acceptable because current Room fields are primitive types
+such as <code>String</code>, <code>Long</code>, <code>Boolean</code>,
+and nullable primitive/string fields.</p>
+<h3 id="room-schema-export">12.6 Room Schema Export</h3>
+<p>The database uses <code>exportSchema = false</code>. This means Room
+schema JSON export is not enabled.</p>
+<p>Potential improvement:</p>
+<p>Enable schema export for production-grade migration auditing.</p>
+<hr />
+<h2 id="hilt-dependency-injection-explanation">13. Hilt Dependency
+Injection Explanation</h2>
+<h3 id="why-hilt-is-used">13.1 Why Hilt Is Used</h3>
+<p>Hilt manages object creation and dependencies. Without Hilt, every
+ViewModel or repository would need manual constructors and factories.
+Hilt helps keep code cleaner and makes testing easier.</p>
+<h3 id="application-class">13.2 Application Class</h3>
+<h4 id="file-path-23">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/SpendlyApplication.kt</code></p>
+<h4 id="important-annotations">Important Annotations</h4>
+<p><code>@HiltAndroidApp</code></p>
+<h4 id="purpose-12">Purpose</h4>
+<ul>
+<li>Enables Hilt for the app.</li>
+<li>Injects <code>HiltWorkerFactory</code>.</li>
+<li>Injects <code>SyncManager</code>.</li>
+<li>Provides WorkManager configuration.</li>
+<li>Schedules periodic sync in <code>onCreate</code>.</li>
+</ul>
+<h3 id="main-activity">13.3 Main Activity</h3>
+<h4 id="file-path-24">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/MainActivity.kt</code></p>
+<h4 id="important-annotation">Important Annotation</h4>
+<p><code>@AndroidEntryPoint</code></p>
+<h4 id="purpose-13">Purpose</h4>
+<p>Allows Hilt to inject dependencies into Compose through
+<code>hiltViewModel()</code>.</p>
+<h3 id="app-module">13.4 App Module</h3>
+<h4 id="file-path-25">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/di/AppModule.kt</code></p>
+<h4 id="provides">Provides</h4>
+<table>
+<thead>
+<tr>
+<th>Dependency</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FirebaseAuth</code></td>
+<td>Authentication</td>
+</tr>
+<tr>
+<td><code>FirebaseFirestore</code></td>
+<td>Cloud database</td>
+</tr>
+<tr>
+<td><code>SpendlyDatabase</code></td>
+<td>Local Room database</td>
+</tr>
+<tr>
+<td><code>IncomeDao</code></td>
+<td>Income SQL</td>
+</tr>
+<tr>
+<td><code>ExpenseDao</code></td>
+<td>Expense SQL</td>
+</tr>
+<tr>
+<td><code>GoalDao</code></td>
+<td>Goal SQL</td>
+</tr>
+<tr>
+<td><code>UserProfileDao</code></td>
+<td>Profile SQL</td>
+</tr>
+<tr>
+<td><code>WorkManager</code></td>
+<td>Background work</td>
+</tr>
+</tbody>
+</table>
+<h3 id="repository-module">13.5 Repository Module</h3>
+<h4 id="file-path-26">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/di/RepositoryModule.kt</code></p>
+<h4 id="purpose-14">Purpose</h4>
+<p>Binds repository interfaces to their implementations.</p>
+<table>
+<thead>
+<tr>
+<th>Interface</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AuthRepository</code></td>
+<td><code>FirebaseAuthRepository</code></td>
+</tr>
+<tr>
+<td><code>IncomeRepository</code></td>
+<td><code>IncomeRepositoryImpl</code></td>
+</tr>
+<tr>
+<td><code>ExpenseRepository</code></td>
+<td><code>ExpenseRepositoryImpl</code></td>
+</tr>
+<tr>
+<td><code>GoalRepository</code></td>
+<td><code>GoalRepositoryImpl</code></td>
+</tr>
+<tr>
+<td><code>UserRepository</code></td>
+<td><code>UserRepositoryImpl</code></td>
+</tr>
+<tr>
+<td><code>TransactionRepository</code></td>
+<td><code>FirebaseTransactionRepository</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="viewmodel-injection">13.6 ViewModel Injection</h3>
+<p>ViewModels use <code>@HiltViewModel</code> and constructor
+injection.</p>
+<p>Example dependencies:</p>
+<ul>
+<li><code>FinanceViewModel</code> receives auth, repositories, sync
+manager.</li>
+<li><code>TransactionsViewModel</code> receives auth and transaction
+repository.</li>
+<li><code>AnalyticsViewModel</code> receives auth and transaction
+repository.</li>
+<li><code>GoalsViewModel</code> receives auth and goal repository.</li>
+</ul>
+<h3 id="worker-injection">13.7 Worker Injection</h3>
+<p><code>SpendlySyncWorker</code> uses <code>@HiltWorker</code> so
+repositories can be injected into background work.</p>
+<hr />
+<h2 id="workmanager-and-sync-explanation">14. WorkManager And Sync
+Explanation</h2>
+<h3 id="why-workmanager-is-used">14.1 Why WorkManager Is Used</h3>
+<p>WorkManager is used because sync must happen reliably in the
+background, even if the app is not actively in the foreground. It
+supports network constraints and retry policies.</p>
+<h3 id="worker-file">14.2 Worker File</h3>
+<h4 id="file-path-27">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/worker/SpendlySyncWorker.kt</code></p>
+<h4 id="important-class">Important Class</h4>
+<p><code>SpendlySyncWorker</code></p>
+<h4 id="important-function-1">Important Function</h4>
+<p><code>doWork()</code></p>
+<h3 id="sync-steps">14.3 Sync Steps</h3>
+<pre class="text"><code>doWork()
+    ↓
+Get current uid from AuthRepository
+    ↓
+If uid is null, return Result.success()
+    ↓
+Run sync jobs:
+    - userRepository.syncWithFirestore(uid)
+    - incomeRepository.syncWithFirestore(uid)
+    - expenseRepository.syncWithFirestore(uid)
+    - goalRepository.syncWithFirestore(uid)
+    ↓
+If all succeed, return Result.success()
+    ↓
+If error and attempt &lt; 3, return Result.retry()
+    ↓
+Otherwise return Result.failure()</code></pre>
+<h3 id="scheduling-logic">14.4 Scheduling Logic</h3>
+<h4 id="file-path-28">File Path</h4>
+<p><code>app/src/main/kotlin/com/spendly/financetracker/util/SyncManager.kt</code></p>
+<h4 id="functions">Functions</h4>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>schedulePeriodicSync()</code></td>
+<td>Schedules periodic sync every 15 minutes</td>
+</tr>
+<tr>
+<td><code>startImmediateSync()</code></td>
+<td>Starts one-time sync immediately</td>
+</tr>
+</tbody>
+</table>
+<h3 id="network-constraints">14.5 Network Constraints</h3>
+<p>The worker request uses network constraints so sync runs when the
+network is connected.</p>
+<h3 id="offline-first-behavior">14.6 Offline-First Behavior</h3>
+<p>The code supports partial offline-first behavior:</p>
+<ul>
+<li>Writes save locally first.</li>
+<li>Failed Firestore writes leave data unsynced.</li>
+<li>WorkManager can retry upload.</li>
+</ul>
+<p>Limitations:</p>
+<ul>
+<li>Robust delete tombstones are not found.</li>
+<li>Full two-way conflict resolution for every edge case is
+limited.</li>
+<li>Remote deletion propagation to local Room is not clearly
+implemented.</li>
+</ul>
+<h3 id="viva-questions-1">14.7 Viva Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Why not sync only when user opens app?</td>
+<td>WorkManager allows retry in background with network
+constraints.</td>
+</tr>
+<tr>
+<td>What data is synced?</td>
+<td>Profile, income, expenses, and goals.</td>
+</tr>
+<tr>
+<td>What is the minimum periodic interval?</td>
+<td>WorkManager periodic work minimum is 15 minutes.</td>
+</tr>
+<tr>
+<td>What happens if sync fails?</td>
+<td>Worker retries up to configured attempts, then fails. Local unsynced
+data remains.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="theme-ui-consistency-and-design-system">15. Theme, UI
+Consistency, And Design System</h2>
+<h3 id="theme-files">15.1 Theme Files</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ui/theme/Color.kt</code></td>
+<td>Spendly brand and semantic colors</td>
+</tr>
+<tr>
+<td><code>ui/theme/Theme.kt</code></td>
+<td>Material light/dark color schemes</td>
+</tr>
+<tr>
+<td><code>ui/theme/ThemeMode.kt</code></td>
+<td>SYSTEM/LIGHT/DARK enum</td>
+</tr>
+<tr>
+<td><code>ui/theme/Type.kt</code></td>
+<td>Typography</td>
+</tr>
+</tbody>
+</table>
+<h3 id="theme-mode-flow">15.2 Theme Mode Flow</h3>
+<pre class="text"><code>ProfileScreen Appearance row
+    ↓
+User selects System / Light / Dark
+    ↓
+FinanceViewModel.updateProfile(...)
+    ↓
+UserProfile.themeMode saved to Room + Firestore
+    ↓
+MainActivity observes FinanceUiState
+    ↓
+FinanceTrackerTheme applies correct color scheme</code></pre>
+<h3 id="material-design-3-usage">15.3 Material Design 3 Usage</h3>
+<p>The app uses Material 3 components such as:</p>
+<ul>
+<li><code>Scaffold</code></li>
+<li><code>NavigationBar</code></li>
+<li><code>TopAppBar</code></li>
+<li><code>Card</code></li>
+<li><code>Button</code></li>
+<li><code>OutlinedTextField</code></li>
+<li><code>AlertDialog</code></li>
+<li><code>FloatingActionButton</code></li>
+<li><code>FilterChip</code></li>
+</ul>
+<h3 id="shared-ui-components">15.4 Shared UI Components</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bottom navigation</td>
+<td><code>AppBottomNavigation.kt</code></td>
+<td>Shared bottom tab UI</td>
+</tr>
+<tr>
+<td>Add action FAB</td>
+<td><code>SpendlyAddActionMenu.kt</code></td>
+<td>Consistent plus button/menu</td>
+</tr>
+<tr>
+<td>Month picker</td>
+<td><code>SpendlyMonthPicker.kt</code></td>
+<td>Shared History/Analytics month selector</td>
+</tr>
+<tr>
+<td>Transaction row</td>
+<td><code>TransactionListItem.kt</code></td>
+<td>Consistent transaction display</td>
+</tr>
+<tr>
+<td>Summary cards</td>
+<td><code>SummaryCard.kt</code>, <code>SummaryPanel.kt</code></td>
+<td>Dashboard summary UI</td>
+</tr>
+<tr>
+<td>Goal card</td>
+<td><code>GoalCard.kt</code></td>
+<td>Goal summary UI</td>
+</tr>
+<tr>
+<td>Design tokens</td>
+<td><code>SpendlyDesignTokens.kt</code>,
+<code>SpendlyDesign.kt</code></td>
+<td>Shared spacing, sizing, styles</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ui-consistency-improvements-already-present">15.5 UI Consistency
+Improvements Already Present</h3>
+<ul>
+<li>Shared month picker for History and Analytics.</li>
+<li>Shared plus FAB overlay in app scaffold.</li>
+<li>Modern navigation transitions.</li>
+<li>Material color scheme support for dark/light/system modes.</li>
+<li>Central money/date formatting helpers.</li>
+<li>Shared transaction row component.</li>
+</ul>
+<h3 id="ui-risk-areas">15.6 UI Risk Areas</h3>
+<p>Potential areas to test before demo:</p>
+<ul>
+<li>Dark mode contrast on all custom cards.</li>
+<li>Profile image picker permissions on different Android versions.</li>
+<li>FAB position across Home, History, and Goals.</li>
+<li>Analytics chart readability with empty data.</li>
+<li>Long text handling in goal and transaction names.</li>
+</ul>
+<hr />
+<h2 id="main-functional-logic-to-understand">16. Main Functional Logic
+To Understand</h2>
+<h3 id="authentication-flow">16.1 Authentication Flow</h3>
+<pre class="text"><code>AuthScreen
+    ↓
+FinanceViewModel.submitAuth
+    ↓
+AuthRepository.signIn
+    ↓
+FirebaseAuthRepository.signIn
+    ↓
+Firebase Auth
+    ↓
+observeSession emits UserSession
+    ↓
+FinanceViewModel observes user data</code></pre>
+<p>Must know:</p>
+<ul>
+<li>Firebase UID is the owner key.</li>
+<li>Session changes drive navigation.</li>
+<li>Login errors are stored in ViewModel state.</li>
+</ul>
+<h3 id="registration-flow">16.2 Registration Flow</h3>
+<pre class="text"><code>CreateAccountScreen
+    ↓
+CreateAccountViewModel
+    ↓
+AuthRepository.createAccount
+    ↓
+Firebase Auth user created
+    ↓
+UserProfileEntity created
+    ↓
+Room profile saved
+    ↓
+Firestore profile saved</code></pre>
+<p>Must know:</p>
+<ul>
+<li>Default currency is saved during account creation.</li>
+<li>Profile is created under <code>users/{uid}/profile/main</code>.</li>
+</ul>
+<h3 id="dashboard-calculation-flow">16.3 Dashboard Calculation Flow</h3>
+<pre class="text"><code>FinanceViewModel combines:
+    - Profile Flow
+    - Transaction Flow
+    - Goal Flow
+    ↓
+Calculates:
+    - balance
+    - monthly income
+    - monthly expense
+    - savings rate
+    - yearly savings
+    - recent transactions
+    - primary goal
+    ↓
+HomeScreen renders state</code></pre>
+<h3 id="transaction-add-flow">16.4 Transaction Add Flow</h3>
+<pre class="text"><code>AddIncome/AddExpense Screen
+    ↓
+Screen-specific ViewModel validates
+    ↓
+Repository saves to Room
+    ↓
+Repository tries Firestore
+    ↓
+DAO marks synced on success</code></pre>
+<h3 id="transaction-updatedelete-flow">16.5 Transaction Update/Delete
+Flow</h3>
+<pre class="text"><code>History row expanded
+    ↓
+Edit navigates to correct form
+    ↓
+Delete opens confirmation
+    ↓
+ViewModel calls repository delete
+    ↓
+Room and Firestore delete attempted</code></pre>
+<h3 id="goal-progress-flow">16.6 Goal Progress Flow</h3>
+<pre class="text"><code>Goal savedCents and targetCents
+    ↓
+progress = savedCents / targetCents
+    ↓
+UI progress bar and percentage</code></pre>
+<h3 id="goal-savings-flow">16.7 Goal Savings Flow</h3>
+<pre class="text"><code>User adds savings
+    ↓
+Validate amount &lt;= remaining target
+    ↓
+Update goal.savedCents
+    ↓
+Create linked expense with category Goal
+    ↓
+Sync goal and expense</code></pre>
+<h3 id="analytics-aggregation-flow">16.8 Analytics Aggregation Flow</h3>
+<pre class="text"><code>Transactions from Room
+    ↓
+Filter by selected month
+    ↓
+Group expenses by category
+    ↓
+Calculate percentages
+    ↓
+Split committed/discretionary
+    ↓
+Build 5-month overview
+    ↓
+AnalyticsScreen renders charts</code></pre>
+<h3 id="sync-flow">16.9 Sync Flow</h3>
+<pre class="text"><code>Local writes create isSynced=false rows
+    ↓
+Immediate sync or WorkManager periodic sync
+    ↓
+Repository pushes unsynced local rows
+    ↓
+Repository pulls remote rows
+    ↓
+Newest updatedAtMillis selected during merge</code></pre>
+<h3 id="currency-exchange-rate-flow">16.10 Currency / Exchange Rate
+Flow</h3>
+<pre class="text"><code>User selects currency
+    ↓
+If selected currency == default currency:
+    exchange field hidden
+Else:
+    exchange rate required or updated from service
+    ↓
+Converted amount stored in amountCents
+Original amount/currency/rate stored for reference</code></pre>
+<p>Important:</p>
+<p>API failure does not block saving if manual rate is valid.</p>
+<hr />
+<h2 id="live-demo-presentation-flow">17. Live Demo Presentation
+Flow</h2>
+<h3 id="minute-0-1-project-introduction">Minute 0-1: Project
+Introduction</h3>
+<p>What to click:</p>
+<ul>
+<li>Open app from launcher.</li>
+<li>Show splash/login/dashboard depending on test state.</li>
+</ul>
+<p>What to say:</p>
+<p>“Spendly is a personal finance tracker built with Kotlin, Compose,
+MVVM, Room, Firebase, Hilt, and WorkManager. It supports account-based
+finance tracking, local cache, cloud sync, dashboard summaries, goals,
+analytics, and profile settings.”</p>
+<p>Technical point:</p>
+<ul>
+<li>Local-first architecture and Firebase UID ownership.</li>
+</ul>
+<p>Possible lecturer question:</p>
+<p>“What makes this different from a static UI app?”</p>
+<p>Answer:</p>
+<p>“The app has real local and remote data layers. Screens are backed by
+ViewModels, repositories, Room DAOs, and Firestore documents.”</p>
+<h3 id="minute-1-3-architecture-explanation">Minute 1-3: Architecture
+Explanation</h3>
+<p>What to show:</p>
+<ul>
+<li>Briefly mention code structure or architecture diagram.</li>
+</ul>
+<p>What to say:</p>
+<p>“The data flow is Compose UI to ViewModel to Repository to Room and
+Firestore. Room provides local flows for the UI. Firestore provides
+cross-device persistence. Hilt injects all dependencies.”</p>
+<p>Technical point:</p>
+<ul>
+<li>MVVM separation.</li>
+<li>Room and Firestore coordination.</li>
+<li>WorkManager sync.</li>
+</ul>
+<p>Possible lecturer question:</p>
+<p>“Why use repository interfaces?”</p>
+<p>Answer:</p>
+<p>“They keep ViewModels independent from concrete Firebase/Room classes
+and make the architecture cleaner and more testable.”</p>
+<h3 id="minute-3-5-registerlogin-flow">Minute 3-5: Register/Login
+Flow</h3>
+<p>What to click:</p>
+<ul>
+<li>Login or create account.</li>
+<li>Show forgot password if needed.</li>
+</ul>
+<p>What to say:</p>
+<p>“Authentication uses Firebase Auth. Registration also creates a
+profile document and local Room profile.”</p>
+<p>Technical point:</p>
+<ul>
+<li><code>FirebaseAuthRepository</code>.</li>
+<li><code>UserProfileEntity</code>.</li>
+<li>Firestore path <code>users/{uid}/profile/main</code>.</li>
+</ul>
+<p>Possible question:</p>
+<p>“How do you prevent data mixing between users?”</p>
+<p>Answer:</p>
+<p>“Every local entity has <code>userId</code>, and every Firestore
+collection is nested under the Firebase UID.”</p>
+<h3 id="minute-5-7-dashboard-explanation">Minute 5-7: Dashboard
+Explanation</h3>
+<p>What to click:</p>
+<ul>
+<li>Open Home/Dashboard.</li>
+</ul>
+<p>What to say:</p>
+<p>“Dashboard is calculated from transaction and goal data. It displays
+total balance, monthly income, monthly expenses, net savings, savings
+rate, yearly savings, primary goals, and recent transactions.”</p>
+<p>Technical point:</p>
+<ul>
+<li>Uses <code>dateMillis</code> for finance reporting.</li>
+<li>Uses money stored as cents.</li>
+</ul>
+<p>Possible question:</p>
+<p>“Where are these calculations done?”</p>
+<p>Answer:</p>
+<p>“They are prepared in ViewModel state, mainly
+<code>FinanceViewModel</code>, then passed to
+<code>HomeScreen</code>.”</p>
+<h3 id="minute-7-9-transactions-flow">Minute 7-9: Transactions Flow</h3>
+<p>What to click:</p>
+<ul>
+<li>Tap plus.</li>
+<li>Add income.</li>
+<li>Add expense.</li>
+<li>Open History.</li>
+<li>Filter income/expense.</li>
+<li>Edit/delete a transaction.</li>
+</ul>
+<p>What to say:</p>
+<p>“Transactions are separated into income and expense tables but
+combined into one UI list. Add and edit screens validate data and save
+through repositories.”</p>
+<p>Technical point:</p>
+<ul>
+<li>Room insert first.</li>
+<li>Firestore sync second.</li>
+<li><code>isSynced</code> flag.</li>
+</ul>
+<p>Possible question:</p>
+<p>“What if internet is unavailable?”</p>
+<p>Answer:</p>
+<p>“Local Room write can still succeed. The row remains unsynced and
+WorkManager can retry later.”</p>
+<h3 id="minute-9-11-goals-flow">Minute 9-11: Goals Flow</h3>
+<p>What to click:</p>
+<ul>
+<li>Open Goal tab.</li>
+<li>Add goal.</li>
+<li>Show icon suggestion.</li>
+<li>Add savings.</li>
+</ul>
+<p>What to say:</p>
+<p>“Goals track a target amount and saved amount. Adding savings updates
+the goal and creates a linked expense transaction with category
+Goal.”</p>
+<p>Technical point:</p>
+<ul>
+<li><code>goalId</code> links expense to goal.</li>
+<li>Validation prevents saving more than target.</li>
+</ul>
+<p>Possible question:</p>
+<p>“Why is goal saving an expense?”</p>
+<p>Answer:</p>
+<p>“It represents money allocated out of available balance, so the
+dashboard and history remain consistent.”</p>
+<h3 id="minute-11-13-analyticsprofilesettings">Minute 11-13:
+Analytics/Profile/Settings</h3>
+<p>What to click:</p>
+<ul>
+<li>Open Analytics.</li>
+<li>Change month.</li>
+<li>Open Profile.</li>
+<li>Change appearance or currency.</li>
+</ul>
+<p>What to say:</p>
+<p>“Analytics is based on live transactions. It calculates
+selected-month totals, category percentages, spending split, and 5-month
+overview in <code>AnalyticsViewModel</code>. Profile stores settings
+like currency and theme.”</p>
+<p>Technical point:</p>
+<ul>
+<li>Canvas donut chart.</li>
+<li>Profile synced through Firestore.</li>
+<li>Theme mode is user-specific.</li>
+</ul>
+<p>Possible question:</p>
+<p>“Are analytics hardcoded?”</p>
+<p>Answer:</p>
+<p>“No. They are calculated from transaction records observed through
+Room.”</p>
+<h3 id="minute-13-15-database-sync-conclusion">Minute 13-15: Database,
+Sync, Conclusion</h3>
+<p>What to show:</p>
+<ul>
+<li>Explain schema and sync.</li>
+</ul>
+<p>What to say:</p>
+<p>“Room database version 5 contains income, expenses, goals, and
+profile tables. Firestore stores matching subcollections under each UID.
+WorkManager periodically syncs unsynced data when the network is
+connected.”</p>
+<p>Technical point:</p>
+<ul>
+<li>Migrations.</li>
+<li>Hilt-provided DAOs/repositories.</li>
+<li>Sync worker.</li>
+</ul>
+<p>Possible question:</p>
+<p>“What is a current limitation?”</p>
+<p>Answer:</p>
+<p>“Firestore rules need updating to fully match the current
+income/expenses/goals/profile schema, and delete tombstones would
+improve offline delete sync.”</p>
+<hr />
+<h2 id="viva-engineering-discussion-questions-and-answers">18. Viva /
+Engineering Discussion Questions And Answers</h2>
+<h3 id="a.-general-project-questions">A. General Project Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What is Spendly?</td>
+<td>A personal finance tracker for income, expenses, savings goals,
+analytics, and profile settings.</td>
+</tr>
+<tr>
+<td>What problem does it solve?</td>
+<td>It helps users record money movement and understand savings and
+spending patterns.</td>
+</tr>
+<tr>
+<td>Is this app only UI?</td>
+<td>No. It includes Room, Firebase Auth, Firestore, Hilt, WorkManager,
+and ViewModel state.</td>
+</tr>
+<tr>
+<td>What is the main technical strength?</td>
+<td>Local-first architecture with Room and Firestore sync.</td>
+</tr>
+<tr>
+<td>Who are target users?</td>
+<td>Students, freelancers, and individuals tracking personal
+finances.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b.-architecture-questions">B. Architecture Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What architecture does the app use?</td>
+<td>MVVM with repository pattern.</td>
+</tr>
+<tr>
+<td>What is the data flow?</td>
+<td>UI -&gt; ViewModel -&gt; Repository -&gt; Room/Firestore -&gt; Flow
+-&gt; ViewModel state -&gt; UI.</td>
+</tr>
+<tr>
+<td>Why use repositories?</td>
+<td>To hide data source details from ViewModels and keep code
+testable.</td>
+</tr>
+<tr>
+<td>Why use local-first?</td>
+<td>It improves responsiveness and allows offline-created records.</td>
+</tr>
+<tr>
+<td>Where is navigation handled?</td>
+<td>Mainly in <code>ui/FinanceTrackerApp.kt</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="c.-mvvm-questions">C. MVVM Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What is the View in this app?</td>
+<td>Compose screens and components.</td>
+</tr>
+<tr>
+<td>What is the ViewModel?</td>
+<td>Classes in <code>ui/viewmodel</code>.</td>
+</tr>
+<tr>
+<td>What is the Model?</td>
+<td>Domain models and Room entities in <code>data/model</code> and
+<code>data/local/entity</code>.</td>
+</tr>
+<tr>
+<td>Do Composables call repositories directly?</td>
+<td>Important screens are designed to use ViewModels/callbacks
+instead.</td>
+</tr>
+<tr>
+<td>Why is StateFlow useful?</td>
+<td>It exposes observable state that Compose can collect and
+render.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="d.-viewmodel-questions">D. ViewModel Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What does <code>FinanceViewModel</code> do?</td>
+<td>Handles session, app state, profile, dashboard data, and sync
+triggers.</td>
+</tr>
+<tr>
+<td>What does <code>TransactionsViewModel</code> do?</td>
+<td>Filters, groups, and deletes transactions.</td>
+</tr>
+<tr>
+<td>What does <code>AnalyticsViewModel</code> do?</td>
+<td>Calculates totals, category breakdown, split, and monthly
+overview.</td>
+</tr>
+<tr>
+<td>What does <code>GoalsViewModel</code> do?</td>
+<td>Handles goal form state, validation, details, and savings.</td>
+</tr>
+<tr>
+<td>Why not calculate analytics in Compose?</td>
+<td>Business calculations should stay in ViewModel for MVVM
+separation.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="e.-firestore-questions">E. Firestore Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What is the Firestore root path?</td>
+<td><code>users/{uid}</code>.</td>
+</tr>
+<tr>
+<td>Where is profile stored?</td>
+<td><code>users/{uid}/profile/main</code>.</td>
+</tr>
+<tr>
+<td>Where is income stored?</td>
+<td><code>users/{uid}/income/{incomeId}</code>.</td>
+</tr>
+<tr>
+<td>Where are expenses stored?</td>
+<td><code>users/{uid}/expenses/{expenseId}</code>.</td>
+</tr>
+<tr>
+<td>Where are goals stored?</td>
+<td><code>users/{uid}/goals/{goalId}</code>.</td>
+</tr>
+<tr>
+<td>How are conflicts handled?</td>
+<td>Repositories generally compare <code>updatedAtMillis</code> and keep
+the newest.</td>
+</tr>
+<tr>
+<td>Are security rules complete?</td>
+<td>Current matching rules for the implemented schema are not found;
+existing rules look older.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="f.-room-db-questions">F. Room DB Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Why use Room?</td>
+<td>For structured local cache, offline state, and Flow-based
+queries.</td>
+</tr>
+<tr>
+<td>What is the database version?</td>
+<td>Version 5.</td>
+</tr>
+<tr>
+<td>What tables exist?</td>
+<td>Income, expenses, goals, and user profiles.</td>
+</tr>
+<tr>
+<td>Why migrations?</td>
+<td>To preserve existing user data when schema changes.</td>
+</tr>
+<tr>
+<td>Why <code>isSynced</code>?</td>
+<td>To know which local rows need Firestore upload.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="g.-hilt-questions">G. Hilt Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Why use Hilt?</td>
+<td>To inject dependencies and avoid manual factories.</td>
+</tr>
+<tr>
+<td>Where is Hilt enabled?</td>
+<td><code>SpendlyApplication.kt</code> with
+<code>@HiltAndroidApp</code>.</td>
+</tr>
+<tr>
+<td>Where are dependencies provided?</td>
+<td><code>di/AppModule.kt</code> and
+<code>di/RepositoryModule.kt</code>.</td>
+</tr>
+<tr>
+<td>How are ViewModels injected?</td>
+<td>With <code>@HiltViewModel</code> and
+<code>hiltViewModel()</code>.</td>
+</tr>
+<tr>
+<td>How is WorkManager injected?</td>
+<td>Through <code>HiltWorkerFactory</code> and
+<code>@HiltWorker</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="h.-workmanager-questions">H. WorkManager Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What does WorkManager do here?</td>
+<td>Periodically syncs local and remote data.</td>
+</tr>
+<tr>
+<td>Which file has the worker?</td>
+<td><code>worker/SpendlySyncWorker.kt</code>.</td>
+</tr>
+<tr>
+<td>How often does periodic sync run?</td>
+<td>Every 15 minutes.</td>
+</tr>
+<tr>
+<td>What constraint is used?</td>
+<td>Network connected.</td>
+</tr>
+<tr>
+<td>What data is synced?</td>
+<td>Profile, income, expenses, and goals.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="i.-authentication-questions">I. Authentication Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What auth provider is used?</td>
+<td>Firebase Authentication.</td>
+</tr>
+<tr>
+<td>What happens after login?</td>
+<td>Session updates, data is observed, and immediate sync starts.</td>
+</tr>
+<tr>
+<td>Does create account create profile data?</td>
+<td>Yes, it creates a Room profile and Firestore profile document.</td>
+</tr>
+<tr>
+<td>Is forgot password implemented?</td>
+<td><code>sendPasswordResetEmail(email)</code> exists in
+<code>FirebaseAuthRepository</code>.</td>
+</tr>
+<tr>
+<td>Is password change implemented?</td>
+<td><code>updatePassword</code> exists with reauthentication
+support.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="j.-transactions-questions">J. Transactions Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Why separate income and expense tables?</td>
+<td>They have different fields and behavior but can be combined for
+UI.</td>
+</tr>
+<tr>
+<td>How are they combined?</td>
+<td><code>FirebaseTransactionRepository</code> combines income and
+expense flows.</td>
+</tr>
+<tr>
+<td>How is month filtering done?</td>
+<td>By comparing transaction <code>dateMillis</code> with selected month
+start/end.</td>
+</tr>
+<tr>
+<td>How are custom categories stored?</td>
+<td>In profile <code>categorySettingsJson</code>.</td>
+</tr>
+<tr>
+<td>How is exchange rate handled?</td>
+<td>Converted amount is stored in <code>amountCents</code>; original
+values and rate are also stored.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="k.-dashboard-questions">K. Dashboard Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What does Dashboard show?</td>
+<td>Balance, monthly income, monthly expense, net savings, goals, and
+recent transactions.</td>
+</tr>
+<tr>
+<td>Where does data come from?</td>
+<td>From ViewModel state built from Room-backed repository flows.</td>
+</tr>
+<tr>
+<td>What date field is used?</td>
+<td><code>dateMillis</code>, the user-selected event date.</td>
+</tr>
+<tr>
+<td>Why show yearly savings?</td>
+<td>It gives a longer-term financial summary beyond current month.</td>
+</tr>
+<tr>
+<td>Does Dashboard edit transactions?</td>
+<td>It mainly displays recent transactions; edit/delete belongs to
+History.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="l.-goals-questions">L. Goals Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>How are goals represented?</td>
+<td><code>SavingsGoal</code> model and <code>SavingsGoalEntity</code>
+Room table.</td>
+</tr>
+<tr>
+<td>What is <code>isPrimary</code>?</td>
+<td>Marks a goal for the primary goals section.</td>
+</tr>
+<tr>
+<td>What is <code>iconKey</code>?</td>
+<td>Stores the selected goal icon name.</td>
+</tr>
+<tr>
+<td>How is added savings saved?</td>
+<td>It updates goal saved amount and creates linked Goal expense.</td>
+</tr>
+<tr>
+<td>What validation prevents over-saving?</td>
+<td>Added amount cannot exceed remaining target.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="m.-analytics-questions">M. Analytics Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Are analytics live?</td>
+<td>Yes, based on transaction records.</td>
+</tr>
+<tr>
+<td>Where are calculations done?</td>
+<td><code>AnalyticsViewModel</code>.</td>
+</tr>
+<tr>
+<td>What does the donut chart show?</td>
+<td>Expense distribution by category.</td>
+</tr>
+<tr>
+<td>What is committed spending?</td>
+<td>Expenses marked committed or in committed default categories like
+Rent/Gym/Subscriptions.</td>
+</tr>
+<tr>
+<td>What does monthly overview show?</td>
+<td>Income and expense bars for the last 5 months relative to selected
+month.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="n.-profile-questions">N. Profile Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What profile data is stored?</td>
+<td>Name, email, currency, image URI, category settings, theme mode,
+timestamps.</td>
+</tr>
+<tr>
+<td>Is profile image uploaded to Firebase?</td>
+<td>No, local URI only. Firebase Storage is not implemented.</td>
+</tr>
+<tr>
+<td>How is theme changed?</td>
+<td>Profile Appearance row updates <code>themeMode</code>;
+<code>MainActivity</code> applies theme.</td>
+</tr>
+<tr>
+<td>How is currency changed?</td>
+<td>Profile updates default currency through repository.</td>
+</tr>
+<tr>
+<td>How is logout handled?</td>
+<td>Firebase Auth sign-out through <code>AuthRepository</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="o.-uiux-questions">O. UI/UX Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What design system is used?</td>
+<td>Material Design 3 with Spendly colors and shared components.</td>
+</tr>
+<tr>
+<td>How is dark mode supported?</td>
+<td>Light/dark color schemes and profile theme mode.</td>
+</tr>
+<tr>
+<td>How are FABs made consistent?</td>
+<td>Shared FAB/menu component and scaffold-level placement.</td>
+</tr>
+<tr>
+<td>How is month picker consistency handled?</td>
+<td>Shared <code>SpendlyMonthPicker</code>.</td>
+</tr>
+<tr>
+<td>Why use reusable components?</td>
+<td>Consistent UI and less duplicated code.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="p.-testing-and-future-improvement-questions">P. Testing And
+Future Improvement Questions</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Short Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Are unit tests present?</td>
+<td>Only placeholder/default tests are visible; meaningful tests should
+be added.</td>
+</tr>
+<tr>
+<td>What should be tested first?</td>
+<td>Auth, add transaction, sync, goal savings, analytics
+calculations.</td>
+</tr>
+<tr>
+<td>What is a major limitation?</td>
+<td>Firestore security rules need updating for current schema.</td>
+</tr>
+<tr>
+<td>What sync improvement is needed?</td>
+<td>Delete tombstones and stronger conflict resolution.</td>
+</tr>
+<tr>
+<td>What feature could be added next?</td>
+<td>Budgets, reminders, exports, richer analytics, cloud profile image
+storage.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="important-project-notes">19. Important Project Notes</h2>
+<h3 id="strengths">19.1 Strengths</h3>
+<ul>
+<li>Real MVVM architecture.</li>
+<li>Compose Material 3 UI.</li>
+<li>Firebase Authentication integration.</li>
+<li>Firestore per-user data structure.</li>
+<li>Room local database with migrations.</li>
+<li>Hilt dependency injection.</li>
+<li>WorkManager background sync.</li>
+<li>Local-first write flow.</li>
+<li>Separate domains for team members.</li>
+<li>Shared UI components for consistency.</li>
+<li>Analytics calculated from actual data.</li>
+<li>Goal savings integrated with expense records.</li>
+<li>Theme selector with System/Light/Dark modes.</li>
+</ul>
+<h3 id="current-limitations">19.2 Current Limitations</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Limitation</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Firestore rules mismatch</td>
+<td>Current <code>firestore.rules</code> appears to target old
+<code>transactions</code> schema, not current
+<code>income/expenses/goals/profile</code> paths</td>
+</tr>
+<tr>
+<td>Delete sync</td>
+<td>Offline-safe delete tombstones are not found</td>
+</tr>
+<tr>
+<td>Profile image cloud storage</td>
+<td>Firebase Storage upload is not implemented</td>
+</tr>
+<tr>
+<td>Automated tests</td>
+<td>Meaningful unit/instrumentation tests are limited or not found</td>
+</tr>
+<tr>
+<td>Remote cascading delete</td>
+<td>Deleting account/goal may not fully clean nested subcollections</td>
+</tr>
+<tr>
+<td>Full conflict resolution</td>
+<td>Newest timestamp merge exists, but complex multi-device conflicts
+are limited</td>
+</tr>
+<tr>
+<td>API reliability</td>
+<td>Currency/crypto API may fail, but manual rate fallback exists</td>
+</tr>
+</tbody>
+</table>
+<h3 id="known-bugs-or-risk-areas-visible-from-code">19.3 Known Bugs Or
+Risk Areas Visible From Code</h3>
+<ul>
+<li>Existing Firestore rules may block or fail to protect the currently
+used paths unless updated in Firebase Console.</li>
+<li>Room <code>exportSchema=false</code> reduces migration
+auditability.</li>
+<li>Firestore subcollection deletion is not automatically handled by
+deleting parent user document.</li>
+<li>Profile image URI may not work across devices because it is local to
+the device.</li>
+<li>External exchange-rate services are optional and may not always
+return data.</li>
+<li>If local delete happens offline, a robust remote tombstone pattern
+is not found.</li>
+</ul>
+<h3 id="what-to-prepare-before-demo">19.4 What To Prepare Before
+Demo</h3>
+<ol type="1">
+<li>Use a test Firebase account.</li>
+<li>Add at least two income records.</li>
+<li>Add at least five expense records across categories.</li>
+<li>Add one committed expense such as Rent or Subscription.</li>
+<li>Add one discretionary expense such as Food.</li>
+<li>Add at least two goals.</li>
+<li>Mark one goal as primary.</li>
+<li>Add savings to a goal.</li>
+<li>Ensure Analytics has data for the selected month.</li>
+<li>Test Profile theme switch.</li>
+<li>Test History month picker and filters.</li>
+<li>Confirm Firestore database contains user data under the correct
+UID.</li>
+</ol>
+<h3 id="screens-to-test-before-demo">19.5 Screens To Test Before
+Demo</h3>
+<table>
+<thead>
+<tr>
+<th>Screen</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Splash</td>
+<td>Routes correctly</td>
+</tr>
+<tr>
+<td>Login</td>
+<td>Sign in and forgot password message</td>
+</tr>
+<tr>
+<td>Create Account</td>
+<td>Validation and profile creation</td>
+</tr>
+<tr>
+<td>Dashboard</td>
+<td>Values update after adding records</td>
+</tr>
+<tr>
+<td>Add Income</td>
+<td>Save default currency and USD/manual rate</td>
+</tr>
+<tr>
+<td>Add Expense</td>
+<td>Category, payment, type, date, save</td>
+</tr>
+<tr>
+<td>History</td>
+<td>Filter, edit, delete</td>
+</tr>
+<tr>
+<td>Goals</td>
+<td>Add, edit, add savings, prevent over-save</td>
+</tr>
+<tr>
+<td>Analytics</td>
+<td>Month picker, chart, split, overview</td>
+</tr>
+<tr>
+<td>Profile</td>
+<td>Edit name/photo, currency, theme, password, logout</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="future-improvements">20. Future Improvements</h2>
+<h3 id="better-offline-first-sync">20.1 Better Offline-First Sync</h3>
+<p>Add tombstone records for deletes so offline deletions can sync
+later. Add stronger conflict resolution for simultaneous edits on
+multiple devices.</p>
+<h3 id="better-firestore-security-rules">20.2 Better Firestore Security
+Rules</h3>
+<p>Update <code>firestore.rules</code> to match current paths:</p>
+<ul>
+<li><code>users/{uid}/profile/main</code></li>
+<li><code>users/{uid}/income/{incomeId}</code></li>
+<li><code>users/{uid}/expenses/{expenseId}</code></li>
+<li><code>users/{uid}/goals/{goalId}</code></li>
+</ul>
+<p>Also validate important fields such as <code>userId</code>,
+<code>amountCents</code>, <code>dateMillis</code>, and
+<code>updatedAtMillis</code>.</p>
+<h3 id="unit-and-integration-tests">20.3 Unit And Integration Tests</h3>
+<p>Recommended tests:</p>
+<ul>
+<li>ViewModel validation tests.</li>
+<li>Analytics calculation tests.</li>
+<li>Repository mapping tests.</li>
+<li>Room migration tests.</li>
+<li>Goal savings tests.</li>
+<li>Transaction delete/update tests.</li>
+</ul>
+<h3 id="better-error-handling">20.4 Better Error Handling</h3>
+<p>Add consistent error banners/snackbars across all screens for:</p>
+<ul>
+<li>Network failure.</li>
+<li>Firestore permission denied.</li>
+<li>Invalid exchange rate.</li>
+<li>Sync failure.</li>
+<li>Password reauthentication failure.</li>
+</ul>
+<h3 id="more-analytics-charts">20.5 More Analytics Charts</h3>
+<p>Future analytics:</p>
+<ul>
+<li>Weekly trend.</li>
+<li>Budget vs actual.</li>
+<li>Top merchants.</li>
+<li>Highest expense category.</li>
+<li>Savings goal projection.</li>
+<li>Exportable reports.</li>
+</ul>
+<h3 id="budgeting-feature">20.6 Budgeting Feature</h3>
+<p>Add category budgets:</p>
+<ul>
+<li>Monthly budget per category.</li>
+<li>Warning when near limit.</li>
+<li>Budget usage chart.</li>
+<li>Budget carry-over.</li>
+</ul>
+<h3 id="notification-reminders">20.7 Notification Reminders</h3>
+<p>Use WorkManager or AlarmManager for reminders:</p>
+<ul>
+<li>Daily expense reminder.</li>
+<li>Bill due reminder.</li>
+<li>Goal contribution reminder.</li>
+</ul>
+<h3 id="cloud-profile-images">20.8 Cloud Profile Images</h3>
+<p>Add Firebase Storage:</p>
+<ul>
+<li>Upload profile image.</li>
+<li>Store download URL in profile.</li>
+<li>Sync profile picture across devices.</li>
+</ul>
+<h3 id="performance-improvements">20.9 Performance Improvements</h3>
+<ul>
+<li>Add indexes if Firestore queries become more complex.</li>
+<li>Add pagination for long transaction histories.</li>
+<li>Keep heavy calculations in ViewModels or repository layer.</li>
+<li>Add derived analytics caching if data volume grows.</li>
+</ul>
+<h3 id="accessibility-improvements">20.10 Accessibility
+Improvements</h3>
+<ul>
+<li>Add content descriptions for icons.</li>
+<li>Improve TalkBack labels.</li>
+<li>Test color contrast in dark mode.</li>
+<li>Support larger font sizes.</li>
+</ul>
+<hr />
+<h2 id="final-quick-revision-sheet">21. Final Quick Revision Sheet</h2>
+<h3 id="ten-most-important-files">21.1 Ten Most Important Files</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>File</th>
+<th>Why Important</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>MainActivity.kt</code></td>
+<td>Starts app and applies theme</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>SpendlyApplication.kt</code></td>
+<td>Hilt and WorkManager setup</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>ui/FinanceTrackerApp.kt</code></td>
+<td>Navigation, scaffold, bottom nav, FAB</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>ui/viewmodel/FinanceViewModel.kt</code></td>
+<td>Global session/dashboard/profile state</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>data/local/db/SpendlyDatabase.kt</code></td>
+<td>Room DB and migrations</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>di/AppModule.kt</code></td>
+<td>Provides Firebase, Room, DAOs, WorkManager</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>data/repository/FirebaseAuthRepository.kt</code></td>
+<td>Firebase Authentication</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>data/remote/IncomeRepositoryImpl.kt</code></td>
+<td>Income Room/Firestore logic</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>data/remote/ExpenseRepositoryImpl.kt</code></td>
+<td>Expense Room/Firestore logic</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>worker/SpendlySyncWorker.kt</code></td>
+<td>Background sync</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ten-most-important-flows">21.2 Ten Most Important Flows</h3>
+<ol type="1">
+<li>App startup and splash routing.</li>
+<li>Firebase login and session observation.</li>
+<li>Create account and profile creation.</li>
+<li>Add income local-first save.</li>
+<li>Add expense local-first save.</li>
+<li>History filtering and grouping by <code>dateMillis</code>.</li>
+<li>Dashboard calculations from transaction flows.</li>
+<li>Goal creation and progress calculation.</li>
+<li>Goal savings linked expense creation.</li>
+<li>WorkManager sync of unsynced Room rows.</li>
+</ol>
+<h3 id="ten-most-important-viva-answers">21.3 Ten Most Important Viva
+Answers</h3>
+<ol type="1">
+<li>“The app uses MVVM with repositories to separate UI from data
+access.”</li>
+<li>“Room is used as the local source for UI state and offline
+cache.”</li>
+<li>“Firestore is used for per-user cloud sync under
+<code>users/{uid}</code>.”</li>
+<li>“Firebase UID is the owner key for all user records.”</li>
+<li>“Money is stored as cents in <code>Long</code> fields to avoid
+floating-point errors.”</li>
+<li>“Transactions use <code>dateMillis</code> for financial reporting
+and <code>createdAtMillis</code> for audit.”</li>
+<li>“ViewModels expose state to Compose and keep calculations out of
+UI.”</li>
+<li>“Hilt injects Firebase, Room, DAOs, repositories, ViewModels, and
+the worker.”</li>
+<li>“WorkManager retries sync when network is available.”</li>
+<li>“Current Firestore rules should be updated because the rules file
+appears older than the implemented schema.”</li>
+</ol>
+<h3 id="ten-things-to-test-before-demo">21.4 Ten Things To Test Before
+Demo</h3>
+<ol type="1">
+<li>Login with existing Firebase account.</li>
+<li>Create account with default currency.</li>
+<li>Add income and confirm Dashboard updates.</li>
+<li>Add expense and confirm Dashboard updates.</li>
+<li>Edit and delete transaction from History.</li>
+<li>Change History month.</li>
+<li>Create a goal and add savings.</li>
+<li>Confirm goal saving appears as expense.</li>
+<li>Open Analytics and verify charts use live data.</li>
+<li>Change Profile theme to Dark/Light/System.</li>
+</ol>
+<h3 id="five-strongest-technical-points-to-mention">21.5 Five Strongest
+Technical Points To Mention</h3>
+<ol type="1">
+<li>Local-first Room + Firestore sync architecture.</li>
+<li>Clean MVVM separation with repository interfaces.</li>
+<li>Hilt dependency injection across app, repositories, database, and
+worker.</li>
+<li>WorkManager background sync with network constraints.</li>
+<li>Data-driven analytics and dashboard using actual persisted
+transactions.</li>
+</ol>
+<hr />
+<h2 id="appendix-a.-complete-firestore-structure-to-explain">Appendix A.
+Complete Firestore Structure To Explain</h2>
+<pre class="text"><code>users
+└── {uid}
+    ├── profile
+    │   └── main
+    │       ├── uid
+    │       ├── name
+    │       ├── email
+    │       ├── defaultCurrency
+    │       ├── categorySettingsJson
+    │       ├── themeMode
+    │       ├── createdAtMillis
+    │       └── updatedAtMillis
+    ├── income
+    │   └── {incomeId}
+    │       ├── id
+    │       ├── userId
+    │       ├── name
+    │       ├── amountCents
+    │       ├── source
+    │       ├── dateMillis
+    │       ├── originalCurrency
+    │       ├── exchangeRate
+    │       └── updatedAtMillis
+    ├── expenses
+    │   └── {expenseId}
+    │       ├── id
+    │       ├── userId
+    │       ├── name
+    │       ├── amountCents
+    │       ├── category
+    │       ├── dateMillis
+    │       ├── paymentMethod
+    │       ├── expenseType
+    │       ├── goalId
+    │       └── updatedAtMillis
+    └── goals
+        └── {goalId}
+            ├── id
+            ├── userId
+            ├── title
+            ├── targetCents
+            ├── savedCents
+            ├── dueDateMillis
+            ├── isPrimary
+            ├── iconKey
+            └── updatedAtMillis</code></pre>
+<h2 id="appendix-b.-architecture-diagram">Appendix B. Architecture
+Diagram</h2>
+<pre class="text"><code>                  ┌───────────────────────┐
+                  │      Compose UI        │
+                  │ Screens + Components   │
+                  └───────────┬───────────┘
+                              │ user event / collect state
+                              ▼
+                  ┌───────────────────────┐
+                  │       ViewModels       │
+                  │ StateFlow + validation │
+                  └───────────┬───────────┘
+                              │ repository call
+                              ▼
+                  ┌───────────────────────┐
+                  │ Repository Interfaces  │
+                  └───────────┬───────────┘
+                              │ implementation
+                              ▼
+         ┌────────────────────┴────────────────────┐
+         ▼                                         ▼
+┌───────────────────┐                    ┌───────────────────┐
+│ Room Local DB      │                    │ Firebase Firestore │
+│ Entities + DAOs    │                    │ users/{uid}/...    │
+└─────────┬─────────┘                    └─────────┬─────────┘
+          │ Flow                                      │ remote docs
+          ▼                                           ▼
+┌───────────────────┐                    ┌───────────────────┐
+│ UI State Updates   │                    │ WorkManager Sync   │
+└───────────────────┘                    └───────────────────┘</code></pre>
+<h2 id="appendix-c.-not-found-in-current-codebase">Appendix C. Not Found
+In Current Codebase</h2>
+<p>These items were requested or are common in production apps, but are
+not found or not fully implemented in the current repository:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Firestore security rules matching current
+<code>income/expenses/goals/profile</code> schema</td>
+<td>Not found in current codebase</td>
+</tr>
+<tr>
+<td>Firebase Storage upload for profile image</td>
+<td>Not found in current codebase</td>
+</tr>
+<tr>
+<td>Room TypeConverter file</td>
+<td>Not found in current codebase</td>
+</tr>
+<tr>
+<td>Meaningful unit tests for repositories/ViewModels/calculations</td>
+<td>Not found in current codebase</td>
+</tr>
+<tr>
+<td>Full delete tombstone sync</td>
+<td>Not found in current codebase</td>
+</tr>
+<tr>
+<td>Automatic cascading delete of all Firestore user subcollections on
+account delete</td>
+<td>Not found in current codebase</td>
+</tr>
+<tr>
+<td>Exported Room schema JSON files</td>
+<td>Not found in current codebase</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

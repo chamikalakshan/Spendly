@@ -32,10 +32,15 @@ fun shiftMonth(timeMillis: Long, amount: Int): Long {
 fun monthLabel(timeMillis: Long): String =
     SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(timeMillis)
 
-fun monthOptions(centerMillis: Long = System.currentTimeMillis(), monthsBack: Int = 24, monthsForward: Int = 3): List<MonthOption> {
+fun monthOptions(centerMillis: Long = System.currentTimeMillis(), monthsBack: Int = 11, monthsForward: Int = 0): List<MonthOption> {
     val centerStart = monthStart(centerMillis)
-    return (monthsBack downTo -monthsForward).map { offset ->
+    val recent = (0..monthsBack).map { offset ->
         val start = shiftMonth(centerStart, -offset)
         MonthOption(startMillis = start, label = monthLabel(start))
     }
+    val future = (1..monthsForward).map { offset ->
+        val start = shiftMonth(centerStart, offset)
+        MonthOption(startMillis = start, label = monthLabel(start))
+    }
+    return recent + future
 }

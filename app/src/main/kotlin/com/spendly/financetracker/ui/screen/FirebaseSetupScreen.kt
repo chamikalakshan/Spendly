@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.spendly.financetracker.ui.components.SpendlySpacing
 
 @Composable
 fun FirebaseSetupScreen(contentPadding: PaddingValues) {
@@ -19,7 +20,8 @@ fun FirebaseSetupScreen(contentPadding: PaddingValues) {
         modifier = Modifier
             .fillMaxSize()
             .padding(contentPadding)
-            .padding(24.dp),
+            .padding(horizontal = SpendlySpacing.screenHorizontal, vertical = 24.dp)
+            .padding(top = SpendlySpacing.screenTop),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

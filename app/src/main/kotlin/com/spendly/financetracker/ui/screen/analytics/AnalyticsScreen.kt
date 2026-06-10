@@ -17,32 +17,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,76 +45,75 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.spendly.financetracker.ui.components.NoAnalyticsState
+import com.spendly.financetracker.ui.components.SpendlyMonthPicker
+import com.spendly.financetracker.ui.components.SpendlyRadius
+import com.spendly.financetracker.ui.components.SpendlySpacing
 import com.spendly.financetracker.ui.theme.ChartColors
 import com.spendly.financetracker.ui.theme.ChartPurple
-import com.spendly.financetracker.ui.theme.SpendlyGray100
-import com.spendly.financetracker.ui.theme.SpendlyGray300
-import com.spendly.financetracker.ui.theme.SpendlyGray500
-import com.spendly.financetracker.ui.theme.SpendlyGray700
-import com.spendly.financetracker.ui.theme.SpendlyGray900
 import com.spendly.financetracker.ui.theme.SpendlyGreen
-import com.spendly.financetracker.ui.theme.SpendlyGreenDark
-import com.spendly.financetracker.ui.theme.SpendlyGreenLight
 import com.spendly.financetracker.ui.theme.SpendlyRed
-import com.spendly.financetracker.ui.theme.SpendlyRedDark
-import com.spendly.financetracker.ui.theme.SpendlyRedLight
 import com.spendly.financetracker.ui.util.formatMoney
 import com.spendly.financetracker.ui.viewmodel.AnalyticsSlice
 import com.spendly.financetracker.ui.viewmodel.AnalyticsUiState
 import com.spendly.financetracker.ui.viewmodel.AnalyticsViewModel
+import com.spendly.financetracker.data.service.SmartInsight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalyticsScreen() {
     val viewModel: AnalyticsViewModel = hiltViewModel()
-    val state by viewModel.uiState.collectAsState()
-    var monthMenuExpanded by remember { mutableStateOf(false) }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             Column {
                 TopAppBar(
-                    windowInsets = WindowInsets(0.dp),
-                    title = { Text("Analytics", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold) },
+                    title = { Text("Analytics", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) },
                     actions = {
-                        Box(modifier = Modifier.padding(end = 16.dp)) {
-                            Surface(color = SpendlyGray100, shape = RoundedCornerShape(18.dp), onClick = { monthMenuExpanded = true }) {
-                                Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.CalendarMonth, null, tint = SpendlyGray700, modifier = Modifier.size(16.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(state.selectedMonthLabel, style = MaterialTheme.typography.titleSmall, color = SpendlyGray900)
-                                    Icon(Icons.Default.ArrowDropDown, null, tint = SpendlyGray700, modifier = Modifier.size(18.dp))
-                                }
-                            }
-                            DropdownMenu(expanded = monthMenuExpanded, onDismissRequest = { monthMenuExpanded = false }) {
-                                state.monthOptions.forEach { option ->
-                                    DropdownMenuItem(
-                                        text = { Text(option.label) },
-                                        onClick = {
-                                            viewModel.selectMonth(option.startMillis)
-                                            monthMenuExpanded = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
+                        SpendlyMonthPicker(
+                            selectedLabel = state.selectedMonthLabel,
+                            options = state.monthOptions,
+                            onMonthSelected = viewModel::selectMonth,
+                            modifier = Modifier.padding(end = SpendlySpacing.screenHorizontal)
+                        )
                     }
                 )
-                HorizontalDivider(thickness = 0.5.dp, color = SpendlyGray300)
+                if (state.isLoading) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
+                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
             }
         }
     ) { padding ->
         if (!state.isLoading && state.totalIncome == 0L && state.totalExpense == 0L) {
-            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(bottom = SpendlySpacing.mainScreenBottomPadding),
+                contentAlignment = Alignment.Center
+            ) {
                 NoAnalyticsState()
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding).background(Color.White),
-                contentPadding = PaddingValues(start = 16.dp, top = 14.dp, end = 16.dp, bottom = 104.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(MaterialTheme.colorScheme.background),
+                contentPadding = PaddingValues(
+                    start = SpendlySpacing.screenHorizontal,
+                    top = SpendlySpacing.screenTop,
+                    end = SpendlySpacing.screenHorizontal,
+                    bottom = SpendlySpacing.mainScreenBottomPadding
+                ),
+                verticalArrangement = Arrangement.spacedBy(SpendlySpacing.cardGap)
             ) {
                 item { SummaryTiles(state) }
+                if (state.smartInsights.isNotEmpty()) {
+                    item { SmartInsightsCard(state.smartInsights) }
+                }
                 item { SpendingByCategoryCard(state) }
                 item { SpendingSplitCard(state) }
                 item { MonthlyOverviewCard(state) }
@@ -137,17 +126,38 @@ fun AnalyticsScreen() {
 }
 
 @Composable
+private fun SmartInsightsCard(insights: List<SmartInsight>) {
+    AnalyticsCard {
+        Text("Smart Insights", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+        insights.forEach { insight ->
+            val color = when (insight.severity) {
+                "DANGER" -> SpendlyRed
+                "WARNING" -> ChartPurple
+                else -> SpendlyGreen
+            }
+            Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Box(modifier = Modifier.size(10.dp).padding(top = 5.dp).clip(CircleShape).background(color))
+                Column {
+                    Text(insight.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text(insight.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun SummaryTiles(state: AnalyticsUiState) {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        SummaryTile("Total Income", formatMoney(state.totalIncome), SpendlyGreenLight, SpendlyGreenDark, Modifier.weight(1f))
-        SummaryTile("Total Expenses", formatMoney(state.totalExpense), SpendlyRedLight, SpendlyRedDark, Modifier.weight(1f))
+    Row(horizontalArrangement = Arrangement.spacedBy(SpendlySpacing.cardGap)) {
+        SummaryTile("Total Income", formatMoney(state.totalIncome), MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer, Modifier.weight(1f))
+        SummaryTile("Total Expenses", formatMoney(state.totalExpense), MaterialTheme.colorScheme.errorContainer, MaterialTheme.colorScheme.onErrorContainer, Modifier.weight(1f))
     }
 }
 
 @Composable
 private fun SummaryTile(label: String, value: String, background: Color, textColor: Color, modifier: Modifier) {
-    Card(modifier = modifier.height(88.dp), colors = CardDefaults.cardColors(containerColor = background), shape = RoundedCornerShape(18.dp)) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.Center) {
+    Card(modifier = modifier.height(88.dp), colors = CardDefaults.cardColors(containerColor = background), shape = RoundedCornerShape(SpendlyRadius.card)) {
+        Column(modifier = Modifier.padding(SpendlySpacing.cardPadding), verticalArrangement = Arrangement.Center) {
             Text(label, style = MaterialTheme.typography.titleSmall, color = textColor, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
             Text(value, style = MaterialTheme.typography.titleLarge, color = textColor, fontWeight = FontWeight.Bold)
@@ -158,11 +168,11 @@ private fun SummaryTile(label: String, value: String, background: Color, textCol
 @Composable
 private fun SpendingByCategoryCard(state: AnalyticsUiState) {
     AnalyticsCard {
-        Text("Spending by Category", style = MaterialTheme.typography.titleLarge, color = SpendlyGray900, fontWeight = FontWeight.Bold)
+        Text("Spending by Category", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
         Row(modifier = Modifier.fillMaxWidth().height(210.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.weight(0.9f), contentAlignment = Alignment.Center) {
                 DonutChart(state.spendingByCategory, Modifier.size(132.dp))
-                Text("Spent\n${formatCompactAmount(state.totalExpense)}", textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium, color = SpendlyGray700, fontWeight = FontWeight.Bold)
+                Text("Spent\n${formatCompactAmount(state.totalExpense)}", textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
             }
             Column(modifier = Modifier.weight(1.1f), verticalArrangement = Arrangement.spacedBy(11.dp)) {
                 state.spendingByCategory.take(7).forEachIndexed { index, item ->
@@ -175,12 +185,13 @@ private fun SpendingByCategoryCard(state: AnalyticsUiState) {
 
 @Composable
 private fun DonutChart(categories: List<AnalyticsSlice>, modifier: Modifier = Modifier) {
+    val emptyColor = MaterialTheme.colorScheme.surfaceVariant
     Canvas(modifier = modifier) {
         val stroke = Stroke(width = 22.dp.toPx(), cap = StrokeCap.Butt)
         val arcSize = Size(size.width - stroke.width, size.height - stroke.width)
         var start = -90f
         if (categories.isEmpty()) {
-            drawArc(SpendlyGray100, start, 360f, false, topLeft = androidx.compose.ui.geometry.Offset(stroke.width / 2, stroke.width / 2), size = arcSize, style = stroke)
+            drawArc(emptyColor, start, 360f, false, topLeft = androidx.compose.ui.geometry.Offset(stroke.width / 2, stroke.width / 2), size = arcSize, style = stroke)
         } else {
             categories.forEachIndexed { index, item ->
                 val sweep = (item.percent.coerceAtLeast(1.0).toFloat() / 100f) * 360f
@@ -203,8 +214,8 @@ private fun DonutChart(categories: List<AnalyticsSlice>, modifier: Modifier = Mo
 private fun LegendRow(item: AnalyticsSlice, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Box(modifier = Modifier.size(10.dp).clip(RoundedCornerShape(3.dp)).background(color))
-        Text(item.label, style = MaterialTheme.typography.bodyMedium, color = SpendlyGray700, modifier = Modifier.weight(1f))
-        Text(formatPercent(item.percent), style = MaterialTheme.typography.bodyMedium, color = SpendlyGray700, fontWeight = FontWeight.Bold)
+        Text(item.label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+        Text(formatPercent(item.percent), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -212,7 +223,7 @@ private fun LegendRow(item: AnalyticsSlice, color: Color) {
 private fun SpendingSplitCard(state: AnalyticsUiState) {
     val split = state.spendingSplit
     AnalyticsCard {
-        Text("Committed vs Discretionary", style = MaterialTheme.typography.titleLarge, color = SpendlyGray900, fontWeight = FontWeight.Bold)
+        Text("Committed vs Discretionary", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
         SplitBar("Committed", "Rent • Gym • Subscriptions", split.committedCents, split.committedPercent, ChartPurple)
         SplitBar("Discretionary", "Food • Transport • Entertainment", split.discretionaryCents, split.discretionaryPercent, SpendlyGreen)
     }
@@ -223,8 +234,8 @@ private fun SplitBar(label: String, subtitle: String, amount: Long, percent: Dou
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.Bottom) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(label, style = MaterialTheme.typography.titleMedium, color = SpendlyGray900, fontWeight = FontWeight.Bold)
-                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = SpendlyGray500)
+                Text(label, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Text("${formatMoney(amount)} (${formatPercent(percent)})", style = MaterialTheme.typography.titleSmall, color = color, fontWeight = FontWeight.Bold)
         }
@@ -232,71 +243,48 @@ private fun SplitBar(label: String, subtitle: String, amount: Long, percent: Dou
             progress = { (percent.toFloat() / 100f).coerceIn(0f, 1f) },
             modifier = Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(8.dp)),
             color = color,
-            trackColor = SpendlyGray100
+            trackColor = MaterialTheme.colorScheme.surfaceVariant
         )
     }
 }
 
 @Composable
 private fun MonthlyOverviewCard(state: AnalyticsUiState) {
-    val data = state.monthlyOverview
-    val maxValue = data.maxOfOrNull { maxOf(it.income, it.expense) }?.coerceAtLeast(1L) ?: 1L
     AnalyticsCard {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Monthly Overview (5 months)", style = MaterialTheme.typography.titleLarge, color = SpendlyGray900, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                LegendMini("Income", SpendlyGreen)
-                LegendMini("Expenses", SpendlyRed)
+        Text("Monthly Overview", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Column {
+                Text("Income", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(formatMoney(state.totalIncome), style = MaterialTheme.typography.titleMedium, color = SpendlyGreen, fontWeight = FontWeight.Bold)
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text("Expenses", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(formatMoney(state.totalExpense), style = MaterialTheme.typography.titleMedium, color = SpendlyRed, fontWeight = FontWeight.Bold)
             }
         }
-        Row(modifier = Modifier.fillMaxWidth().height(190.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Bottom) {
-            Column(modifier = Modifier.height(148.dp), verticalArrangement = Arrangement.SpaceBetween, horizontalAlignment = Alignment.End) {
-                Text(formatCompactAmount(maxValue), style = MaterialTheme.typography.labelSmall, color = SpendlyGray500)
-                Text(formatCompactAmount(maxValue / 2), style = MaterialTheme.typography.labelSmall, color = SpendlyGray500)
-                Text("0", style = MaterialTheme.typography.labelSmall, color = SpendlyGray500)
-            }
-            data.forEach { item ->
-                Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
-                    Row(modifier = Modifier.height(148.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
-                        ChartBar(item.income, maxValue, SpendlyGreen, Modifier.weight(1f))
-                        ChartBar(item.expense, maxValue, SpendlyRed, Modifier.weight(1f))
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Text(item.label, style = MaterialTheme.typography.labelSmall, color = SpendlyGray500)
-                }
-            }
+        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Net Cash Flow", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+            val net = state.totalIncome - state.totalExpense
+            Text(formatMoney(net), style = MaterialTheme.typography.titleMedium, color = if (net >= 0) SpendlyGreen else SpendlyRed, fontWeight = FontWeight.Bold)
         }
-    }
-}
-
-@Composable
-private fun ChartBar(value: Long, maxValue: Long, color: Color, modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxHeight(), contentAlignment = Alignment.BottomCenter) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight((value.toFloat() / maxValue.toFloat()).coerceIn(0.03f, 1f))
-                .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
-                .background(color)
-        )
     }
 }
 
 @Composable
 private fun IncomeSourcesCard(state: AnalyticsUiState) {
     AnalyticsCard {
-        Text("Income Sources", style = MaterialTheme.typography.titleLarge, color = SpendlyGray900, fontWeight = FontWeight.Bold)
-        state.incomeSources.forEach { item ->
-            SplitBar(item.label, "${formatPercent(item.percent)} of total income", item.amountCents, item.percent, SpendlyGreen)
+        Text("Income Sources", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+        state.incomeSources.forEach { source ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(source.label, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(formatMoney(source.amountCents), style = MaterialTheme.typography.titleSmall, color = SpendlyGreen, fontWeight = FontWeight.Bold)
+                    Text(formatPercent(source.percent), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
         }
-    }
-}
-
-@Composable
-private fun LegendMini(label: String, color: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-        Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(color))
-        Text(label, style = MaterialTheme.typography.labelSmall, color = SpendlyGray500)
     }
 }
 
@@ -304,23 +292,26 @@ private fun LegendMini(label: String, color: Color) {
 private fun AnalyticsCard(content: @Composable ColumnScope.() -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(0.5.dp, SpendlyGray300),
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(SpendlyRadius.card),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.28f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp), content = content)
+        Column(
+            modifier = Modifier.padding(SpendlySpacing.cardPadding),
+            verticalArrangement = Arrangement.spacedBy(SpendlySpacing.cardGap),
+            content = content
+        )
     }
 }
+
+private fun formatPercent(percent: Double): String = "%.1f%%".format(percent)
 
 private fun formatCompactAmount(cents: Long): String {
-    val amount = cents / 100L
+    val amount = cents / 100.0
     return when {
-        amount >= 1_000_000L -> "LKR ${(amount + 500_000L) / 1_000_000L}m"
-        amount >= 1_000L -> "LKR ${(amount + 500L) / 1_000L}k"
-        else -> "LKR $amount"
+        amount >= 1_000_000 -> "$%.1fM".format(amount / 1_000_000)
+        amount >= 1_000 -> "$%.1fK".format(amount / 1_000)
+        else -> "$%.0f".format(amount)
     }
 }
-
-private fun formatPercent(percent: Double): String =
-    "${String.format(java.util.Locale.US, "%.1f", percent)}%"

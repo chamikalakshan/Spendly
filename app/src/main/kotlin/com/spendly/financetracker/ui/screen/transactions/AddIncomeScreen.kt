@@ -51,7 +51,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,8 +66,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.spendly.financetracker.ui.theme.SpendlyGray300
-import com.spendly.financetracker.ui.theme.SpendlyGray500
+import com.spendly.financetracker.data.model.RecurringFrequency
+import com.spendly.financetracker.ui.components.SpendlyRadius
+import com.spendly.financetracker.ui.components.SpendlySectionLabel
+import com.spendly.financetracker.ui.components.SpendlySizing
+import com.spendly.financetracker.ui.components.SpendlySpacing
 import com.spendly.financetracker.ui.theme.SpendlyGreen
 import com.spendly.financetracker.ui.viewmodel.AddIncomeViewModel
 import com.spendly.financetracker.ui.viewmodel.RateStatus
@@ -84,7 +87,7 @@ fun AddIncomeScreen(
     onBack: () -> Unit
 ) {
     val viewModel: AddIncomeViewModel = hiltViewModel()
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showSourceDialog by remember { mutableStateOf(false) }
     var customSource by remember { mutableStateOf("") }
     var currencyMenuExpanded by remember { mutableStateOf(false) }
@@ -97,7 +100,6 @@ fun AddIncomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                windowInsets = WindowInsets(0.dp),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.Close, contentDescription = "Close")
@@ -109,8 +111,8 @@ fun AddIncomeScreen(
                         onClick = viewModel::save,
                         enabled = !state.isLoading,
                         colors = ButtonDefaults.buttonColors(containerColor = SpendlyGreen, contentColor = Color.White),
-                        shape = RoundedCornerShape(20.dp),
-                        modifier = Modifier.padding(end = 8.dp).height(36.dp),
+                        shape = RoundedCornerShape(SpendlyRadius.pill),
+                        modifier = Modifier.padding(end = 8.dp).height(SpendlySizing.compactButtonHeight),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
                     ) { Text("Save", style = MaterialTheme.typography.labelMedium) }
                 }
@@ -121,9 +123,10 @@ fun AddIncomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(horizontal = SpendlySpacing.screenHorizontal)
+                .padding(top = SpendlySpacing.screenTop, bottom = SpendlySpacing.sectionGap)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(SpendlySpacing.formGap)
         ) {
             if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = SpendlyGreen)
             if (state.error != null) {
@@ -132,13 +135,13 @@ fun AddIncomeScreen(
 
             // Amount
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                AddIncomeLabel("Amount")
+                SpendlySectionLabel("Amount")
                 val amountCurrency = if (state.isCrypto) state.customCryptoCoin.ifBlank { state.selectedCoin } else state.selectedCurrency
                 Surface(
                     modifier = Modifier.fillMaxWidth().height(58.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color.White,
-                    border = androidx.compose.foundation.BorderStroke(0.8.dp, SpendlyGray300)
+                    shape = RoundedCornerShape(SpendlyRadius.input),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = androidx.compose.foundation.BorderStroke(0.8.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.55f))
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box {
@@ -151,7 +154,7 @@ fun AddIncomeScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(amountCurrency, style = MaterialTheme.typography.titleSmall, color = SpendlyGreen, fontWeight = FontWeight.Bold)
-                                if (!state.isCrypto) Icon(Icons.Default.ArrowDropDown, contentDescription = "Select currency", tint = SpendlyGray500, modifier = Modifier.size(18.dp))
+                                if (!state.isCrypto) Icon(Icons.Default.ArrowDropDown, contentDescription = "Select currency", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                             }
                             DropdownMenu(expanded = currencyMenuExpanded, onDismissRequest = { currencyMenuExpanded = false }) {
                                 state.visibleCurrencies.forEach { currency ->
@@ -165,7 +168,7 @@ fun AddIncomeScreen(
                                 }
                             }
                         }
-                        Box(modifier = Modifier.width(1.dp).height(58.dp).background(SpendlyGray300))
+                        Box(modifier = Modifier.width(1.dp).height(58.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)))
                         BasicTextField(
                             value = state.amount,
                             onValueChange = viewModel::onAmountChanged,
@@ -179,7 +182,7 @@ fun AddIncomeScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             visualTransformation = AmountVisualTransformation,
                             decorationBox = { inner ->
-                                if (state.amount.isEmpty()) Text("Enter Amount", fontSize = 16.sp, color = SpendlyGray500)
+                                if (state.amount.isEmpty()) Text("Enter Amount", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 inner()
                             }
                         )
@@ -189,7 +192,7 @@ fun AddIncomeScreen(
 
             // Source
             Row(verticalAlignment = Alignment.CenterVertically) {
-                AddIncomeLabel("Income Source", modifier = Modifier.weight(1f))
+                SpendlySectionLabel("Income Source", modifier = Modifier.weight(1f))
                 TextButton(onClick = { editSources = !editSources }) {
                     Text(if (editSources) "Done" else "Edit")
                 }
@@ -236,7 +239,7 @@ fun AddIncomeScreen(
             }
 
             if (state.isCrypto) {
-                AddIncomeLabel("Crypto Coin")
+                SpendlySectionLabel("Crypto Coin")
                 FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     cryptoCoins.forEach { coin ->
                         FilterChip(
@@ -277,16 +280,34 @@ fun AddIncomeScreen(
             Text(
                 "Converted: ${formatMoney(state.convertedAmountCents, state.defaultCurrency)}",
                 style = MaterialTheme.typography.labelMedium,
-                color = SpendlyGray500
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 Text("Recurring monthly", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                 Switch(checked = state.isRecurring, onCheckedChange = viewModel::onRecurringChanged)
             }
+            if (state.isRecurring) {
+                SpendlySectionLabel("Repeat")
+                FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    RecurringFrequency.values().forEach { frequency ->
+                        FilterChip(
+                            selected = state.recurringFrequency == frequency,
+                            onClick = { viewModel.onRecurringFrequencyChanged(frequency) },
+                            label = { Text(frequency.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = SpendlyGreen, selectedLabelColor = Color.White)
+                        )
+                    }
+                }
+                Text(
+                    "This saves the current income now and repeats from the next period.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             // Name
-            AddIncomeLabel("Name")
+            SpendlySectionLabel("Name")
             OutlinedTextField(
                 value = state.name,
                 onValueChange = viewModel::onNameChanged,
@@ -296,7 +317,7 @@ fun AddIncomeScreen(
             )
 
             // Date
-            AddIncomeLabel("Date")
+            SpendlySectionLabel("Date")
             var showDatePicker by remember { mutableStateOf(false) }
             Box {
                 OutlinedTextField(
@@ -318,7 +339,7 @@ fun AddIncomeScreen(
             }
 
             // Note
-            AddIncomeLabel("Note (optional)")
+            SpendlySectionLabel("Note (optional)")
             OutlinedTextField(
                 value = state.note,
                 onValueChange = viewModel::onNoteChanged,
@@ -362,11 +383,6 @@ fun AddIncomeScreen(
 }
 
 @Composable
-private fun AddIncomeLabel(text: String, modifier: Modifier = Modifier) {
-    Text(text, modifier = modifier, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-}
-
-@Composable
 private fun RateStatusText(status: RateStatus) {
     val text = when (status) {
         RateStatus.IDLE -> null
@@ -375,5 +391,5 @@ private fun RateStatusText(status: RateStatus) {
         RateStatus.MANUAL_REQUIRED -> "Manual rate required"
         RateStatus.UNAVAILABLE -> "Rate unavailable"
     } ?: return
-    Text(text, style = MaterialTheme.typography.labelSmall, color = SpendlyGray500)
+    Text(text, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }

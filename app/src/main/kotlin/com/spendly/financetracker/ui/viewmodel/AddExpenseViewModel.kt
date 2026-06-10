@@ -4,11 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.spendly.financetracker.data.model.ExpenseType
+import com.spendly.financetracker.data.model.RecurringFrequency
+import com.spendly.financetracker.data.model.RecurringRuleDraft
 import com.spendly.financetracker.data.model.TransactionDraft
 import com.spendly.financetracker.data.model.TransactionType
 import com.spendly.financetracker.data.model.UserProfile
 import com.spendly.financetracker.data.repository.AuthRepository
 import com.spendly.financetracker.data.repository.ExpenseRepository
+import com.spendly.financetracker.data.repository.RecurringTransactionRepository
 import com.spendly.financetracker.data.repository.TransactionRepository
 import com.spendly.financetracker.data.repository.UserRepository
 import com.spendly.financetracker.ui.util.CategorySettings
@@ -20,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 data class AddExpenseUiState(
@@ -35,6 +39,8 @@ data class AddExpenseUiState(
     val selectedCurrency: String = "LKR",
     val exchangeRate: String = "",
     val convertedAmountCents: Long = 0L,
+    val isRecurring: Boolean = false,
+    val recurringFrequency: RecurringFrequency = RecurringFrequency.MONTHLY,
     val selectedDate: Long = System.currentTimeMillis(),
     val availableBalanceCents: Long = 0L,
     val categorySettings: CategorySettings = CategorySettings(),
@@ -56,6 +62,7 @@ val defaultPaymentMethods = listOf("Card", "Cash", "Auto-debit")
 class AddExpenseViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val expenseRepository: ExpenseRepository,
+    private val recurringRepository: RecurringTransactionRepository,
     private val transactionRepository: TransactionRepository,
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository
@@ -109,6 +116,8 @@ class AddExpenseViewModel @Inject constructor(
     fun onDateSelected(ms: Long) = _uiState.update { it.copy(selectedDate = ms) }
     fun onPaymentMethodSelected(v: String) = _uiState.update { it.copy(selectedPaymentMethod = v) }
     fun onExpenseTypeSelected(v: ExpenseType) = _uiState.update { it.copy(expenseType = v) }
+    fun onRecurringChanged(v: Boolean) = _uiState.update { it.copy(isRecurring = v) }
+    fun onRecurringFrequencyChanged(v: RecurringFrequency) = _uiState.update { it.copy(recurringFrequency = v) }
     fun onCurrencySelected(v: String) = _uiState.update { it.copy(selectedCurrency = v, error = null).recalculate() }
     fun onExchangeRateChanged(v: String) {
         if (v.isEmpty() || (v.all { it.isDigit() || it == '.' } && v.count { it == '.' } <= 1)) {
@@ -185,10 +194,32 @@ class AddExpenseViewModel @Inject constructor(
                 defaultCurrency = s.defaultCurrency,
                 exchangeRate = if (s.needsExchangeRate) s.exchangeRate.toDoubleOrNull() else null,
                 paymentMethod = s.selectedPaymentMethod,
-                expenseType = s.expenseType
+                expenseType = s.expenseType,
+                isRecurring = s.isRecurring
             )
             val result = if (s.editId.isNullOrBlank()) expenseRepository.addExpense(uid, draft)
                 else expenseRepository.updateExpense(s.editId, draft)
+            if (result.isSuccess && s.isRecurring && s.editId.isNullOrBlank()) {
+                recurringRepository.saveRule(
+                    uid,
+                    RecurringRuleDraft(
+                        type = TransactionType.EXPENSE,
+                        name = s.name.trim(),
+                        amountCents = amountCents,
+                        originalAmount = draft.originalAmount,
+                        originalCurrency = draft.originalCurrency,
+                        defaultCurrency = draft.defaultCurrency,
+                        exchangeRate = draft.exchangeRate,
+                        category = s.selectedCategory,
+                        paymentMethod = s.selectedPaymentMethod,
+                        expenseType = s.expenseType,
+                        note = s.note.trim(),
+                        frequency = s.recurringFrequency,
+                        startDateMillis = s.selectedDate,
+                        nextRunDateMillis = advance(s.selectedDate, s.recurringFrequency)
+                    )
+                )
+            }
             _uiState.update {
                 if (result.isSuccess) it.copy(isLoading = false, isSaved = true)
                 else it.copy(isLoading = false, error = result.exceptionOrNull()?.message ?: "Failed to save")
@@ -213,6 +244,7 @@ class AddExpenseViewModel @Inject constructor(
                     paymentMethods = (state.paymentMethods + payment).distinct(),
                     expenseType = transaction.expenseType ?: defaultTypeFor(category),
                     selectedDate = transaction.dateMillis,
+                    isRecurring = transaction.isRecurring,
                     defaultCurrency = transaction.defaultCurrency,
                     selectedCurrency = transaction.originalCurrency.ifBlank { transaction.defaultCurrency },
                     exchangeRate = transaction.exchangeRate?.toPlainInput().orEmpty(),
@@ -250,4 +282,17 @@ class AddExpenseViewModel @Inject constructor(
 
     private fun Double.toPlainInput(): String =
         if (this % 1.0 == 0.0) toLong().toString() else toString()
+
+    private fun advance(timeMillis: Long, frequency: RecurringFrequency): Long {
+        val field = when (frequency) {
+            RecurringFrequency.DAILY -> Calendar.DAY_OF_YEAR
+            RecurringFrequency.WEEKLY -> Calendar.WEEK_OF_YEAR
+            RecurringFrequency.MONTHLY -> Calendar.MONTH
+            RecurringFrequency.YEARLY -> Calendar.YEAR
+        }
+        return Calendar.getInstance().apply {
+            timeInMillis = timeMillis
+            add(field, 1)
+        }.timeInMillis
+    }
 }

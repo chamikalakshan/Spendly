@@ -43,19 +43,42 @@ data class TransactionsUiState(
     val selectedMonthLabel: String
         get() = monthLabel(selectedMonthStartMillis)
 
-    val filtered: List<FinanceTransaction>
-        get() = when (filter) {
+    val filtered: List<FinanceTransaction> by lazy {
+        when (filter) {
             TransactionTab.ALL -> transactions
             TransactionTab.EXPENSES -> transactions.filter { it.type == TransactionType.EXPENSE }
             TransactionTab.INCOMES -> transactions.filter { it.type == TransactionType.INCOME }
         }.filter { it.dateMillis in selectedMonthStartMillis until nextMonthStart(selectedMonthStartMillis) }
-            .sortedByDescending { it.dateMillis }
+            .sortedWith(
+                compareByDescending<FinanceTransaction> { dayStart(it.dateMillis) }
+                    .thenByDescending { it.createdAtMillis }
+                    .thenByDescending { it.updatedAtMillis }
+            )
+    }
 
-    val groupedTransactions: List<TransactionDateGroup>
-        get() = filtered
+    val groupedTransactions: List<TransactionDateGroup> by lazy {
+        filtered
             .groupBy { fullDateLabel(it.dateMillis) }
-            .map { TransactionDateGroup(it.key, it.value) }
+            .map { (_, transactions) ->
+                TransactionDateGroup(
+                    label = fullDateLabel(transactions.first().dateMillis),
+                    transactions = transactions.sortedWith(
+                        compareByDescending<FinanceTransaction> { it.createdAtMillis }
+                            .thenByDescending { it.updatedAtMillis }
+                    )
+                )
+            }
+    }
 }
+
+private fun dayStart(timeMillis: Long): Long =
+    Calendar.getInstance().apply {
+        timeInMillis = timeMillis
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
 
 @HiltViewModel
 class TransactionsViewModel @Inject constructor(

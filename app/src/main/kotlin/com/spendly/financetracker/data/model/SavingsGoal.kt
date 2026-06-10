@@ -19,7 +19,9 @@ data class SavingsGoal(
     val updatedAtMillis: Long = 0L,
     val initialSavedCents: Long = 0L,
     val defaultCurrency: String = "LKR",
-    val iconKey: String = "goal"
+    val iconKey: String = "goal",
+    val iconAccentColorKey: String = "GREEN",
+    val goalImageUri: String? = null
 ) {
     val progressPercent: Int
         get() = if (targetCents <= 0L) 0 else ((savedCents * 100) / targetCents).toInt().coerceIn(0, 100)
@@ -45,5 +47,7 @@ data class GoalDraft(
     val dueDateMillis: Long? = null,
     val defaultCurrency: String = "LKR",
     val isPrimary: Boolean = false,
-    val iconKey: String = "goal"
+    val iconKey: String = "goal",
+    val iconAccentColorKey: String = "GREEN",
+    val goalImageUri: String? = null
 )

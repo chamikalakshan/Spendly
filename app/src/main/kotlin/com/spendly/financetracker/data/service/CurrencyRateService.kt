@@ -2,6 +2,8 @@ package com.spendly.financetracker.data.service
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.spendly.financetracker.data.local.dao.ExchangeRateDao
+import com.spendly.financetracker.data.local.entity.ExchangeRateEntity
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -15,7 +17,9 @@ data class RateResult(
 )
 
 @Singleton
-class CurrencyRateService @Inject constructor() {
+class CurrencyRateService @Inject constructor(
+    private val exchangeRateDao: ExchangeRateDao
+) {
     private val cache = mutableMapOf<String, RateResult>()
 
     suspend fun getRate(fromCurrency: String, toCurrency: String): Result<RateResult> = withContext(Dispatchers.IO) {
@@ -29,6 +33,13 @@ class CurrencyRateService @Inject constructor() {
             val key = "$from-$to"
             cache[key]?.takeIf { System.currentTimeMillis() - it.fetchedAtMillis < CACHE_TTL_MILLIS }?.let {
                 return@runCatching it.copy(source = "CACHE")
+            }
+            val now = System.currentTimeMillis()
+            val cachedRow = exchangeRateDao.getRate(from, to)
+            cachedRow?.takeIf { it.expiresAtMillis > now }?.let {
+                val result = RateResult(rate = it.rate, source = "CACHE", fetchedAtMillis = it.fetchedAtMillis)
+                cache[key] = result
+                return@runCatching result
             }
 
             val url = URL("https://api.exchangerate.host/latest?base=$from&symbols=$to")
@@ -48,7 +59,23 @@ class CurrencyRateService @Inject constructor() {
                 if (rate <= 0.0) throw IllegalStateException("Rate unavailable")
                 RateResult(rate = rate, source = "API", fetchedAtMillis = System.currentTimeMillis()).also {
                     cache[key] = it
+                    exchangeRateDao.upsert(
+                        ExchangeRateEntity(
+                            id = key,
+                            fromCurrency = from,
+                            toCurrency = to,
+                            rate = rate,
+                            source = "API",
+                            fetchedAtMillis = it.fetchedAtMillis,
+                            expiresAtMillis = it.fetchedAtMillis + CACHE_TTL_MILLIS
+                        )
+                    )
                 }
+            } catch (error: Exception) {
+                cachedRow?.let {
+                    return@runCatching RateResult(rate = it.rate, source = "STALE_CACHE", fetchedAtMillis = it.fetchedAtMillis)
+                }
+                throw error
             } finally {
                 connection.disconnect()
             }

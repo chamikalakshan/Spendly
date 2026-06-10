@@ -54,6 +54,7 @@ data class SpendingSplitUi(
 data class FinanceUiState(
     val isFirebaseConfigured: Boolean = true,
     val isLoading: Boolean = true,
+    val isSyncing: Boolean = false,
     val isBusy: Boolean = false,
     val session: UserSession? = null,
     val profile: UserProfile? = null,
@@ -68,54 +69,64 @@ data class FinanceUiState(
     val transactionTab: TransactionTab = TransactionTab.ALL,
     val goals: List<SavingsGoal> = emptyList(),
     val transactions: List<FinanceTransaction> = emptyList(),
+    val openSyncConflictCount: Int = 0,
     val message: String? = null
 ) {
-    val incomeCents: Long
-        get() = transactions.filter { it.type == TransactionType.INCOME }.sumOf { it.amountCents }
+    val incomeCents: Long by lazy {
+        transactions.filter { it.type == TransactionType.INCOME }.sumOf { it.amountCents }
+    }
 
-    val expenseCents: Long
-        get() = transactions.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amountCents }
+    val expenseCents: Long by lazy {
+        transactions.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amountCents }
+    }
 
-    val balanceCents: Long
-        get() = transactions.sumOf { it.signedAmountCents }
+    val balanceCents: Long by lazy { transactions.sumOf { it.signedAmountCents } }
 
-    val currentMonthIncomeCents: Long
-        get() = currentMonthTransactions()
+    private val currentMonthTransactions: List<FinanceTransaction> by lazy { currentMonthTransactions() }
+
+    val currentMonthIncomeCents: Long by lazy {
+        currentMonthTransactions
             .filter { it.type == TransactionType.INCOME && !it.isInitialIncome() }
             .sumOf { it.amountCents }
+    }
 
-    val currentMonthExpenseCents: Long
-        get() = currentMonthTransactions()
+    val currentMonthExpenseCents: Long by lazy {
+        currentMonthTransactions
             .filter { it.type == TransactionType.EXPENSE }
             .sumOf { it.amountCents }
+    }
 
-    val currentMonthNetSavingsCents: Long
-        get() = currentMonthIncomeCents - currentMonthExpenseCents
+    val currentMonthNetSavingsCents: Long by lazy { currentMonthIncomeCents - currentMonthExpenseCents }
 
-    val primaryGoal: SavingsGoal?
-        get() = goals.firstOrNull { it.isPrimary } ?: goals.firstOrNull()
+    val primaryGoal: SavingsGoal? by lazy { goals.firstOrNull { it.isPrimary } ?: goals.firstOrNull() }
 
-    val primaryGoals: List<SavingsGoal>
-        get() = goals.filter { it.isPrimary }.ifEmpty { primaryGoal?.let(::listOf) ?: emptyList() }
+    val primaryGoals: List<SavingsGoal> by lazy {
+        goals.filter { it.isPrimary }.ifEmpty { primaryGoal?.let(::listOf) ?: emptyList() }
+    }
 
-    val otherGoals: List<SavingsGoal>
-        get() = goals.filterNot { goal -> primaryGoals.any { it.id == goal.id } }
+    val otherGoals: List<SavingsGoal> by lazy {
+        val primaryIds = primaryGoals.mapTo(hashSetOf()) { it.id }
+        goals.filterNot { it.id in primaryIds }
+    }
 
-    val savingsRate: Int
-        get() = if (currentMonthIncomeCents <= 0L) 0 else (((currentMonthIncomeCents - currentMonthExpenseCents) * 100) / currentMonthIncomeCents).toInt().coerceIn(0, 100)
+    val savingsRate: Int by lazy {
+        if (currentMonthIncomeCents <= 0L) 0
+        else (((currentMonthIncomeCents - currentMonthExpenseCents) * 100) / currentMonthIncomeCents).toInt().coerceIn(0, 100)
+    }
 
-    val recentTransactions: List<FinanceTransaction>
-        get() = transactions.sortedByDescending { it.dateMillis }.take(6)
+    val recentTransactions: List<FinanceTransaction> by lazy {
+        transactions.sortedWith(compareByDescending<FinanceTransaction> { it.dateMillis }.thenByDescending { it.createdAtMillis }).take(6)
+    }
 
-    val primaryGoalMonthlyNeedCents: Long
-        get() = primaryGoal?.let { goal ->
+    val primaryGoalMonthlyNeedCents: Long by lazy {
+        primaryGoal?.let { goal ->
             if (goal.remainingCents <= 0L) 0L else (goal.remainingCents + 11L) / 12L
         } ?: 0L
+    }
 
-    val currentYearSavingsCents: Long
-        get() {
+    val currentYearSavingsCents: Long by lazy {
             val now = Calendar.getInstance()
-            return transactions
+            transactions
                 .filter {
                     val calendar = Calendar.getInstance().apply { timeInMillis = it.dateMillis }
                     calendar.get(Calendar.YEAR) == now.get(Calendar.YEAR)
@@ -123,32 +134,33 @@ data class FinanceUiState(
                 .sumOf { it.signedAmountCents }
         }
 
-    val spendingByCategory: List<AnalyticsSlice>
-        get() = transactions
+    val spendingByCategory: List<AnalyticsSlice> by lazy {
+        transactions
             .filter { it.type == TransactionType.EXPENSE }
             .groupBy { it.category.ifBlank { "Other" }.take(18) }
             .mapValues { entry -> entry.value.sumOf { it.amountCents } }
             .toList()
             .sortedByDescending { it.second }
             .map { (category, amount) -> AnalyticsSlice(category, amount, percentOf(amount, expenseCents)) }
+    }
 
-    val incomeSources: List<AnalyticsSlice>
-        get() = transactions
+    val incomeSources: List<AnalyticsSlice> by lazy {
+        transactions
             .filter { it.type == TransactionType.INCOME }
             .groupBy { it.source.ifBlank { "Other" }.take(18) }
             .mapValues { entry -> entry.value.sumOf { it.amountCents } }
             .toList()
             .sortedByDescending { it.second }
             .map { (source, amount) -> AnalyticsSlice(source, amount, percentOf(amount, incomeCents)) }
+    }
 
-    val spendingSplit: SpendingSplitUi
-        get() {
+    val spendingSplit: SpendingSplitUi by lazy {
             val committedCategories = setOf("Rent", "Subscriptions", "Gym", "Goal")
             val committed = transactions
                 .filter { it.type == TransactionType.EXPENSE && it.category in committedCategories }
                 .sumOf { it.amountCents }
             val discretionary = (expenseCents - committed).coerceAtLeast(0L)
-            return SpendingSplitUi(
+            SpendingSplitUi(
                 committedCents = committed,
                 discretionaryCents = discretionary,
                 committedPercent = percentOf(committed, expenseCents),
@@ -156,8 +168,8 @@ data class FinanceUiState(
             )
         }
 
-    val monthlyOverview: List<AnalyticsMonth>
-        get() = lastFiveMonths().map { (label, month, year) ->
+    val monthlyOverview: List<AnalyticsMonth> by lazy {
+        lastFiveMonths().map { (label, month, year) ->
             val monthTransactions = transactions.filter {
                 val calendar = Calendar.getInstance().apply { timeInMillis = it.dateMillis }
                 calendar.get(Calendar.MONTH) == month && calendar.get(Calendar.YEAR) == year
@@ -168,6 +180,7 @@ data class FinanceUiState(
                 expense = monthTransactions.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amountCents }
             )
         }
+    }
 
     private fun percentOf(amount: Long, total: Long): Double =
         if (total > 0L) (amount.toDouble() * 100.0) / total.toDouble() else 0.0

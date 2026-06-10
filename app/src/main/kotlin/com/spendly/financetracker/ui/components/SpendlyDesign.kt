@@ -17,8 +17,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.BusinessCenter
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.EventRepeat
+import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Savings
+import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.Subscriptions
 import androidx.compose.material.icons.filled.TrackChanges
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -43,9 +55,6 @@ import com.spendly.financetracker.ui.theme.SpendlyAmber
 import com.spendly.financetracker.ui.theme.SpendlyAmberLight
 import com.spendly.financetracker.ui.theme.SpendlyBlue
 import com.spendly.financetracker.ui.theme.SpendlyBlueLight
-import com.spendly.financetracker.ui.theme.SpendlyGray300
-import com.spendly.financetracker.ui.theme.SpendlyGray500
-import com.spendly.financetracker.ui.theme.SpendlyGray700
 import com.spendly.financetracker.ui.theme.SpendlyGreen
 import com.spendly.financetracker.ui.theme.SpendlyGreenLight
 import com.spendly.financetracker.ui.theme.SpendlyRed
@@ -63,10 +72,10 @@ fun SpendlyStatCard(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(SpendlyRadius.card)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(SpendlySpacing.cardPadding),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             if (leadingIcon != null) {
@@ -120,7 +129,7 @@ fun SectionHeader(
                     Text(
                         text = actionLabel,
                         style = MaterialTheme.typography.labelMedium,
-                        color = SpendlyGreen
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -133,6 +142,20 @@ fun SectionHeader(
             )
         }
     }
+}
+
+@Composable
+fun SpendlySectionLabel(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = text,
+        modifier = modifier,
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurface
+    )
 }
 
 @Composable
@@ -156,7 +179,7 @@ fun EmptyState(
             imageVector = icon,
             contentDescription = null,
             modifier = Modifier.size(64.dp),
-            tint = SpendlyGray300
+            tint = MaterialTheme.colorScheme.outline
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -224,11 +247,13 @@ fun NoAnalyticsState() {
 fun TransactionIcon(
     transactionType: TransactionType,
     label: String,
-    size: Dp = 40.dp
+    size: Dp = 40.dp,
+    isRecurring: Boolean = false
 ) {
     val isIncome = transactionType == TransactionType.INCOME
     val bgColor = if (isIncome) SpendlyGreenLight else SpendlyRedLight
     val iconColor = if (isIncome) SpendlyGreen else SpendlyRed
+    val icon = transactionIconFor(label, isIncome)
 
     Box(
         modifier = Modifier
@@ -238,11 +263,52 @@ fun TransactionIcon(
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            imageVector = Icons.Default.AccountBalanceWallet,
+            imageVector = icon,
             contentDescription = label,
             tint = iconColor,
             modifier = Modifier.size(size * 0.5f)
         )
+        if (isRecurring) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .size(size * 0.34f)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surface),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.EventRepeat,
+                    contentDescription = "Recurring",
+                    tint = iconColor,
+                    modifier = Modifier.size(size * 0.22f)
+                )
+            }
+        }
+    }
+}
+
+private fun transactionIconFor(label: String, isIncome: Boolean): ImageVector {
+    val normalized = label.lowercase()
+    return if (isIncome) {
+        when {
+            "salary" in normalized || "work" in normalized -> Icons.Default.Work
+            "freelance" in normalized || "business" in normalized -> Icons.Default.BusinessCenter
+            "crypto" in normalized || "sell" in normalized -> Icons.Default.Savings
+            else -> Icons.Default.AccountBalanceWallet
+        }
+    } else {
+        when {
+            "food" in normalized || "restaurant" in normalized || "uber" in normalized || "pickme" in normalized -> Icons.Default.Fastfood
+            "transport" in normalized || "vehicle" in normalized || "car" in normalized || "bike" in normalized -> Icons.Default.DirectionsCar
+            "rent" in normalized || "house" in normalized || "home" in normalized -> Icons.Default.Home
+            "subscription" in normalized || "netflix" in normalized -> Icons.Default.Subscriptions
+            "entertainment" in normalized || "movie" in normalized -> Icons.Default.Movie
+            "gym" in normalized || "fitness" in normalized -> Icons.Default.FitnessCenter
+            "goal" in normalized || "saving" in normalized -> Icons.Default.TrackChanges
+            "shopping" in normalized -> Icons.Default.ShoppingBag
+            else -> Icons.Default.Payments
+        }
     }
 }
 
@@ -280,10 +346,10 @@ fun PrimaryActionButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.height(SpendlySizing.buttonHeight),
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(containerColor = containerColor),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(SpendlyRadius.input)
     ) {
         if (icon != null) {
             Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))

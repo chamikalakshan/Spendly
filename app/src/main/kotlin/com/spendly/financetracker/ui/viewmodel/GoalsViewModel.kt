@@ -112,7 +112,9 @@ class GoalsViewModel @Inject constructor(
             createdAtMillis = existing?.createdAtMillis ?: 0L,
             initialSavedCents = existing?.initialSavedCents ?: initialSaved,
             defaultCurrency = draft.defaultCurrency,
-            iconKey = draft.iconKey
+            iconKey = draft.iconKey,
+            iconAccentColorKey = draft.iconAccentColorKey,
+            goalImageUri = draft.goalImageUri
         )
         viewModelScope.launch {
             goalRepository.saveGoal(goal)

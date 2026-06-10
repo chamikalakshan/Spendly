@@ -7,6 +7,7 @@ import com.spendly.financetracker.data.local.entity.ExpenseEntryEntity
 import com.spendly.financetracker.data.model.FinanceTransaction
 import com.spendly.financetracker.data.model.TransactionDraft
 import com.spendly.financetracker.data.repository.ExpenseRepository
+import com.spendly.financetracker.data.service.SyncMetadataStore
 import com.spendly.financetracker.util.toTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -19,7 +20,8 @@ import javax.inject.Singleton
 class ExpenseRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val expenseDao: ExpenseDao,
-    private val goalDao: GoalDao
+    private val goalDao: GoalDao,
+    private val syncMetadataStore: SyncMetadataStore
 ) : ExpenseRepository {
     override fun observeExpenses(userId: String): Flow<List<FinanceTransaction>> =
         expenseDao.observeByUser(userId).map { rows -> rows.map { it.toTransaction() } }
@@ -70,35 +72,52 @@ class ExpenseRepositoryImpl @Inject constructor(
     }
 
     override suspend fun syncWithFirestore(userId: String) {
-        expenseDao.getUnsynced(userId).forEach { syncOne(it) }
-        val snapshot = firestore.collection("users").document(userId).collection("expenses").get().await()
-        val remoteRows = snapshot.documents.mapNotNull { doc ->
-            val data = doc.data ?: return@mapNotNull null
-            ExpenseEntryEntity(
-                id = doc.id,
-                userId = userId,
-                name = data["name"] as? String ?: return@mapNotNull null,
-                amountCents = (data["amountCents"] as? Number)?.toLong() ?: return@mapNotNull null,
-                category = data["category"] as? String ?: "Other",
-                dateMillis = (data["dateMillis"] as? Number)?.toLong() ?: 0L,
-                note = data["note"] as? String ?: "",
-                isSynced = true,
-                createdAtMillis = (data["createdAtMillis"] as? Number)?.toLong() ?: 0L,
-                updatedAtMillis = (data["updatedAtMillis"] as? Number)?.toLong() ?: 0L,
-                originalAmount = (data["originalAmount"] as? Number)?.toDouble()
-                    ?: ((data["amountCents"] as? Number)?.toLong() ?: 0L) / 100.0,
-                originalCurrency = data["originalCurrency"] as? String ?: data["defaultCurrency"] as? String ?: "LKR",
-                defaultCurrency = data["defaultCurrency"] as? String ?: "LKR",
-                exchangeRate = (data["exchangeRate"] as? Number)?.toDouble(),
-                paymentMethod = data["paymentMethod"] as? String,
-                expenseType = data["expenseType"] as? String,
-                goalId = data["goalId"] as? String
-            )
-        }.filter { remote ->
-            val local = expenseDao.getById(remote.id)
-            local == null || remote.updatedAtMillis >= local.updatedAtMillis
+        val collection = "expenses"
+        syncMetadataStore.markSyncing(userId, collection)
+        try {
+            expenseDao.getUnsynced(userId).forEach { syncOne(it) }
+            val lastPull = syncMetadataStore.lastPullMillis(userId, collection)
+            val remoteRef = firestore.collection("users").document(userId).collection(collection)
+            val snapshot = if (lastPull > 0L) {
+                remoteRef.whereGreaterThan("updatedAtMillis", lastPull).get().await()
+            } else {
+                remoteRef.get().await()
+            }
+            var maxRemoteUpdatedAt = lastPull
+            val remoteRows = snapshot.documents.mapNotNull { doc ->
+                val data = doc.data ?: return@mapNotNull null
+                ExpenseEntryEntity(
+                    id = doc.id,
+                    userId = userId,
+                    name = data["name"] as? String ?: return@mapNotNull null,
+                    amountCents = (data["amountCents"] as? Number)?.toLong() ?: return@mapNotNull null,
+                    category = data["category"] as? String ?: "Other",
+                    dateMillis = (data["dateMillis"] as? Number)?.toLong() ?: 0L,
+                    note = data["note"] as? String ?: "",
+                    isSynced = true,
+                    createdAtMillis = (data["createdAtMillis"] as? Number)?.toLong() ?: 0L,
+                    updatedAtMillis = (data["updatedAtMillis"] as? Number)?.toLong() ?: 0L,
+                    originalAmount = (data["originalAmount"] as? Number)?.toDouble()
+                        ?: ((data["amountCents"] as? Number)?.toLong() ?: 0L) / 100.0,
+                    originalCurrency = data["originalCurrency"] as? String ?: data["defaultCurrency"] as? String ?: "LKR",
+                    defaultCurrency = data["defaultCurrency"] as? String ?: "LKR",
+                    exchangeRate = (data["exchangeRate"] as? Number)?.toDouble(),
+                    paymentMethod = data["paymentMethod"] as? String,
+                    expenseType = data["expenseType"] as? String,
+                    goalId = data["goalId"] as? String,
+                    recurringRuleId = data["recurringRuleId"] as? String,
+                    recurringPeriodKey = data["recurringPeriodKey"] as? String
+                ).also { maxRemoteUpdatedAt = maxOf(maxRemoteUpdatedAt, it.updatedAtMillis) }
+            }.filter { remote ->
+                val local = expenseDao.getById(remote.id)
+                local == null || remote.updatedAtMillis >= local.updatedAtMillis
+            }
+            expenseDao.insertAll(remoteRows)
+            syncMetadataStore.markSuccess(userId, collection, maxRemoteUpdatedAt)
+        } catch (error: Exception) {
+            syncMetadataStore.markFailure(userId, collection, error)
+            throw error
         }
-        expenseDao.insertAll(remoteRows)
     }
 
     private suspend fun syncOne(entity: ExpenseEntryEntity) {
@@ -162,7 +181,9 @@ class ExpenseRepositoryImpl @Inject constructor(
         exchangeRate = exchangeRate,
         paymentMethod = paymentMethod,
         expenseType = expenseType?.name,
-        goalId = goalId
+        goalId = goalId,
+        recurringRuleId = recurringRuleId,
+        recurringPeriodKey = recurringPeriodKey
     )
 
     private fun ExpenseEntryEntity.toFirestoreMap(): Map<String, Any?> = mapOf(
@@ -181,6 +202,8 @@ class ExpenseRepositoryImpl @Inject constructor(
         "exchangeRate" to exchangeRate,
         "paymentMethod" to paymentMethod,
         "expenseType" to expenseType,
-        "goalId" to goalId
+        "goalId" to goalId,
+        "recurringRuleId" to recurringRuleId,
+        "recurringPeriodKey" to recurringPeriodKey
     )
 }

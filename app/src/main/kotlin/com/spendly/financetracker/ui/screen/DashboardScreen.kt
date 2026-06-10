@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
@@ -28,6 +29,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.spendly.financetracker.data.model.FinanceTransaction
 import com.spendly.financetracker.data.model.TransactionType
+import com.spendly.financetracker.ui.components.SpendlyRadius
+import com.spendly.financetracker.ui.components.SpendlySpacing
 import com.spendly.financetracker.ui.viewmodel.FinanceUiState
 
 @Composable
@@ -45,7 +48,12 @@ fun DashboardScreen(
         modifier = Modifier
             .fillMaxWidth()
             .padding(contentPadding),
-        contentPadding = PaddingValues(20.dp),
+        contentPadding = PaddingValues(
+            start = 20.dp,
+            top = SpendlySpacing.screenTop,
+            end = 20.dp,
+            bottom = 20.dp
+        ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
@@ -173,9 +181,12 @@ private fun SummaryCard(
     modifier: Modifier = Modifier,
     isPrimary: Boolean = false
 ) {
-    ElevatedCard(modifier = modifier.fillMaxWidth()) {
+    ElevatedCard(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(SpendlyRadius.card)
+    ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(SpendlySpacing.cardPadding),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
