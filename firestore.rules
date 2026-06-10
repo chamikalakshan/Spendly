@@ -1,0 +1,62 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owns(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function validTimestampedUserDocument(userId) {
+      return request.resource.data.userId == userId
+        && request.resource.data.updatedAtMillis is int
+        && request.resource.data.createdAtMillis is int;
+    }
+
+    function validMoneyDocument(userId) {
+      return validTimestampedUserDocument(userId)
+        && request.resource.data.amountCents is int
+        && request.resource.data.amountCents >= 0;
+    }
+
+    match /users/{userId}/profile/main {
+      allow read, delete: if owns(userId);
+      allow create, update: if owns(userId)
+        && request.resource.data.uid == userId
+        && request.resource.data.updatedAtMillis is int
+        && request.resource.data.createdAtMillis is int;
+    }
+
+    match /users/{userId}/income/{documentId} {
+      allow read, delete: if owns(userId);
+      allow create, update: if owns(userId) && validMoneyDocument(userId);
+    }
+
+    match /users/{userId}/expenses/{documentId} {
+      allow read, delete: if owns(userId);
+      allow create, update: if owns(userId) && validMoneyDocument(userId);
+    }
+
+    match /users/{userId}/goals/{documentId} {
+      allow read, delete: if owns(userId);
+      allow create, update: if owns(userId)
+        && validTimestampedUserDocument(userId)
+        && request.resource.data.targetCents is int
+        && request.resource.data.savedCents is int
+        && request.resource.data.targetCents >= 0
+        && request.resource.data.savedCents >= 0;
+    }
+
+    match /users/{userId}/budgets/{documentId} {
+      allow read, delete: if owns(userId);
+      allow create, update: if owns(userId)
+        && validTimestampedUserDocument(userId)
+        && request.resource.data.limitCents is int
+        && request.resource.data.limitCents > 0;
+    }
+
+    match /users/{userId}/recurringRules/{documentId} {
+      allow read, delete: if owns(userId);
+      allow create, update: if owns(userId) && validMoneyDocument(userId);
+    }
+  }
+}
