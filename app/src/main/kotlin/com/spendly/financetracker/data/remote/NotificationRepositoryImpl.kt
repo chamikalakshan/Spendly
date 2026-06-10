@@ -16,6 +16,8 @@ class NotificationRepositoryImpl @Inject constructor(
     override fun observeNotifications(userId: String): Flow<List<AppNotification>> =
         dao.observeByUser(userId).map { rows -> rows.map { it.toModel() } }
 
+    override suspend fun getNotification(id: String): AppNotification? = dao.getById(id)?.toModel()
+
     override suspend fun upsert(notification: AppNotification) {
         dao.upsert(notification.toEntity())
     }

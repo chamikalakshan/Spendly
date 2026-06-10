@@ -249,22 +249,6 @@ class ReportExportService @Inject constructor(
             }
         }
 
-        y += 138f
-        drawCard(40f, y, 555f, 802f)
-        canvas.drawText("Transaction Ledger Preview", 58f, y + 28f, heading)
-        canvas.drawText("${ledgerRows.size} records in ${monthTitle(selectedMonthStart)}. Full details continue on following pages.", 58f, y + 46f, muted)
-        rowY = y + 52f
-        ledgerRows.take(8).forEach {
-            val typeColor = if (it.type == TransactionType.INCOME) green else red
-            canvas.drawText(date(it.dateMillis), 58f, rowY, muted)
-            Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 10.5f; color = typeColor; isFakeBoldText = true }
-                .also { p -> canvas.drawText(if (it.type == TransactionType.INCOME) "IN" else "EX", 126f, rowY, p) }
-            canvas.drawText(it.title.take(28), 158f, rowY, body)
-            canvas.drawText((it.category.ifBlank { it.source }).take(14), 330f, rowY, muted)
-            canvas.drawText(formatMoney(it.amountCents), 440f, rowY, body)
-            rowY += 17f
-        }
-
         startPage()
         drawRoundRect(30f, 28f, 565f, 90f, green, 22f)
         canvas.drawText("Full Transaction Details", 48f, 62f, title)

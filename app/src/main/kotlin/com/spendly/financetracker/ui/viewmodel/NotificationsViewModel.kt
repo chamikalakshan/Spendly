@@ -7,6 +7,7 @@ import com.spendly.financetracker.data.repository.AuthRepository
 import com.spendly.financetracker.data.repository.BudgetRepository
 import com.spendly.financetracker.data.repository.NotificationRepository
 import com.spendly.financetracker.data.repository.RecurringTransactionRepository
+import com.spendly.financetracker.data.service.AppNotificationDispatcher
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,7 +33,8 @@ class NotificationsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val notificationRepository: NotificationRepository,
     private val budgetRepository: BudgetRepository,
-    private val recurringRepository: RecurringTransactionRepository
+    private val recurringRepository: RecurringTransactionRepository,
+    private val notificationDispatcher: AppNotificationDispatcher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(NotificationsUiState())
     val uiState: StateFlow<NotificationsUiState> = _uiState.asStateFlow()
@@ -51,11 +53,23 @@ class NotificationsViewModel @Inject constructor(
 
     fun markAllRead() {
         val userId = uid ?: return
-        viewModelScope.launch { notificationRepository.markAllRead(userId) }
+        viewModelScope.launch {
+            notificationRepository.markAllRead(userId)
+            notificationDispatcher.cancelAll()
+        }
     }
 
     fun delete(id: String) {
-        viewModelScope.launch { notificationRepository.deleteNotification(id) }
+        viewModelScope.launch {
+            notificationRepository.deleteNotification(id)
+            notificationDispatcher.cancel(id)
+        }
+    }
+
+    fun postUnreadToSystem() {
+        _uiState.value.notifications
+            .filterNot(AppNotification::isRead)
+            .forEach(notificationDispatcher::post)
     }
 
     private fun observe(userId: String) {
@@ -76,7 +90,7 @@ class NotificationsViewModel @Inject constructor(
                 .collect { (budgets, rules) ->
                     val now = System.currentTimeMillis()
                     budgets.filter { it.deletedAtMillis == null }.take(3).forEach { budget ->
-                        notificationRepository.upsert(
+                        publishIfNew(
                             AppNotification(
                                 id = "budget-${budget.id}",
                                 userId = userId,
@@ -92,7 +106,7 @@ class NotificationsViewModel @Inject constructor(
                         .sortedBy { it.nextRunDateMillis }
                         .take(2)
                         .forEach { rule ->
-                            notificationRepository.upsert(
+                            publishIfNew(
                                 AppNotification(
                                     id = "recurring-${rule.id}",
                                     userId = userId,
@@ -113,4 +127,10 @@ class NotificationsViewModel @Inject constructor(
 
     private fun formatDate(timeMillis: Long): String =
         SimpleDateFormat("MMM d", Locale.getDefault()).format(timeMillis)
+
+    private suspend fun publishIfNew(notification: AppNotification) {
+        if (notificationRepository.getNotification(notification.id) != null) return
+        notificationRepository.upsert(notification)
+        notificationDispatcher.post(notification)
+    }
 }

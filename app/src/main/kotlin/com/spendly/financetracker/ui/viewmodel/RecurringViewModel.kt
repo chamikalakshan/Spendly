@@ -8,8 +8,10 @@ import com.spendly.financetracker.data.model.RecurringRule
 import com.spendly.financetracker.data.model.RecurringRuleDraft
 import com.spendly.financetracker.data.model.TransactionType
 import com.spendly.financetracker.data.repository.AuthRepository
+import com.spendly.financetracker.data.repository.NotificationRepository
 import com.spendly.financetracker.data.repository.RecurringTransactionRepository
 import com.spendly.financetracker.data.repository.UserRepository
+import com.spendly.financetracker.data.service.AppNotificationDispatcher
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,7 +36,9 @@ data class RecurringUiState(
 class RecurringViewModel @Inject constructor(
     private val recurringRepository: RecurringTransactionRepository,
     private val userRepository: UserRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val notificationRepository: NotificationRepository,
+    private val notificationDispatcher: AppNotificationDispatcher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(RecurringUiState())
     val uiState: StateFlow<RecurringUiState> = _uiState.asStateFlow()
@@ -124,7 +128,12 @@ class RecurringViewModel @Inject constructor(
     fun delete(ruleId: String) {
         viewModelScope.launch {
             recurringRepository.deleteRule(ruleId)
-                .onSuccess { _uiState.update { it.copy(message = "Recurring rule deleted") } }
+                .onSuccess {
+                    val notificationId = "recurring-$ruleId"
+                    notificationRepository.deleteNotification(notificationId)
+                    notificationDispatcher.cancel(notificationId)
+                    _uiState.update { it.copy(message = "Recurring rule deleted") }
+                }
                 .onFailure { setError(it.message ?: "Failed to delete") }
         }
     }

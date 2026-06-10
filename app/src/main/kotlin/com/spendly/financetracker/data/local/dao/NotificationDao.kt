@@ -14,6 +14,9 @@ interface NotificationDao {
     @Upsert
     suspend fun upsert(entity: NotificationEntity)
 
+    @Query("SELECT * FROM notifications WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): NotificationEntity?
+
     @Query("UPDATE notifications SET isRead = 1 WHERE userId = :userId")
     suspend fun markAllRead(userId: String)
 
