@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.spendly.financetracker.data.firebase.FirebaseBootstrap
@@ -46,6 +47,21 @@ class FirebaseAuthRepository @Inject constructor(
         auth.signInWithEmailAndPassword(email.trim(), password).await()
     }
 
+    override suspend fun signInWithGoogle(idToken: String): Result<Unit> = runCatching {
+        require(idToken.isNotBlank()) { "Google sign-in did not return a valid account token." }
+        val result = auth.signInWithCredential(GoogleAuthProvider.getCredential(idToken, null)).await()
+        val user = result.user ?: error("Google sign-in failed.")
+        if (result.additionalUserInfo?.isNewUser == true) {
+            createAndSyncProfile(
+                user = user,
+                name = user.displayName.orEmpty(),
+                email = user.email.orEmpty(),
+                defaultCurrency = "LKR",
+                profileImageUri = user.photoUrl?.toString()
+            )
+        }
+    }
+
     override suspend fun createAccount(
         name: String,
         email: String,
@@ -53,17 +69,36 @@ class FirebaseAuthRepository @Inject constructor(
         defaultCurrency: String
     ): Result<Unit> = runCatching {
         val result = auth.createUserWithEmailAndPassword(email.trim(), password).await()
-        val uid = result.user?.uid ?: error("Registration failed")
+        val user = result.user ?: error("Registration failed")
+        createAndSyncProfile(
+            user = user,
+            name = name,
+            email = email,
+            defaultCurrency = defaultCurrency,
+            profileImageUri = null
+        )
+    }
+
+    private suspend fun createAndSyncProfile(
+        user: FirebaseUser,
+        name: String,
+        email: String,
+        defaultCurrency: String,
+        profileImageUri: String?
+    ) {
+        val uid = user.uid
         val now = System.currentTimeMillis()
         val profile = UserProfileEntity(
             uid = uid,
-            name = name.trim(),
+            name = name.trim().ifBlank {
+                email.substringBefore("@").replaceFirstChar { character -> character.uppercase() }
+            },
             email = email.trim(),
             defaultCurrency = defaultCurrency.trim().ifBlank { "LKR" }.uppercase(),
             createdAtMillis = now,
             updatedAtMillis = now,
             isSynced = false,
-            profileImageUri = null,
+            profileImageUri = profileImageUri,
             exchangeRateSettings = "",
             notificationFrequency = null,
             reminderTime = null,

@@ -96,6 +96,24 @@ class FinanceViewModel @Inject constructor(
         }
     }
 
+    fun signInWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isBusy = true, message = null) }
+            val result = authRepository.signInWithGoogle(idToken)
+            _uiState.update {
+                it.copy(
+                    isBusy = false,
+                    password = if (result.isSuccess) "" else it.password,
+                    message = result.exceptionOrNull()?.userMessage()
+                )
+            }
+        }
+    }
+
+    fun reportAuthError(message: String) {
+        _uiState.update { it.copy(isBusy = false, message = message) }
+    }
+
     fun signOut() {
         dataJob?.cancel()
         dataJob = null

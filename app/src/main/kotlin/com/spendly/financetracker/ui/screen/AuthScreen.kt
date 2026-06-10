@@ -1,5 +1,8 @@
 package com.spendly.financetracker.ui.screen
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -55,6 +59,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.spendly.financetracker.ui.components.SpendlyRadius
 import com.spendly.financetracker.ui.components.SpendlySpacing
 import com.spendly.financetracker.ui.viewmodel.FinanceUiState
@@ -66,13 +72,50 @@ fun AuthScreen(
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onSubmit: () -> Unit,
+    onGoogleSignIn: (String) -> Unit,
+    onGoogleSignInError: (String) -> Unit,
     onForgotPassword: () -> Unit,
     onToggleMode: () -> Unit,
     onCreateAccount: () -> Unit
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val accent = MaterialTheme.colorScheme.primary
     val accentEnd = MaterialTheme.colorScheme.tertiary
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode != Activity.RESULT_OK || result.data == null) {
+            onGoogleSignInError("Google sign-in was cancelled.")
+            return@rememberLauncherForActivityResult
+        }
+        GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            .addOnSuccessListener { account ->
+                account.idToken?.let(onGoogleSignIn)
+                    ?: onGoogleSignInError("Google sign-in is not configured correctly. Download an updated google-services.json.")
+            }
+            .addOnFailureListener { error ->
+                onGoogleSignInError(error.localizedMessage ?: "Google sign-in failed.")
+            }
+    }
+    val launchGoogleSignIn = {
+        val clientIdResource = context.resources.getIdentifier(
+            "default_web_client_id",
+            "string",
+            context.packageName
+        )
+        if (clientIdResource == 0) {
+            onGoogleSignInError(
+                "Google sign-in is not configured. Enable Google Authentication and download an updated google-services.json."
+            )
+        } else {
+            val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(context.getString(clientIdResource))
+                .requestEmail()
+                .build()
+            googleSignInLauncher.launch(GoogleSignIn.getClient(context, options).signInIntent)
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -255,6 +298,27 @@ fun AuthScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         HorizontalDivider(modifier = Modifier.weight(1f))
+                    }
+
+                    OutlinedButton(
+                        onClick = launchGoogleSignIn,
+                        enabled = !state.isBusy,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(SpendlyRadius.input)
+                    ) {
+                        Text(
+                            text = "G",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Continue with Google",
+                            modifier = Modifier.padding(start = 12.dp),
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
 
                     OutlinedButton(

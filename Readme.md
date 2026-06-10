@@ -439,8 +439,16 @@ app/google-services.json
 Enable:
 
 - Authentication -> Email/Password.
+- Authentication -> Google.
 - Cloud Firestore.
-- Firebase Storage.
+- Firebase Storage. Open Storage in the Firebase Console and complete **Get started** so the configured bucket is created before uploading images.
+
+For Google sign-in:
+
+1. Add the debug and release SHA-1/SHA-256 signing fingerprints to the Firebase Android app.
+2. Enable Google in Firebase Authentication -> Sign-in method.
+3. Download the updated `google-services.json` after enabling Google sign-in.
+4. Confirm the file contains an OAuth client with `client_type: 3`; this generates the `default_web_client_id` resource used by the app.
 
 See `firebase_&_firestore.md` and `docs/Firebase_Security_Setup.md` for additional setup guidance.
 
@@ -461,6 +469,13 @@ Deploy Firestore and Storage rules:
 ```bash
 firebase deploy --only firestore:rules,firestore:indexes,storage
 ```
+
+If a profile image reports `Object does not exist at location`, confirm:
+
+1. Firebase Console -> Storage has been initialized for the project.
+2. The active bucket matches the `storage_bucket` value in `app/google-services.json`.
+3. `firebase deploy --only storage` completed successfully.
+4. The user is signed in and the uploaded path begins with `users/{authenticatedUid}/profile/`.
 
 The included Firestore rules:
 

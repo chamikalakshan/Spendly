@@ -131,6 +131,8 @@ fun FinanceTrackerApp(viewModel: FinanceViewModel) {
                             onEmailChange = viewModel::updateEmail,
                             onPasswordChange = viewModel::updatePassword,
                             onSubmit = viewModel::submitAuth,
+                            onGoogleSignIn = viewModel::signInWithGoogle,
+                            onGoogleSignInError = viewModel::reportAuthError,
                             onForgotPassword = viewModel::sendPasswordReset,
                             onToggleMode = viewModel::toggleAuthMode,
                             onCreateAccount = { authNavController.navigate(Screen.CreateAccount.route) }
