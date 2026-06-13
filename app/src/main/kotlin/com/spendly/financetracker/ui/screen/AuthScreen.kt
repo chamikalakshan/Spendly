@@ -1,6 +1,5 @@
 package com.spendly.financetracker.ui.screen
 
-import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -61,6 +60,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
 import com.spendly.financetracker.ui.components.SpendlyRadius
 import com.spendly.financetracker.ui.components.SpendlySpacing
 import com.spendly.financetracker.ui.viewmodel.FinanceUiState
@@ -85,7 +87,7 @@ fun AuthScreen(
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode != Activity.RESULT_OK || result.data == null) {
+        if (result.data == null) {
             onGoogleSignInError("Google sign-in was cancelled.")
             return@rememberLauncherForActivityResult
         }
@@ -95,10 +97,10 @@ fun AuthScreen(
                     ?: onGoogleSignInError("Google sign-in is not configured correctly. Download an updated google-services.json.")
             }
             .addOnFailureListener { error ->
-                onGoogleSignInError(error.localizedMessage ?: "Google sign-in failed.")
+                onGoogleSignInError(googleSignInErrorMessage(error))
             }
     }
-    val launchGoogleSignIn = {
+    val launchGoogleSignIn: () -> Unit = {
         val clientIdResource = context.resources.getIdentifier(
             "default_web_client_id",
             "string",
@@ -113,7 +115,10 @@ fun AuthScreen(
                 .requestIdToken(context.getString(clientIdResource))
                 .requestEmail()
                 .build()
-            googleSignInLauncher.launch(GoogleSignIn.getClient(context, options).signInIntent)
+            val googleSignInClient = GoogleSignIn.getClient(context, options)
+            googleSignInClient.signOut().addOnCompleteListener {
+                googleSignInLauncher.launch(googleSignInClient.signInIntent)
+            }
         }
     }
 
@@ -334,5 +339,28 @@ fun AuthScreen(
                 }
             }
         }
+    }
+}
+
+private fun googleSignInErrorMessage(error: Exception): String {
+    val statusCode = (error as? ApiException)?.statusCode
+    return when (statusCode) {
+        GoogleSignInStatusCodes.SIGN_IN_CANCELLED ->
+            "Google sign-in was cancelled."
+
+        CommonStatusCodes.DEVELOPER_ERROR ->
+            "Google sign-in configuration does not match this app. Add this APK's SHA-1 and SHA-256 fingerprints in Firebase, then download an updated google-services.json."
+
+        CommonStatusCodes.NETWORK_ERROR ->
+            "Google sign-in could not connect. Check your internet connection and try again."
+
+        GoogleSignInStatusCodes.SIGN_IN_FAILED ->
+            "Google sign-in failed. Confirm that Google is enabled in Firebase Authentication."
+
+        CommonStatusCodes.INTERNAL_ERROR ->
+            "Google sign-in encountered an internal error. Please try again."
+
+        else -> error.localizedMessage?.takeIf { it.isNotBlank() }
+            ?: "Google sign-in failed${statusCode?.let { " (status $it)" }.orEmpty()}."
     }
 }

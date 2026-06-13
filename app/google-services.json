@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "464678005758-lv1ftav29neis84a3fcc0i8tm19co1ic.apps.googleusercontent.com",
+          "client_id": "464678005758-dptq4jilsg2cgsgik8db7unugbtfkr74.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.spendly.financetracker",
-            "certificate_hash": "edc6d35eb63ed8c20183f8906f4cf3533137f443"
+            "certificate_hash": "9702551002852e177e6fb1f0b2701b38576790e4"
           }
         },
         {
